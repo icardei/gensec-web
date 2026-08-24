@@ -1,0 +1,471 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="These hands-on labs provide students practice towards applying Generative AI and Large Language Models to solving problems in cybersecurity.">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="generator" content="CS 475/575: Generative Security Application Engineering">
+<meta name="application-name" content="CS 475/575: Generative Security Application Engineering">
+<link rel="canonical" href="https://example.com/cs475/">
+<link rel="preconnect" href="https://www.google-analytics.com">
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'UA-49880327-14', 'auto');
+    ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+<title>CS 475/575: Generative Security Application Engineering</title>
+<link rel="stylesheet" href="/styles/main.css">
+<link rel="import" href="/elements/elements.html">
+<style is="custom-style">
+:root{--paper-tabs-selection-bar-color:currentcolor;--paper-input-container-underline:{display:none};--paper-input-container-underline-focus:{display:none};}.dropdown-filter{--paper-input-container:{padding:8px}} </style>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#455a64">
+<meta name="apple-mobile-web-app-title" content="CS 475/575: Generative Security Application Engineering">
+<link rel="apple-touch-icon" sizes="180x180" href="/images/favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="194x194" href="/images/favicons/favicon-194x194.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/images/favicons/android-chrome-192x192.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/images/favicons/favicon-16x16.png">
+<link rel="mask-icon" href="/images/favicons/safari-pinned-tab.svg" color="#455a64">
+<meta name="msapplication-TileColor" content="#455a64">
+<meta name="msapplication-TileImage" content="/images/favicons/mstile-144x144.png">
+<meta name="theme-color" content="#455a64">
+<meta name="og:type" property="og:type" content="website">
+<meta name="og:title" property="og:title" content="CS 475/575: Generative Security Application Engineering">
+<meta name="og:description" property="og:description" content="These hands-on labs provide students practice towards applying Generative AI and Large Language Models to solving problems in cybersecurity.">
+<meta name="og:url" property="og:url" content="https://example.com/cs475/">
+<meta name="og:site_name" property="og:site_name" content="Codelabs">
+<meta name="og:determiner" property="og:determiner" content="the">
+<meta name="og:locale" property="og:locale" content="en_US">
+<meta name="og:image" property="og:image" content="/images/og-image.png">
+<meta name="og:image:url" property="og:image:url" content="/images/og-image.png">
+<meta name="og:image:type" property="og:image:type" content="image/png">
+<meta name="og:image:width" property="og:image:width" content="1200">
+<meta name="og:image:height" property="og:image:height" content="1200">
+<meta name="og:image:alt" property="og:image:alt" content="Codelabs">
+<meta name="twitter:card" property="twitter:card" content="summary_large_image">
+<meta name="twitter:title" property="twitter:title" content="CS 475/575: Generative Security Application Engineering">
+<meta name="twitter:description" property="twitter:description" content="These hands-on labs provide students practice towards applying Generative AI and Large Language Models to solving problems in cybersecurity.">
+<meta name="twitter:image" property="twitter:image" content="/images/og-image.png">
+<meta name="twitter:url" property="twitter:url" content="https://example.com/cs475/">
+</head>
+<body id="app" is="body-bind" class="loading fullbleed view">
+<paper-header-panel id="main" mode="standard" main>
+<header id="banner" down>
+<div class="site-width">
+<p><img id="logo" src="/images/pdx-cs-logo.png" width="30" height="40" alt="Portland State University"></p>
+<div class="banner-description">
+<div class="banner-meta">
+<h2>CS 475/575: Generative Security Application Engineering</h2>
+<p>These hands-on labs provide students practice towards applying Generative AI and Large Language Models to solving problems in cybersecurity.</p>
+</div>
+</div>
+</div>
+</header>
+<main>
+<div id="filters" class="site-width layout horizontal center justified">
+<div id="sortby">
+<paper-tabs selected="0" noink on-iron-activate="sortBy">
+<paper-tab>A-Z</paper-tab>
+<paper-tab>Recent</paper-tab>
+<paper-tab>Duration</paper-tab>
+</paper-tabs>
+</div>
+<paper-dropdown-menu label="Choose a class" class="dropdown-filter" no-label-float noink no-animations>
+<paper-listbox id="eventList" slot="dropdown-content" class="dropdown-content"><a href="/ai112/" tabindex="-1">
+<paper-item>AI 112: Generative AI Studio</paper-item>
+</a>
+<a href="/cs430/" tabindex="-1">
+<paper-item>CS 430/530: Internet, Web, and Cloud Systems</paper-item>
+</a>
+<a href="/cs475/" tabindex="-1">
+<paper-item>CS 475/575: Generative Security Application Engineering</paper-item>
+</a>
+<a href="/cs491/" tabindex="-1">
+<paper-item>CS 491/591: Introduction to Computer Security</paper-item>
+</a>
+<a href="/cs492/" tabindex="-1">
+<paper-item>CS 492/592: Malware Reverse Engineering</paper-item>
+</a>
+<a href="/cs495/" tabindex="-1">
+<paper-item>CS 495/595: Web and Cloud Security</paper-item>
+</a>
+<a href="/pentestmcp/" tabindex="-1">
+<paper-item>PentestMCP workshop</paper-item>
+</a>
+</paper-listbox>
+</paper-dropdown-menu>
+<paper-dropdown-menu label="Filter by category" class="dropdown-filter" no-label-float noink no-animations>
+<paper-listbox id="categorylist" slot="dropdown-content" class="dropdown-content" on-iron-activate="onCategoryActivate" attr-for-selected="filter">
+<paper-item filter="agent">agent</paper-item>
+<paper-item filter="gcp">gcp</paper-item>
+<paper-item filter="homework">homework</paper-item>
+<paper-item filter="hw">hw</paper-item>
+<paper-item filter="labs">labs</paper-item>
+<paper-item filter="langchain">langchain</paper-item>
+<paper-item filter="llm">llm</paper-item>
+<paper-item filter="mcp">mcp</paper-item>
+<paper-item filter="owasp">owasp</paper-item>
+<paper-item filter="python">python</paper-item>
+</paper-listbox>
+</paper-dropdown-menu></div>
+<card-sorter id="cards" class="site-width">
+<a href="/labs/G03.1_Agents/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-agent" data-category="agent,llm,wk03" data-title="03.1: Agents" data-duration="48" data-summary="Experiment with agents and tools for building autonomous applications" data-updated="2026-07-01T22:41:51Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>03.1: Agents</h4></div>
+<div class="description">Experiment with agents and tools for building autonomous applications</div>
+<div class="card-duration">
+<span>48 min </span>
+<span>Updated Jul 1, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon agent-icon"></div>
+<paper-button class="agent-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G01.2_Ollama/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-gcp" data-category="gcp,llm,wk01" data-title="01.2: Ollama" data-duration="46" data-summary="Deploy an Ollama server for testing open language models" data-updated="2026-01-05T23:12:20Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>01.2: Ollama</h4></div>
+<div class="description">Deploy an Ollama server for testing open language models</div>
+<div class="card-duration">
+<span>46 min </span>
+<span>Updated Jan 5, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon gcp-icon"></div>
+<paper-button class="gcp-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G01.1_Setup/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-homework" data-category="homework,llm,security,wk01" data-title="01.1: Setup" data-duration="80" data-summary="Set up Google Cloud and LLM accounts" data-updated="2026-07-01T22:39:19Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>01.1: Setup</h4></div>
+<div class="description">Set up Google Cloud and LLM accounts</div>
+<div class="card-duration">
+<span>80 min </span>
+<span>Updated Jul 1, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon homework-icon"></div>
+<paper-button class="homework-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G02.4_hw_wk2/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-hw" data-category="hw,llm,python,wk02" data-title="02.4: Homework" data-duration="216" data-summary="Create a custom RAG application of your own." data-updated="2026-02-02T23:05:25Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>02.4: Homework</h4></div>
+<div class="description">Create a custom RAG application of your own.</div>
+<div class="card-duration">
+<span>216 min </span>
+<span>Updated Feb 2, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon hw-icon"></div>
+<paper-button class="hw-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G03.2_hw_wk3/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-hw" data-category="hw,llm,python,wk03" data-title="03.2: Homework" data-duration="180" data-summary="Build-a-Bot Workshop.  Create a custom LangChain agent of your own." data-updated="2026-02-02T23:05:42Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>03.2: Homework</h4></div>
+<div class="description">Build-a-Bot Workshop. Create a custom LangChain agent of your own.</div>
+<div class="card-duration">
+<span>180 min </span>
+<span>Updated Feb 2, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon hw-icon"></div>
+<paper-button class="hw-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G04.2_hw_wk4/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-hw" data-category="hw,llm,python,wk04" data-title="04.2: Homework" data-duration="180" data-summary="Create a custom MCP-based agent application of your own." data-updated="2026-02-03T00:51:55Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>04.2: Homework</h4></div>
+<div class="description">Create a custom MCP-based agent application of your own.</div>
+<div class="card-duration">
+<span>180 min </span>
+<span>Updated Feb 3, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon hw-icon"></div>
+<paper-button class="hw-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G05.2_hw_wk5/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-hw" data-category="hw,llm,python,wk05" data-title="05.2: Homework" data-duration="180" data-summary="Security test your LangChain agent." data-updated="2026-02-17T02:04:28Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>05.2: Homework</h4></div>
+<div class="description">Security test your LangChain agent.</div>
+<div class="card-duration">
+<span>180 min </span>
+<span>Updated Feb 17, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon hw-icon"></div>
+<paper-button class="hw-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G06.3_hw_wk6/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-hw" data-category="hw,llm,security,wk06" data-title="06.3: Homework" data-duration="182" data-summary="Generate a secure application with coding agents" data-updated="2026-02-23T22:10:19Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>06.3: Homework</h4></div>
+<div class="description">Generate a secure application with coding agents</div>
+<div class="card-duration">
+<span>182 min </span>
+<span>Updated Feb 23, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon hw-icon"></div>
+<paper-button class="hw-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G07.3_hw_wk7/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-hw" data-category="hw,llm,security,wk07" data-title="07.3: Homework" data-duration="182" data-summary="Write your own agentic application to generate configurations and deploy them" data-updated="2026-03-05T23:18:44Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>07.3: Homework</h4></div>
+<div class="description">Write your own agentic application to generate configurations and deploy them</div>
+<div class="card-duration">
+<span>182 min </span>
+<span>Updated Mar 5, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon hw-icon"></div>
+<paper-button class="hw-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G08.2_hw_wk8/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-hw" data-category="hw,llm,python,wk08" data-title="08.2: Homework" data-duration="182" data-summary="Write your own LLM application to aid in analyzing and reverse engineering code" data-updated="2026-03-05T23:17:53Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>08.2: Homework</h4></div>
+<div class="description">Write your own LLM application to aid in analyzing and reverse engineering code</div>
+<div class="card-duration">
+<span>182 min </span>
+<span>Updated Mar 5, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon hw-icon"></div>
+<paper-button class="hw-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G09.3_hw_wk9/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-hw" data-category="hw,llm,python,wk09" data-title="09.3: Homework" data-duration="182" data-summary="Use LLM applications to aid in exploiting vulnerabilities" data-updated="2026-03-05T23:14:12Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>09.3: Homework</h4></div>
+<div class="description">Use LLM applications to aid in exploiting vulnerabilities</div>
+<div class="card-duration">
+<span>182 min </span>
+<span>Updated Mar 5, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon hw-icon"></div>
+<paper-button class="hw-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G10.3_final/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-hw" data-category="hw,llm,security,wk10" data-title="10.3: Final project" data-duration="182" data-summary="Build an LLM security application given what you&#39;ve learned in this class" data-updated="2026-03-22T18:39:12Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>10.3: Final project</h4></div>
+<div class="description">Build an LLM security application given what you&#39;ve learned in this class</div>
+<div class="card-duration">
+<span>182 min </span>
+<span>Updated Mar 22, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon hw-icon"></div>
+<paper-button class="hw-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G06.1_CodeGeneration/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-labs" data-category="labs,llm,security,wk06" data-title="06.1: Code Generation" data-duration="21" data-summary="Perform code generation, editing, and translation using an LLM" data-updated="2026-02-14T21:36:41Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>06.1: Code Generation</h4></div>
+<div class="description">Perform code generation, editing, and translation using an LLM</div>
+<div class="card-duration">
+<span>21 min </span>
+<span>Updated Feb 14, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon labs-icon"></div>
+<paper-button class="labs-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G06.2_CodeAgents/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-labs" data-category="labs,llm,security,wk06" data-title="06.2: Coding Agents" data-duration="39" data-summary="Utilize LLM-powered coding agents to vibe code applications" data-updated="2026-06-05T23:47:11Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>06.2: Coding Agents</h4></div>
+<div class="description">Utilize LLM-powered coding agents to vibe code applications</div>
+<div class="card-duration">
+<span>39 min </span>
+<span>Updated Jun 5, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon labs-icon"></div>
+<paper-button class="labs-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G07.1_CommandGeneration/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-labs" data-category="labs,llm,security,wk07" data-title="07.1: Command and Configuration Generation" data-duration="24" data-summary="Use LLMs to generate commands and configurations" data-updated="2026-02-17T02:35:55Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>07.1: Command and Configuration Generation</h4></div>
+<div class="description">Use LLMs to generate commands and configurations</div>
+<div class="card-duration">
+<span>24 min </span>
+<span>Updated Feb 17, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon labs-icon"></div>
+<paper-button class="labs-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G07.2_CommandAgents/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-labs" data-category="labs,llm,security,wk07" data-title="07.2: Command agents" data-duration="30" data-summary="Experiment with agents that generate and execute commands" data-updated="2026-07-02T01:15:01Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>07.2: Command agents</h4></div>
+<div class="description">Experiment with agents that generate and execute commands</div>
+<div class="card-duration">
+<span>30 min </span>
+<span>Updated Jul 2, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon labs-icon"></div>
+<paper-button class="labs-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G08.1_CodAnalysisReverseEngineering/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-labs" data-category="labs,llm,security,wk08" data-title="08.1: Code Analysis and Reverse Engineering" data-duration="134" data-summary="Use LLMs to aid in analyzing and reverse engineering code" data-updated="2026-02-28T21:38:30Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>08.1: Code Analysis and Reverse Engineering</h4></div>
+<div class="description">Use LLMs to aid in analyzing and reverse engineering code</div>
+<div class="card-duration">
+<span>134 min </span>
+<span>Updated Feb 28, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon labs-icon"></div>
+<paper-button class="labs-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G08.1_CodeDocumentationAnalysis/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-labs" data-category="labs,llm,security,wk08" data-title="08.1: Code Documentation and Analysis" data-duration="134" data-summary="Use LLMs to aid in documenting, analyzing, and reverse engineering code" data-updated="2026-02-28T19:11:14Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>08.1: Code Documentation and Analysis</h4></div>
+<div class="description">Use LLMs to aid in documenting, analyzing, and reverse engineering code</div>
+<div class="card-duration">
+<span>134 min </span>
+<span>Updated Feb 28, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon labs-icon"></div>
+<paper-button class="labs-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G09.1_VulnerabilitiesExploitation/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-labs" data-category="labs,llm,security,wk09" data-title="09.1: Vulnerabilities and exploitation" data-duration="36" data-summary="Use LLMs to aid in vulnerability discovery and exploitation" data-updated="2026-03-02T22:43:26Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>09.1: Vulnerabilities and exploitation</h4></div>
+<div class="description">Use LLMs to aid in vulnerability discovery and exploitation</div>
+<div class="card-duration">
+<span>36 min </span>
+<span>Updated Mar 2, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon labs-icon"></div>
+<paper-button class="labs-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G09.2_VulnerabilityTools/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-labs" data-category="labs,llm,security,wk09" data-title="09.2: Vulnerability Tools" data-duration="61" data-summary="Use LLMs with tools for vulnerability discovery, exploitation, and patching" data-updated="2026-03-11T18:00:56Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>09.2: Vulnerability Tools</h4></div>
+<div class="description">Use LLMs with tools for vulnerability discovery, exploitation, and patching</div>
+<div class="card-duration">
+<span>61 min </span>
+<span>Updated Mar 11, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon labs-icon"></div>
+<paper-button class="labs-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G10.1_ThreatIntelligence/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-labs" data-category="labs,llm,security,wk10" data-title="10.1. Threat Intelligence" data-duration="54" data-summary="Use LLMs to aid in threat intelligence tasks" data-updated="2026-07-01T18:37:17Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>10.1. Threat Intelligence</h4></div>
+<div class="description">Use LLMs to aid in threat intelligence tasks</div>
+<div class="card-duration">
+<span>54 min </span>
+<span>Updated Jul 1, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon labs-icon"></div>
+<paper-button class="labs-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G10.2_SocialEngineering/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-labs" data-category="labs,llm,security,wk10" data-title="10.2: Social Engineering" data-duration="24" data-summary="Use LLMs to aid in social engineering tasks" data-updated="2026-03-10T23:00:30Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>10.2: Social Engineering</h4></div>
+<div class="description">Use LLMs to aid in social engineering tasks</div>
+<div class="card-duration">
+<span>24 min </span>
+<span>Updated Mar 10, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon labs-icon"></div>
+<paper-button class="labs-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G02.1_LangChainTour/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-langchain" data-category="langchain,python,wk02" data-title="02.1: LangChain Tour" data-duration="21" data-summary="Experiment with prompt templates, messages, chat models, safety settings, chains, and parsers in LangChain" data-updated="2026-01-11T23:48:56Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>02.1: LangChain Tour</h4></div>
+<div class="description">Experiment with prompt templates, messages, chat models, safety settings, chains, and parsers in LangChain</div>
+<div class="card-duration">
+<span>21 min </span>
+<span>Updated Jan 11, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon langchain-icon"></div>
+<paper-button class="langchain-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G02.2_LangChainDocumentLoading/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-langchain" data-category="langchain,python,wk02" data-title="02.2: LangChain Documents" data-duration="30" data-summary="Experiment with document loading, chunking, and tokenizers in LangChain" data-updated="2026-01-13T21:36:13Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>02.2: LangChain Documents</h4></div>
+<div class="description">Experiment with document loading, chunking, and tokenizers in LangChain</div>
+<div class="card-duration">
+<span>30 min </span>
+<span>Updated Jan 13, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon langchain-icon"></div>
+<paper-button class="langchain-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G02.3_LangChainRAG/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-langchain" data-category="langchain,python,wk02" data-title="02.3: LangChain RAG application" data-duration="30" data-summary="Experiment with a retrieval augmented generation application in LangChain" data-updated="2026-01-27T04:36:13Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>02.3: LangChain RAG application</h4></div>
+<div class="description">Experiment with a retrieval augmented generation application in LangChain</div>
+<div class="card-duration">
+<span>30 min </span>
+<span>Updated Jan 27, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon langchain-icon"></div>
+<paper-button class="langchain-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G01.4_ModelTesting/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-llm" data-category="llm,wk01" data-title="01.4: Model Testing" data-duration="27" data-summary="Examine the performance of different LLMs on a suite of tasks" data-updated="2025-12-09T23:48:31Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>01.4: Model Testing</h4></div>
+<div class="description">Examine the performance of different LLMs on a suite of tasks</div>
+<div class="card-duration">
+<span>27 min </span>
+<span>Updated Dec 9, 2025</span>
+</div>
+<div class="card-footer">
+<div class="category-icon llm-icon"></div>
+<paper-button class="llm-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G04.1_MCP_AgentSkills/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-mcp" data-category="mcp,llm,wk04" data-title="04.1: MCP, Agent Skills" data-duration="80" data-summary="Leverage Model-Context-Protocol tools and Agent Skills" data-updated="2026-07-01T23:01:07Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>04.1: MCP, Agent Skills</h4></div>
+<div class="description">Leverage Model-Context-Protocol tools and Agent Skills</div>
+<div class="card-duration">
+<span>80 min </span>
+<span>Updated Jul 1, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon mcp-icon"></div>
+<paper-button class="mcp-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G05.1_SecuringGenerativeApps/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-owasp" data-category="owasp,security,llm,wk05" data-title="05.1: Securing LLM applications" data-duration="115" data-summary="Analyze the security of LLM applications" data-updated="2026-02-24T02:48:54Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>05.1: Securing LLM applications</h4></div>
+<div class="description">Analyze the security of LLM applications</div>
+<div class="card-duration">
+<span>115 min </span>
+<span>Updated Feb 24, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon owasp-icon"></div>
+<paper-button class="owasp-bg">Start</paper-button>
+</div>
+</a>
+<a href="/labs/G01.3_ProgramModel/index.html?index=..%2F..cs475" on-tap="navigate" class="codelab-card category-python" data-category="python,langchain,wk01" data-title="01.3: Programmatic Model Access" data-duration="11" data-summary="Access a range of LLMs from Python" data-updated="2026-01-11T23:48:26Z" data-tags="cs475" data-pin="">
+<div class="description"><h4>01.3: Programmatic Model Access</h4></div>
+<div class="description">Access a range of LLMs from Python</div>
+<div class="card-duration">
+<span>11 min </span>
+<span>Updated Jan 11, 2026</span>
+</div>
+<div class="card-footer">
+<div class="category-icon python-icon"></div>
+<paper-button class="python-bg">Start</paper-button>
+</div>
+</a>
+</card-sorter>
+<div id="loading-placeholder" class="site-width">
+Loading Codelabs, please wait...
+</div>
+</main>
+</paper-header-panel>
+<script src="/scripts/main.js"></script>
+</body>
+</html>
