@@ -1,0 +1,243 @@
+
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1,user-scalable=yes">
+<meta name="theme-color" content="#4F7DC9">
+<meta charset="UTF-8">
+<title>01.1: Setup</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+<style>
+.success{color:#1e8e3e}.error{color:red} </style>
+</head>
+<body>
+<google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+<google-codelab codelab-gaid="" id="G01.1_Setup" title="01.1: Setup" environment="web" feedback-link="https://docs.google.com/document/d/1KzRmack14X8G7ZFT5o_QGqr9hY894Y0MoM7wG9Gtor4">
+<google-codelab-step label="Google Cloud account" duration="3">
+<aside class="special"><p>For the following steps, you will be using a <code>ProjectName</code> that is a combination of the undergraduate course number along with your last name and OdinID. The format to follow is:<br> <code>gensec-</code>&lt;<code>LastName</code>&gt;<code>-</code>&lt;<code>OdinID</code>&gt;<br>For example, my <code>ProjectName</code> would be:</p>
+<p><code> gensec-Feng-wuchang</code></p>
+</aside>
+<h2 is-upgraded>Incognito mode</h2>
+<p>To avoid applying the coupon you receive to the incorrect account, ensure that these steps are done in an &#34;Incognito&#34; or &#34;Private Browsing&#34; browser window to set up your account.<br><img style="width:370px" src="img/335ca8dd26816ef4.png"></p>
+<p>Then, visit <a href="https://console.cloud.google.com" target="_blank">https://console.cloud.google.com</a> and login using your pdx.edu account to enable GCP. If you haven&#39;t used GCP yet and do not mind temporarily putting your credit card on the account, apply for the $300 coupon and use it to create a new billing account. Otherwise, visit the coupon redemption URL on the Canvas home page for the course (<a href="https://canvas.pdx.edu" target="_blank">https://canvas.pdx.edu</a>).</p>
+<aside class="warning"><p>Note: If you fail to do so and assign the coupon to your personal GMail account, you can still create a project using the billing account and then visit IAM settings in the project to assign your @pdx.edu account the &#34;Owner&#34; role.</p>
+</aside>
+<h2 is-upgraded>Create Project</h2>
+<p>Click on the pdx.edu organization from the console. </p>
+<p class="image-container"><img style="width:532px" src="img/5e1390879aaad983.png"></p>
+<p>Then, click on &#34;New Project&#34;<br><img style="width:624px" src="img/336db947a8667e4f.png"></p>
+<p>Create a Google Cloud project with your <code>ProjectName</code> from above. You should be taken to your project&#39;s Home page. For your lab notebook, you will need to ensure that all of your screenshots for your Google Cloud labs include your <code>ProjectName</code>. </p>
+<p>To examine your Billing account and its usage, go to the Billing page from the console at <a href="https://console.cloud.google.com/billing" target="_blank">https://console.cloud.google.com/billing</a> </p>
+<p class="image-container"><img style="width:624px" src="img/3749eacfbfc34fab.png"></p>
+</google-codelab-step>
+<google-codelab-step label="Kali VM Setup on Google Cloud" duration="10">
+<p>The exercises require the use of a Kali Linux VM. We can set one up in the cloud for this purpose. Log into your Google Cloud Platform account and from the web console, launch Cloud Shell. </p>
+<p class="image-container"><img style="width:454px" src="img/bf15fe816c24f23a.png"></p>
+<p>If they do not exist already, create two firewall rules to allow HTTP and HTTPS traffic.</p>
+<pre><code>gcloud compute firewall-rules create default-allow-http \
+  --allow=tcp:80 --target-tags=http-server
+
+gcloud compute firewall-rules create default-allow-https \
+  --allow=tcp:443 --target-tags=https-server</code></pre>
+<p>Then, run the command below to find the most recent version of the Kali VM image on the course&#39;s GCP project.</p>
+<pre><code>gcloud compute images list \
+  --project pdx-cs --no-standard-images</code></pre>
+<p>Make a note of the name of the Kali VM image, then fill in the <code>gcloud</code> command below and launch a VM using the image. Attach the tags that will allow incoming HTTP and HTTPS traffic to the VM (needed for <code>metasploit</code> exercises)</p>
+<pre><code>gcloud compute instances create kali-vm \
+  --machine-type e2-medium --zone us-west1-b \
+  --image-project pdx-cs \
+  --image kali-rolling-latest
+
+gcloud compute instances add-tags kali-vm --tags=http-server,https-server</code></pre>
+<p>Keep track of both the external and internal IP address of each instance. We will be using the internal IP address for the attacks, but will need to connect via the external IP addresses initially.</p>
+<ul>
+<li><code>kali_external_IP, kali_internal_IP</code></li>
+</ul>
+<p><code>ssh</code> into your Kali VM instance to ensure you can access it.</p>
+<p class="image-container"><img style="width:573px" src="img/487fd977af63f643.png"></p>
+<p>Alternatively, you can perform the command below to do so as well. </p>
+<pre><code>gcloud compute ssh kali-vm --zone=us-west1-b</code></pre>
+</google-codelab-step>
+<google-codelab-step label="-" duration="10">
+<p>We will now setup a remote desktop on the Compute Engine using the Remote Desktop Protocol (RDP) in order to enable a graphical interface to the VM.</p>
+<h2 is-upgraded>Connect to instance</h2>
+<p>To connect to the instance from Cloud Shell, you can run the command below:</p>
+<pre><code>gcloud compute ssh &lt;NameOfVM&gt; --zone us-west1-b</code></pre>
+<p>Alternatively, you can also connect via the web console. To do so, navigate to the VM instances on Compute Engine, then click on &#34;<code>ssh</code>&#34; to bring up a shell session on it.</p>
+<p class="image-container"><img style="width:353px" src="img/312de05f0c8411eb.png"></p>
+<h2 is-upgraded>Setup</h2>
+<p>On the VM, install the course&#39;s development tools.</p>
+<pre>sudo apt update -y
+sudo apt install python3-pip python3-dev python3-virtualenv python-is-python3 docker.io git -y</pre>
+<p>Then, add yourself to the <code>docker</code> group so that you&#39;re able to run the <code>docker</code> commands without <code>sudo</code>.</p>
+<pre>sudo usermod -a -G docker $(whoami)</pre>
+<p>For those who prefer <code>uv</code> for managing Python environments, run the installer from Astral and update your path by sourcing the modified <code>.bashrc</code> after installation.</p>
+<pre>curl -LsSf https://astral.sh/uv/install.sh | sh
+source ~/.bashrc</pre>
+<p>Next, install the graphical software packages and allow access for xrdp to the ssl-c</p>
+<pre><code>sudo apt install xfce4 xfce4-goodies xrdp -y</code></pre>
+<p>Check that the <code>xrdp</code> daemon is enabled and running. </p>
+<pre><code>sudo systemctl status xrdp</code></pre>
+<p>If not, enable and start it.</p>
+<pre><code>sudo systemctl enable xrdp
+sudo systemctl start xrdp</code></pre>
+<p>Our RDP setup will require a username and password to authenticate. As Compute Engine instances typically perform authentication via OAuth2 and <code>ssh</code> keys, we will need to set a password for our account on the VM. To do so, run the following to set your account password on the VM for your username (as retrieved via the environment variable <code>$USER</code>).</p>
+<pre><code>sudo passwd $USER</code></pre>
+<h2 is-upgraded>Install a web browser</h2>
+<p>If you prefer Firefox, install it directly.</p>
+<pre><code>sudo apt install firefox-developer-edition-en-us-kbx -y</code></pre>
+<p>If you prefer Chrome, then install Google&#39;s signing key, add Google&#39;s repository to your system, and then install the browser.</p>
+<pre><code>wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmour -o /usr/share/keyrings/google_linux_signing_key.gpg
+
+sudo sh -c &#39;echo &#34;deb [arch=amd64 signed-by=/usr/share/keyrings/google_linux_signing_key.gpg] http://dl.google.com/linux/chrome/deb/ stable main&#34; &gt; /etc/apt/sources.list.d/google.list&#39;
+
+sudo apt update
+
+sudo apt install google-chrome-stable -y</code></pre>
+<h2 is-upgraded>Connect via RDP</h2>
+<p>Locate the VM&#39;s External IP address on the Compute Engine interface.</p>
+<p class="image-container"><img style="width:556px" src="img/a6dd2d753b66c4b2.png"></p>
+<p>On your local machine, connect to the VM&#39;s External IP address using an RDP client. You may utilize clients that are built into the browser (e.g. Chrome Remote Desktop extension) or native clients on Windows (Remote Desktop Connection), MacOS (<a href="https://apps.apple.com/us/app/windows-app" target="_blank">Windows App</a>), or Linux (<a href="https://www.freerdp.com/" target="_blank">FreeRDP</a> or <a href="https://remmina.org/how-to-install-remmina/" target="_blank">remmina</a>) to connect to the VM.</p>
+<p class="image-container"><img style="width:404px" src="img/71e4f380326bf441.png"></p>
+<p>Then, login using your username and the password you set for it to bring up a graphical desktop on the VM.</p>
+<h2 is-upgraded>Stop the VM</h2>
+<p>In order to save costs while keeping the machine image around so that it can be started later, exit out of the session and stop the VM. This can be done via the UI or via the command-line in Cloud Shell via:</p>
+<pre><code>gcloud compute instances stop &lt;NameOfVM&gt; --zone us-west1-b</code></pre>
+</google-codelab-step>
+<google-codelab-step label="Web-based LLM accounts" duration="10">
+<h2 is-upgraded><strong>ChatGPT</strong></h2>
+<p class="image-container"><img style="width:414px" src="img/9fb9996d64cde2ee.png"></p>
+<p>ChatGPT is OpenAI&#39;s Large Language Model service. Visit ChatGPT&#39;s site at <a href="https://chat.openai.com/" target="_blank">https://chat.openai.com/</a>. Sign in using your PSU e-mail address.</p>
+<h2 is-upgraded><strong>Gemini</strong></h2>
+<p class="image-container"><img style="width:307.5px" src="img/72bf6b3afecb1e57.png"></p>
+<p>Gemini is Google&#39;s multimodal Large Language Model service. Visit Google&#39;s Gemini site at <a href="https://gemini.google.com" target="_blank">https://gemini.google.com/</a>. Note that you may need to use a personal Google account to access the web service. </p>
+<h2 is-upgraded><strong>Claude</strong></h2>
+<p class="image-container"><img style="width:405.5px" src="img/4938d979d7f03c91.png"></p>
+<p>Claude is an AI assistant from Anthropic. It allows for free usage, but with limited features. Visit the site at: <a href="https://claude.ai/" target="_blank">https://claude.ai/</a> . Create an account using your school e-mail address. </p>
+</google-codelab-step>
+<google-codelab-step label="Google Generative AI API" duration="3">
+<p>We&#39;ll be using Google&#39;s Gemini Pro as one of our models as it can be run via the course coupon and does not require students to use a credit card. The model can be easily leveraged by programs running outside of Google Cloud. To do so, we&#39;ll first need to enable its API. Navigate to the web console at <a href="https://console.cloud.google.com/" target="_blank">https://console.cloud.google.com/</a>, then launch Cloud Shell.</p>
+<p class="image-container"><img style="width:454px" src="img/bf15fe816c24f23a.png"></p>
+<p>Run the following command to enable the API.</p>
+<pre><code>gcloud services enable generativelanguage.googleapis.com</code></pre>
+<h2 is-upgraded><strong>Set up an API key</strong></h2>
+<p>API keys that are in the pay-as-you-go tier need to be set up via Google&#39;s AI Studio at <a href="https://aistudio.google.com" target="_blank">https://aistudio.google.com</a>. If the service is not enabled for your account already, you can fill out this <a href="https://portlandstate.atlassian.net/servicedesk/customer/portal/2/create/3769" target="_blank">form</a> to request access.</p>
+<p>From Google&#39;s AI Studio import your cloud project and create an API key using the project.</p>
+<p class="image-container"><img style="width:624px" src="img/cd52cd9399e4a6c8.png"></p>
+<p>On the course VM, set an environment variable that contains the value of the API key. In addition, set an environment variable to specify one of Google&#39;s currently supported models. </p>
+<pre><code>export GOOGLE_API_KEY=&#34;&lt;FMI&gt;&#34;
+export GOOGLE_MODEL=&#34;gemini-2.5-flash&#34;</code></pre>
+<p>Add this to your <code>.bashrc</code> file to automatically set the key when you login each time.</p>
+</google-codelab-step>
+<google-codelab-step label="OpenAI" duration="5">
+<p class="image-container"><img style="width:456px" src="img/bab0266324955f61.png"></p>
+<p>Many of the code examples one might find on the Internet that utilize Language Models OpenAI&#39;s API. Unfortunately, this requires one to create an account that is backed by a credit card. As a result, creating an account on OpenAI is optional. If you wish to do so, visit <a href="https://platform.openai.com/" target="_blank">https://platform.openai.com/</a> and register a developer account.</p>
+<p>After creating the account, visit the Dashboard page and create a new key.</p>
+<p class="image-container"><img style="width:624px" src="img/d30cc462717ac8f9.png"></p>
+<p>When utilizing the API on the course VM, we&#39;ll need to set an environment variable that contains the value of the API key. In addition, set an environment variable to specify one of OpenAI&#39;s currently supported models. </p>
+<pre><code>export OPENAI_API_KEY=&#34;&lt;FMI&gt;&#34;
+export OPENAI_MODEL=&#34;gpt-4.1&#34;</code></pre>
+<p>Add this to your <code>.bashrc</code> file to automatically set the key when you login each time.</p>
+</google-codelab-step>
+<google-codelab-step label="Anthropic" duration="5">
+<p class="image-container"><img style="width:512.5px" src="img/ed534cbfa01e7cab.png"></p>
+<p>Anthropic, the creators of the Claude family of models, also provides API access to them. As with OpenAI, this requires one to create an account that is backed by a credit card. You may optionally create one by creating an account by visiting <a href="https://console.anthropic.com" target="_blank">https://console.anthropic.com</a>.</p>
+<p class="image-container"><img style="width:624px" src="img/56e6fdc57fe24756.png"></p>
+<p>When utilizing the API on the course VM, we&#39;ll need to set an environment variable that contains the value of the API key. In addition, set an environment variable to specify one of Anthropic&#39;s currently supported models.</p>
+<pre><code>export ANTHROPIC_API_KEY=&#34;&lt;FMI&gt;&#34;
+export ANTHROPIC_MODEL=&#34;claude-opus-4-20250514&#34;</code></pre>
+<p>Add this to your <code>.bashrc</code> file to automatically set the key when you login each time.</p>
+</google-codelab-step>
+<google-codelab-step label="xAI" duration="5">
+<p class="image-container"><img style="width:242.5px" src="img/9251b530c8ca7d0c.png"></p>
+<p>xAI, the creators of the Grok family of models, also provides API access to them. As with other services, this requires one to create an account that is backed by a credit card. You may optionally create one by creating an account by visiting <a href="https://console.x.ai/" target="_blank">https://console.x.ai/</a>.</p>
+<p class="image-container"><img style="width:624px" src="img/2b9e12791c48b8f0.png"></p>
+<p>When utilizing the API on the course VM, we&#39;ll need to set an environment variable that contains the value of the API key. In addition, set an environment variable to specify one of xAI&#39;s currently supported models.</p>
+<pre><code>export XAI_API_KEY=&#34;&lt;FMI&gt;&#34;
+export XAI_MODEL=&#34;grok-3&#34;</code></pre>
+<p>Add this to your <code>.bashrc</code> file to automatically set the key when you login each time.</p>
+</google-codelab-step>
+<google-codelab-step label="PortSwigger account" duration="5">
+<p>Visit <a href="https://portswigger.net/web-security" target="_blank">https://portswigger.net/web-security</a> and sign-up for an account using your pdx.edu e-mail address:</p>
+<p class="image-container"><img style="width:568px" src="img/908ecbae42325faf.png"></p>
+</google-codelab-step>
+<google-codelab-step label="SerpApi" duration="5">
+<p class="image-container"><img style="width:123.5px" src="img/3b98d0606208e1a1.png"></p>
+<p>For some of the LangChain agents, we&#39;ll be utilizing SerpApi for external calls to Google&#39;s search engine. Doing so allows the access to real-time information to search engine content. Visit the site at <a href="https://serpapi.com" target="_blank">https://serpapi.com</a> .</p>
+<p>Register for a free account using your PSU e-mail address. This will allow you 100 API calls per month. Then, visit the Dashboard and find your API key. </p>
+<p class="image-container"><img style="width:624px" src="img/262c537a8a760a2f.png"></p>
+<p>When utilizing the API on the course VM, we&#39;ll need to set an environment variable that contains the value of the API key.</p>
+<pre><code>export SERPAPI_API_KEY=&#34;&lt;FMI&gt;&#34;</code></pre>
+<p>Add this to your <code>.bashrc</code> file to automatically set the key when you login each time.</p>
+</google-codelab-step>
+<google-codelab-step label="VirusTotal" duration="5">
+<p>VirusTotal is a malware analysis and threat intelligence service that aggregates reports of malicious activity and files across the Internet. It is an invaluable tool for organizations to protect themselves against emerging threats. We will be using this service in conjunction with LLMs to automatically collect and process real-time threat information.</p>
+<p>In order to access the VirusTotal API, we need to create a free account. Visit <a href="https://virustotal.com" target="_blank">https://virustotal.com</a> and sign up for an account with your PSU e-mail address. Then, within the user-interface, obtain an API key that will allow you to access the service programmatically.</p>
+<p class="image-container"><img style="width:624px" src="img/1be7ff76e6f1cdc6.png"></p>
+<p>Generate an API key and copy it. </p>
+<p class="image-container"><img style="width:624px" src="img/a672e42df4431861.png"></p>
+<p>When utilizing the API on the course VM, we&#39;ll need to set an environment variable that contains the value of the API key.</p>
+<pre><code>export VIRUSTOTAL_API_KEY=&#34;&lt;FMI&gt;&#34;</code></pre>
+<p>Add this to your <code>.bashrc</code> file to automatically set the key when you login each time.</p>
+</google-codelab-step>
+<google-codelab-step label="GitHub" duration="5">
+<p class="image-container"><img style="width:180px" src="img/8984429332af6a5a.png"></p>
+<p>For some of the labs, we&#39;ll be retrieving code from GitHub in order to send to an LLM. GitHub requires an account and a personal access token to be issued for the account in order to programmatically retrieve code from any repository it hosts. To get this set-up, visit the site at <a href="https://github.com" target="_blank">https://github.com</a>. Register for a free account using your PSU e-mail address. </p>
+<p>Then, visit the settings to issue a token: <a href="https://github.com/settings/tokens?type=beta" target="_blank">https://github.com/settings/tokens?type=beta</a>. Here you will see a button you can use to make a new access token. </p>
+<p class="image-container"><img style="width:624px" src="img/d52b0ac4b1dfed65.png"></p>
+<p>When creating the token ignore the permission scopes, as you will just be using it to access the course repository which is public. After creating the access token, open a terminal on the course VM. When utilizing the API on the VM, we&#39;ll need to set an environment variable that contains the value of the token.</p>
+<pre><code>export GITHUB_PERSONAL_ACCESS_TOKEN=&#34;&lt;FMI&gt;&#34;</code></pre>
+<p>Add this to your <code>.bashrc</code> file to automatically set the key when you login each time.</p>
+</google-codelab-step>
+<google-codelab-step label="Gitlab repository" duration="7">
+<aside class="special"><p>For the following steps, you will be using a <code>ProjectName</code> that is a combination of the undergraduate course number along with your last name and OdinID. The format to follow is:<br> <code>gensec-</code>&lt;<code>LastName</code>&gt;<code>-</code>&lt;<code>OdinID</code>&gt;<br>For example, my <code>ProjectName</code> would be:</p>
+<p><code> gensec-Feng-wuchang</code></p>
+</aside>
+<h2 is-upgraded>Setup account</h2>
+<ul>
+<li>Visit the MCECS Gitlab <a href="https://gitlab.cecs.pdx.edu/users/sign_in" target="_blank">site</a> and create a private GitLab repo with the <code>ProjectName</code> above. You will be using this repo for the rest of the term. This repo exists on the CECS intranet, and uses your CECS credentials for authentication.</li>
+<li>Using the instructor and TA&#39;s OdinIDs from the course web page, grant them <code>Developer</code> access to your repo. This will allow us to view your repo and provide feedback.</li>
+<li>Create an initial blank submission for the first lab.</li>
+</ul>
+<pre><code>mkdir notebooks
+touch notebooks/Labs1.pdf
+git add notebooks
+git commit -m &#34;initial commit&#34;
+git push</code></pre>
+<ul>
+<li>Note that subsequent notebooks will follow this naming format, replacing the number with the lab notebook number being submitted..</li>
+</ul>
+<h2 is-upgraded>Setup .gitignore</h2>
+<p>It is often the case that you&#39;ll have files in your local directory that you do not want added to your repository. To specify that these files should not be included in any commits, git uses a file called <code>.gitignore</code>. Create a <code>.gitignore</code> file that contains files that are common to Python that you do not want to add to your repository.</p>
+<pre><code>env/
+.venv
+*.pyc
+__pycache__/</code></pre>
+<p>Add it to the files you wish to commit, commit the file to your local repository, and then push the local repository to its remote.</p>
+<pre>git add .gitignore
+git commit -m &#34;Adding .gitignore&#34;
+git push -u origin main</pre>
+</google-codelab-step>
+<google-codelab-step label="git" duration="2">
+<h2 is-upgraded><code>git </code>basics</h2>
+<p>Read the first 6 steps of the following <a href="https://product.hubspot.com/blog/git-and-github-tutorial-for-beginners" target="_blank">link</a>. Note that for this class, you will be substituting Gitlab for GitHub. You will need to become proficient with the following <code>git</code> commands for this course or use an IDE such as VSCode that can perform the operations for you.</p>
+<ul>
+<li><code>git clone</code> : Fetch a copy of a remote repository</li>
+<li><code>git add</code> : Add a new file and/or directory to local repository</li>
+<li><code>git commit</code> : Commit changes to local repository</li>
+<li><code>git push</code> : Merge changes from local repository to a remote one. Implicitly assumes &#34;<code>origin</code>&#34; (place that you retrieved repo from) and &#34;<code>main</code>&#34; (branch)</li>
+<li><code>git pull</code> : Merge changes from remote repository to your local one. Implicitly assumes &#34;<code>origin</code>&#34; (place that you retrieved repo from) and &#34;<code>main</code>&#34; (branch)</li>
+</ul>
+<aside class="special"><p>Looking for more? Learn more about Git and from their <a href="https://git-scm.com/docs" target="_blank">documentation</a> or this <a href="http://rogerdudler.github.io/git-guide/" target="_blank">site</a></p>
+</aside>
+</google-codelab-step>
+</google-codelab>
+<script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+<script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+<script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+<script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+<script src="https://support.google.com/inapp/api.js"></script>
+</body>
+</html>
