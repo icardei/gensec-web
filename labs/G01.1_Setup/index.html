@@ -48,16 +48,13 @@ A VPC provides these capabilities:
 <li>Traffic Routing & Subnets</li>
 </ol>
 Create a new VPC named “default” with gcloud:
-<pre><code>
-gcloud compute networks create default --subnet-mode=auto  
-</code>
-
+<pre><code>gcloud compute networks create default --subnet-mode=auto  
+</code></pre>
 </p>
 <!-- ic end -->
 
 <p>If they do not exist already, create these firewall rules to allow HTTP, HTTPS, RDP, and SSH traffic.
-<pre><code>
-gcloud compute firewall-rules create default-allow-http \
+<pre><code>gcloud compute firewall-rules create default-allow-http \
   --allow=tcp:80 --target-tags=http-server
 
 gcloud compute firewall-rules create default-allow-https \
@@ -76,8 +73,7 @@ gcloud compute firewall-rules create allow-rdp-udp \
 <p>
   To see a clean summary of every firewall rule in your active project 
   (including priority, direction, action, and targets), run this command at any time:
-  <pre><code>
-    gcloud compute firewall-rules list
+  <pre><code>gcloud compute firewall-rules list
   </code></pre> 
 </p>
 
@@ -93,8 +89,7 @@ gcloud compute firewall-rules create allow-rdp-udp \
 
 Run this command to CREATE a VM instance named <code>kali-vm</code> from the current 
 base Debian 13 image, with 50 GB boot disk:
-<pre><code>  
-  gcloud compute instances create kali-vm \
+<pre><code>gcloud compute instances create kali-vm \
     --machine-type e2-medium \
     --zone us-west1-b \
     --image-family=debian-13 \
@@ -105,8 +100,7 @@ base Debian 13 image, with 50 GB boot disk:
 
 <p>
   Add tags to the Kali VM to activate the firewall rules:
-  <pre><code>
-  gcloud compute instances add-tags kali-vm \
+<pre><code>gcloud compute instances add-tags kali-vm \
     --tags=http-server,https-server,ssh-server,rdp-server
   </code></pre>
 </p>
@@ -122,24 +116,21 @@ Attach the tags that will allow incoming HTTP, HTTPS, SSH and RDP traffic to the
   --image kali-rolling-latest
 -->
   <!-- ic start -->
-<pre><code>
-gcloud compute instances add-tags kali-vm \
+<pre><code>gcloud compute instances add-tags kali-vm \
        --tags=http-server,https-server,ssh-server,rdp-server
 </code></pre>       
 </p>
 
 <p>
   Run this command to start the Kali VM:
-  <pre><code> 
-gcloud compute instances start kali-vm --zone=us-west1-b
+  <pre><code>gcloud compute instances start kali-vm --zone=us-west1-b
   </code></pre>
 </p>
 
 
 <p>
 Now connect with ssh to the Kali VM:
-  <pre><code> 
-gcloud compute ssh kali-vm-orig --zone=us-west1-b
+  <pre><code>gcloud compute ssh kali-vm-orig --zone=us-west1-b
   </code></pre>
 </p>
 
@@ -147,50 +138,43 @@ gcloud compute ssh kali-vm-orig --zone=us-west1-b
 <p>
 Enter the following commands on the kali-vm using the ssh client.
   Install the Kali tools on kali-vm. First, update the Debian installation:
-<pre><code> 
-sudo apt update
+<pre><code>sudo apt update
 sudo apt full-upgrade -y
 </code></pre>
 </p>
 
 <p>
 Install prerequisite packages:
-<pre><code> 
-sudo apt install -y curl wget gnupg ca-certificates
+<pre><code>sudo apt install -y curl wget gnupg ca-certificates
 </code></pre>
 </p>
 
 <p>
   Download and install the Kali archive signing key:
-<pre><code> 
-curl -fsSL https://archive.kali.org/archive-key.asc \
+<pre><code>curl -fsSL https://archive.kali.org/archive-key.asc \
     | sudo gpg --dearmor -o /usr/share/keyrings/kali-archive-keyring.gpg
 </code></pre>
 </p>
 
 <p>
 Create the Kali repository:
-  <pre><code>
-cat <<'EOF' | sudo tee /etc/apt/sources.list.d/kali.list
+  <pre><code>cat <<'EOF' | sudo tee /etc/apt/sources.list.d/kali.list
+
 deb [signed-by=/usr/share/keyrings/kali-archive-keyring.gpg] \
 http://http.kali.org/kali kali-last-snapshot main contrib non-free non-free-firmware
 EOF
 </code></pre>
 </p>
 
-
-
 <p>
 Update the revised Debian package list:
-<pre><code> 
-sudo apt update
+<pre><code>sudo apt update
 </code></pre>
 </p>
 
 
 <p>Install only the tools we need for the moment:
-<pre><code> 
-sudo apt install -y nmap metasploit-framework wireshark burpsuite john aircrack-ng
+<pre><code>sudo apt install -y nmap metasploit-framework wireshark burpsuite john aircrack-ng
 </code></pre>
 </p>
 
@@ -200,19 +184,13 @@ sudo apt install -y nmap metasploit-framework wireshark burpsuite john aircrack-
 <pre><code> 
 </code></pre>
 </p>
--->
-
-
-
-
 
 <p>
 <pre><code> 
 </code></pre>
 </p>
 
-
-
+-->
 <!-- ic end -->
 
 <p>Keep track of both the external and internal IP address of each instance. 
