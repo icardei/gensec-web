@@ -127,9 +127,22 @@ docker run -d -p 80:8080 --add-host=host.docker.internal:host-gateway \
  --restart always ghcr.io/ollama-webui/ollama-webui:main</code></pre>
 </google-codelab-step>
 <google-codelab-step label="Setup account" duration="5">
+<!-- ic start -->  
+ <p>Now you will create a new account on the Ollama API server using the ollama-webui docker container 
+  that runs just the Ollama web interface. The web interface is a simple way to create an account and manage models.
+</p>
+<!-- ic end -->
 <p>Go back to Compute Engine and visit the Ollama web interface (e.g. http://35.230.93.16 below)</p>
 <p class="image-container"><img style="width:624px" src="img/10ae11d2d4d9a48a.png"></p>
-<p>Sign up for a new account using the web interface to create the initial administrator account.</p>
+<p>Sign up for a new account using the web interface to create the initial administrator account.
+<!-- ic start -->  
+<br/>
+<b>IMPORTANT:</b> Save the user name and the password. Will need them later to log in.
+If you lose them you will have to delete both docker containers and start over.
+</p> 
+<!-- ic end -->
+
+</p>
 <p class="image-container"><img style="width:412.5px" src="img/877fb3e6ed22a22d.png"></p>
 </google-codelab-step>
 <google-codelab-step label="Install models" duration="10">
@@ -148,6 +161,7 @@ docker run -d -p 80:8080 --add-host=host.docker.internal:host-gateway \
   
   <!-- ic start -->
   <p>You could install and play with llama3:4b, llama3:8b, llama3:latest, and gpt-oss:20b.</p>
+  <!-- ic end -->
 </google-codelab-step>
 <google-codelab-step label="Set up GPU monitor" duration="3">
 <p>Monitoring the GPU usage as models are being run can be helpful in understanding the performance of the models. In order to do so, ssh into the VM and run a command to poll the NVIDIA card for its power usage, its GPU utilization, and its memory utilization. </p>
