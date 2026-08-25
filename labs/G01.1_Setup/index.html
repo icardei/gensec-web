@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html>
 <head>
@@ -25,7 +24,7 @@
 <aside class="warning"><p>Note: If you fail to do so and assign the coupon to your personal GMail account, you can still create a project using the billing account and then visit IAM settings in the project to assign your @fau.edu account the &#34;Owner&#34; role.</p>
 </aside>
 <h2 is-upgraded>Create Project</h2>
-<p>Click on the fau.edu organization from the console. </p>
+<p>Click on the fau.edu organization from the console (photos still show pdx instead). </p>
 <p class="image-container"><img style="width:532px" src="img/5e1390879aaad983.png"></p>
 <p>Then, click on &#34;New Project&#34;<br><img style="width:624px" src="img/336db947a8667e4f.png"></p>
 <p>Create a Google Cloud project with your <code>ProjectName</code> from above. You should be taken to your project&#39;s Home page. For your lab notebook, you will need to ensure that all of your screenshots for your Google Cloud labs include your <code>ProjectName</code>. </p>
@@ -262,7 +261,14 @@ sudo apt install google-chrome-stable -y</code></pre>
 <p>Claude is an AI assistant from Anthropic. It allows for free usage, but with limited features. Visit the site at: <a href="https://claude.ai/" target="_blank">https://claude.ai/</a> . Create an account using your school e-mail address. </p>
 </google-codelab-step>
 <google-codelab-step label="Google Generative AI API" duration="3">
-<p>We&#39;ll be using Google&#39;s Gemini Pro as one of our models as it can be run via the course coupon and does not require students to use a credit card. The model can be easily leveraged by programs running outside of Google Cloud. To do so, we&#39;ll first need to enable its API. Navigate to the web console at <a href="https://console.cloud.google.com/" target="_blank">https://console.cloud.google.com/</a>, then launch Cloud Shell.</p>
+
+  <!-- ic start -->
+<p>It is a good idea to save all API keys you create in the following to an encrypted Word document. 
+  API keys are shown in general only once they are created. If lost, a key may have to be re-created.
+</p>
+<!-- ic end -->
+
+  <p>We&#39;ll be using Google&#39;s Gemini Pro as one of our models as it can be run via the course coupon and does not require students to use a credit card. The model can be easily leveraged by programs running outside of Google Cloud. To do so, we&#39;ll first need to enable its API. Navigate to the web console at <a href="https://console.cloud.google.com/" target="_blank">https://console.cloud.google.com/</a>, then launch Cloud Shell.</p>
 <p class="image-container"><img style="width:454px" src="img/bf15fe816c24f23a.png"></p>
 <p>Run the following command to enable the API.</p>
 <pre><code>gcloud services enable generativelanguage.googleapis.com</code></pre>
@@ -335,7 +341,7 @@ export XAI_MODEL=&#34;grok-3&#34;</code></pre>
 <pre><code>export GITHUB_PERSONAL_ACCESS_TOKEN=&#34;&lt;FMI&gt;&#34;</code></pre>
 <p>Add this to your <code>.bashrc</code> file to automatically set the key when you login each time.</p>
 </google-codelab-step>
-<google-codelab-step label="Gitlab repository" duration="7">
+<google-codelab-step label="Github repository" duration="7">
 <aside class="special"><p>For the following steps, you will be using a <code>ProjectName</code> that is a combination of the undergraduate course number along with your last name and FAU ID. The format to follow is:<br> <code>gensec-</code>&lt;<code>LastName</code>&gt;<code>-</code>&lt;<code>FAU ID</code>&gt;<br>For example, a <code>ProjectName</code> would be:</p>
 <p><code> gensec-Feng-wuchang</code></p>
 </aside>
@@ -366,13 +372,14 @@ git push -u origin main</pre>
 </google-codelab-step>
 <google-codelab-step label="git" duration="2">
 <h2 is-upgraded><code>git </code>basics</h2>
-<p>Read the first 6 steps of the following <a href="https://product.hubspot.com/blog/git-and-github-tutorial-for-beginners" target="_blank">link</a>. Note that for this class, you will be substituting Gitlab for GitHub. You will need to become proficient with the following <code>git</code> commands for this course or use an IDE such as VSCode that can perform the operations for you.</p>
+<p>Read the first 6 steps of the following <a href="https://product.hubspot.com/blog/git-and-github-tutorial-for-beginners" target="_blank">link</a>. 
+  You will need to become proficient with the following <code>git</code> commands for this course or use an IDE such as VSCode that can perform the operations for you.</p>
 <ul>
-<li><code>git clone</code> : Fetch a copy of a remote repository</li>
-<li><code>git add</code> : Add a new file and/or directory to local repository</li>
-<li><code>git commit</code> : Commit changes to local repository</li>
-<li><code>git push</code> : Merge changes from local repository to a remote one. Implicitly assumes &#34;<code>origin</code>&#34; (place that you retrieved repo from) and &#34;<code>main</code>&#34; (branch)</li>
-<li><code>git pull</code> : Merge changes from remote repository to your local one. Implicitly assumes &#34;<code>origin</code>&#34; (place that you retrieved repo from) and &#34;<code>main</code>&#34; (branch)</li>
+<li><pre><code>git clone</code></pre> : Fetch a copy of a remote repository</li>
+<li><pre><code>git add</code></pre> : Add a new file and/or directory to local repository</li>
+<li><pre><code>git commit</code></pre> : Commit changes to local repository</li>
+<li><pre><code>git push</code></pre> : Merge changes from local repository to a remote one. Implicitly assumes &#34;<code>origin</code>&#34; (place that you retrieved repo from) and &#34;<code>main</code>&#34; (branch)</li>
+<li><pre><code>git pull</code></pre> : Merge changes from remote repository to your local one. Implicitly assumes &#34;<code>origin</code>&#34; (place that you retrieved repo from) and &#34;<code>main</code>&#34; (branch)</li>
 </ul>
 <aside class="special"><p>Looking for more? Learn more about Git and from their <a href="https://git-scm.com/docs" target="_blank">documentation</a> or this <a href="http://rogerdudler.github.io/git-guide/" target="_blank">site</a></p>
 </aside>
