@@ -1,0 +1,105 @@
+
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1,user-scalable=yes">
+<meta name="theme-color" content="#4F7DC9">
+<meta charset="UTF-8">
+<title>01.2: Ollama</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+<style>
+.success{color:#1e8e3e}.error{color:red} </style>
+</head>
+<body>
+<google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+<google-codelab codelab-gaid="" id="G01.2_Ollama" title="01.2: Ollama" environment="web" feedback-link="https://docs.google.com/document/d/1T3X5n8gBkBWOnBTPVbBhTp-zBU_jSynSo8a7w_pOe1w">
+<google-codelab-step label="Ollama" duration="3">
+<p class="image-container"><img style="width:113.11px" src="img/7f641e4b8953c1fd.png"> <img style="width:143.9px" src="img/7f73d00612870b2b.png"></p>
+<p>Ollama is a framework that makes it easy to run open-source large language models such as Mistral and Llama. Because we are running the model ourselves, it requires us to deploy a machine with a GPU attached. </p>
+<p>By default, GCP projects have quotas on resources that disable GPU usage. Visit the Google Cloud Platform console and then navigate to the IAM part of the platform &#34;Quotas and System Limits&#34; section of IAM. A direct link to it is <a href="https://console.cloud.google.com/iam-admin/quotas" target="_blank">here</a>. Filter on &#34;<code>gpus_all_regions</code>&#34; and edit the quota to request a change to &#34;1&#34;. It will ask you to submit a quota request. Follow the steps and you will receive an email. The email will say it will take up to 2 business days to process your request, but you should receive a follow up email within a few minutes. We&#39;ll be using an NVIDIA T4 GPU. Check that its quota is set to &#34;1&#34; by searching for &#34;<code>nvidia_t4_gpus</code>&#34;</p>
+<p class="image-container"><img style="width:624px" src="img/267aae222ec8977d.png"></p>
+</google-codelab-step>
+<google-codelab-step label="Launch VM" duration="5">
+<p>Visit the Google Cloud Platform console and bring up Cloud Shell. </p>
+<p class="image-container"><img style="width:454px" src="img/bf15fe816c24f23a.png"></p>
+<p>Create a firewall rule with a tag <code>ollama</code> that allows port 80 (for the web interface) and port 11434 (for the API interface) to the Ollama server.</p>
+<pre><code>gcloud compute firewall-rules create allow-ollama \
+  --allow=tcp:80,tcp:11434 --target-tags=ollama</code></pre>
+<p>Then, launch a Compute Engine VM with the command below. To reduce costs, we&#39;ll run Ollama on a pre-emptible Compute Engine VM. The command attaches an NVIDIA GPU and runs a Linux OS with CUDA support to the pre-emptible, spot instance. The instance is set to run for a maximum of 3 hours. While the VM is launching, find the hardware specifications of the NVIDIA GPU being used.</p>
+<pre><code>gcloud compute instances create ollama \
+  --machine-type=n1-standard-4 \
+  --accelerator=&#34;type=nvidia-tesla-t4,count=1&#34; \
+  --boot-disk-size=200GB \
+  --image-family=common-cu128-ubuntu-2204-nvidia-570 \
+  --image-project=deeplearning-platform-release \
+  --provisioning-model=SPOT --max-run-duration=3h \
+  --maintenance-policy=TERMINATE \
+  --instance-termination-action=STOP \
+  --tags=ollama --zone=us-west1-b   </code></pre>
+<ul>
+<li><strong>How much GPU memory does the accelerator have?</strong></li>
+</ul>
+<p>Make a note of this number as models that are utilized must fit into the GPU&#39;s memory. </p>
+</google-codelab-step>
+<google-codelab-step label="Install and run software" duration="10">
+<p>Click on <code>ssh</code> when the instance is ready. </p>
+<p class="image-container"><img style="width:624px" src="img/10ae11d2d4d9a48a.png"></p>
+<p>You&#39;ll be prompted to install the NVIDIA drivers. Type &#39;<code>Y</code>&#39; to do so.</p>
+<p>Run the following commands to add the signing keys to the NVIDIA container repository.</p>
+<pre><code>curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+ | sed &#39;s#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g&#39; \
+ | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+
+sudo apt update -y</code></pre>
+<p>Then, install the NVIDIA container toolkit and configure it to utilize <code>docker</code>.</p>
+<pre><code>sudo apt install nvidia-container-toolkit docker.io -y
+sudo nvidia-ctk runtime configure --runtime=docker
+sudo systemctl restart docker</code></pre>
+<p>Then, add yourself to the <code>docker</code> group so that you&#39;re able to run the <code>docker</code> commands without <code>sudo</code>.</p>
+<pre><code>sudo usermod -a -G docker $(whoami)</code></pre>
+<p>Finally, run both the Ollama API server on its default port 11434 and the Ollama web interface on port 80. If these commands fail, try adding <code>sudo</code> to the beginning of each.</p>
+<pre><code>docker run -d --gpus=all -v ollama:/root/.ollama \
+  -p 11434:11434 --name ollama --restart always ollama/ollama
+
+docker run -d -p 80:8080 --add-host=host.docker.internal:host-gateway \
+ -v ollama-webui:/app/backend/data --name ollama-webui \
+ --restart always ghcr.io/ollama-webui/ollama-webui:main</code></pre>
+</google-codelab-step>
+<google-codelab-step label="Setup account" duration="5">
+<p>Go back to Compute Engine and visit the Ollama web interface (e.g. http://35.230.93.16 below)</p>
+<p class="image-container"><img style="width:624px" src="img/10ae11d2d4d9a48a.png"></p>
+<p>Sign up for a new account using the web interface to create the initial administrator account.</p>
+<p class="image-container"><img style="width:412.5px" src="img/877fb3e6ed22a22d.png"></p>
+</google-codelab-step>
+<google-codelab-step label="Install models" duration="10">
+<p>Initially, no models are installed. To install models, click the &#34;Settings&#34; icon where you are asked to select a model for a chat.</p>
+<p class="image-container"><img style="width:519px" src="img/ef874527490896e7.png"></p>
+<p>Then, visit the &#34;Models&#34; section which provides an interface to pull models available from <a href="https://ollama.com" target="_blank">ollama.com</a>.</p>
+<p class="image-container"><img style="width:624px" src="img/7f747ac0f8168bc7.png"></p>
+<p>Entering in the name of the model, then clicking the green download button will download, verify and install the model for use in the web interface. Visit the <a href="https://ollama.com/library" target="_blank">Ollama library</a> to find the names of additional models you&#39;d like to experiment with for the class and download each of them. A variety of LLM benchmarks have been performed on various models. One can visit one LLM leaderboard here: <a href="https://lmarena.ai/leaderboard" target="_blank">https://lmarena.ai/leaderboard</a> . When selecting models, ensure that they fit within the GPU memory of the accelerator. Download and install a Llama model along with any others you wish to experiment with for the course.</p>
+</google-codelab-step>
+<google-codelab-step label="Set up GPU monitor" duration="3">
+<p>Monitoring the GPU usage as models are being run can be helpful in understanding the performance of the models. In order to do so, ssh into the VM and run a command to poll the NVIDIA card for its power usage, its GPU utilization, and its memory utilization. </p>
+<pre><code>gcloud compute ssh ollama
+# In your SSH shell
+watch -n 0.5 nvidia-smi</code></pre>
+<p>The screenshot below shows all three metrics on an Ollama server with 2 models actively being used to generate responses for a user. Ollama actively loads and unloads models from memory based on whether or not they are being used by the user at any time.</p>
+<p class="image-container"><img style="width:624px" src="img/49a69dc8b474f481.png"></p>
+</google-codelab-step>
+<google-codelab-step label="Test models" duration="10">
+<p>Keeping the GPU monitor up, for each model you&#39;ve installed, select it in a new chat, and send it a prompt to ensure the model is functional. See the model being loaded in the monitor before the query is then processed. Note that this takes some time to load when first used so patience is necessary!</p>
+<p class="image-container"><img style="width:624px" src="img/66303576d1d8b1be.png"></p>
+<ul>
+<li><strong>Take a screenshot of the results that includes your OdinID</strong></li>
+</ul>
+</google-codelab-step>
+</google-codelab>
+<script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+<script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+<script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+<script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+<script src="https://support.google.com/inapp/api.js"></script>
+</body>
+</html>
