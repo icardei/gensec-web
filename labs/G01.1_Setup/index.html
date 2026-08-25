@@ -16,16 +16,16 @@
 <google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
 <google-codelab codelab-gaid="" id="G01.1_Setup" title="01.1: Setup" environment="web" feedback-link="https://docs.google.com/document/d/1KzRmack14X8G7ZFT5o_QGqr9hY894Y0MoM7wG9Gtor4">
 <google-codelab-step label="Google Cloud account" duration="3">
-<aside class="special"><p>For the following steps, you will be using a <code>ProjectName</code> that is a combination of the undergraduate course number along with your last name and OdinID. The format to follow is:<br> <code>gensec-</code>&lt;<code>LastName</code>&gt;<code>-</code>&lt;<code>OdinID</code>&gt;<br>For example, my <code>ProjectName</code> would be:</p>
+<aside class="special"><p>For the following steps, you will be using a <code>ProjectName</code> that is a combination of the undergraduate course number along with your last name and FAU ID. The format to follow is:<br> <code>gensec-</code>&lt;<code>LastName</code>&gt;<code>-</code>&lt;<code>FAU ID</code>&gt;<br>For example, my <code>ProjectName</code> would be:</p>
 <p><code> gensec-Feng-wuchang</code></p>
 </aside>
 <h2 is-upgraded>Incognito mode</h2>
 <p>To avoid applying the coupon you receive to the incorrect account, ensure that these steps are done in an &#34;Incognito&#34; or &#34;Private Browsing&#34; browser window to set up your account.<br><img style="width:370px" src="img/335ca8dd26816ef4.png"></p>
-<p>Then, visit <a href="https://console.cloud.google.com" target="_blank">https://console.cloud.google.com</a> and login using your pdx.edu account to enable GCP. If you haven&#39;t used GCP yet and do not mind temporarily putting your credit card on the account, apply for the $300 coupon and use it to create a new billing account. Otherwise, visit the coupon redemption URL on the Canvas home page for the course (<a href="https://canvas.pdx.edu" target="_blank">https://canvas.pdx.edu</a>).</p>
-<aside class="warning"><p>Note: If you fail to do so and assign the coupon to your personal GMail account, you can still create a project using the billing account and then visit IAM settings in the project to assign your @pdx.edu account the &#34;Owner&#34; role.</p>
+<p>Then, visit <a href="https://console.cloud.google.com" target="_blank">https://console.cloud.google.com</a> and login using your fau.edu account to enable GCP. If you haven&#39;t used GCP yet and do not mind temporarily putting your credit card on the account, apply for the $300 coupon and use it to create a new billing account. Otherwise, visit the coupon redemption URL on the Canvas home page for the course (<a href="https://canvas.fau.edu" target="_blank">https://canvas.fau.edu</a>).</p>
+<aside class="warning"><p>Note: If you fail to do so and assign the coupon to your personal GMail account, you can still create a project using the billing account and then visit IAM settings in the project to assign your @fau.edu account the &#34;Owner&#34; role.</p>
 </aside>
 <h2 is-upgraded>Create Project</h2>
-<p>Click on the pdx.edu organization from the console. </p>
+<p>Click on the fau.edu organization from the console. </p>
 <p class="image-container"><img style="width:532px" src="img/5e1390879aaad983.png"></p>
 <p>Then, click on &#34;New Project&#34;<br><img style="width:624px" src="img/336db947a8667e4f.png"></p>
 <p>Create a Google Cloud project with your <code>ProjectName</code> from above. You should be taken to your project&#39;s Home page. For your lab notebook, you will need to ensure that all of your screenshots for your Google Cloud labs include your <code>ProjectName</code>. </p>
@@ -33,25 +33,191 @@
 <p class="image-container"><img style="width:624px" src="img/3749eacfbfc34fab.png"></p>
 </google-codelab-step>
 <google-codelab-step label="Kali VM Setup on Google Cloud" duration="10">
-<p>The exercises require the use of a Kali Linux VM. We can set one up in the cloud for this purpose. Log into your Google Cloud Platform account and from the web console, launch Cloud Shell. </p>
+<p>The exercises require the use of a Kali Linux VM. We can set one up in the cloud for this purpose. 
+  Log into your Google Cloud Platform account and from the web console, launch Cloud Shell. </p>
 <p class="image-container"><img style="width:454px" src="img/bf15fe816c24f23a.png"></p>
-<p>If they do not exist already, create two firewall rules to allow HTTP and HTTPS traffic.</p>
-<pre><code>gcloud compute firewall-rules create default-allow-http \
+
+<!-- ic start -->
+<p>We first must create a Virtual Private Cloud (VPC) network for VMs and services to work. 
+  It is analogous to a physical organization-wide network implemented in Google’s software-defined infrastructure, 
+  but it is intended to connect virtual machines.
+A VPC provides these capabilities:
+<ol>
+<li>Isolation and Security</li>
+<li>Internal Communication</li>
+<li>Traffic Routing & Subnets</li>
+</ol>
+Create a new VPC named “default” with gcloud:
+<pre><code>
+gcloud compute networks create default --subnet-mode=auto  
+</code>
+
+</p>
+<!-- ic end -->
+
+<p>If they do not exist already, create these firewall rules to allow HTTP, HTTPS, RDP, and SSH traffic.
+<pre><code>
+gcloud compute firewall-rules create default-allow-http \
   --allow=tcp:80 --target-tags=http-server
 
 gcloud compute firewall-rules create default-allow-https \
-  --allow=tcp:443 --target-tags=https-server</code></pre>
+  --allow=tcp:443 --target-tags=https-server
+
+gcloud compute firewall-rules create default-allow-ssh   \
+  --allow=tcp:22 --target-tags=ssh-server
+
+gcloud compute firewall-rules create allow-rdp \
+  --allow=tcp:3389 --target-tags=rdp-server
+
+gcloud compute firewall-rules create allow-rdp-udp \
+  --allow=udp:3389 --target-tags=rdp-server
+</code></pre>
+
+<p>
+  To see a clean summary of every firewall rule in your active project 
+  (including priority, direction, action, and targets), run this command at any time:
+  <pre><code>
+    gcloud compute firewall-rules list
+  </code></pre> 
+</p>
+
+<!-- ic start
 <p>Then, run the command below to find the most recent version of the Kali VM image on the course&#39;s GCP project.</p>
 <pre><code>gcloud compute images list \
-  --project pdx-cs --no-standard-images</code></pre>
-<p>Make a note of the name of the Kali VM image, then fill in the <code>gcloud</code> command below and launch a VM using the image. Attach the tags that will allow incoming HTTP and HTTPS traffic to the VM (needed for <code>metasploit</code> exercises)</p>
+  --project fau-cs --no-standard-images</code></pre>
+<p>Make a note of the name of the Kali VM image, then fill in the <code>gcloud</code> command below and launch 
+  a VM using the image. -->
+  
+<p>
+  The next step is to create a Debian Linux VM instance with some of the Kali tools installed. 
+
+Run this command to CREATE a VM instance named <code>kali-vm</code> from the current 
+base Debian 13 image, with 50 GB boot disk:
+<pre><code>  
+  gcloud compute instances create kali-vm \
+    --machine-type e2-medium \
+    --zone us-west1-b \
+    --image-family=debian-13 \
+    --image-project=debian-cloud \
+    --boot-disk-size=50GB
+</code></pre>
+</p>
+
+<p>
+  Add tags to the Kali VM to activate the firewall rules:
+  <pre><code>
+  gcloud compute instances add-tags kali-vm \
+    --tags=http-server,https-server,ssh-server,rdp-server
+  </code></pre>
+</p>
+
+<p>
+Attach the tags that will allow incoming HTTP, HTTPS, SSH and RDP traffic to the VM through the firewall
+(HTTPS is needed for <code>metasploit</code> exercises)
+
+<!-- ic 
 <pre><code>gcloud compute instances create kali-vm \
   --machine-type e2-medium --zone us-west1-b \
-  --image-project pdx-cs \
+  --image-project fau-cs \
   --image kali-rolling-latest
+-->
+  <!-- ic start -->
+<pre><code>
+gcloud compute instances add-tags kali-vm \
+       --tags=http-server,https-server,ssh-server,rdp-server
+</code></pre>       
+</p>
 
-gcloud compute instances add-tags kali-vm --tags=http-server,https-server</code></pre>
-<p>Keep track of both the external and internal IP address of each instance. We will be using the internal IP address for the attacks, but will need to connect via the external IP addresses initially.</p>
+<p>
+  Run this command to start the Kali VM:
+  <pre><code> 
+gcloud compute instances start kali-vm --zone=us-west1-b
+  </code></pre>
+</p>
+
+
+<p>
+Now connect with ssh to the Kali VM:
+  <pre><code> 
+gcloud compute ssh kali-vm-orig --zone=us-west1-b
+  </code></pre>
+</p>
+
+
+<p>
+Enter the following commands on the kali-vm using the ssh client.
+  Install the Kali tools on kali-vm. First, update the Debian installation:
+<pre><code> 
+sudo apt update
+sudo apt full-upgrade -y
+</code></pre>
+</p>
+
+<p>
+Install prerequisite packages:
+<pre><code> 
+sudo apt install -y curl wget gnupg ca-certificates
+</code></pre>
+</p>
+
+<p>
+  Download and install the Kali archive signing key:
+<pre><code> 
+curl -fsSL https://archive.kali.org/archive-key.asc \
+    | sudo gpg --dearmor -o /usr/share/keyrings/kali-archive-keyring.gpg
+</code></pre>
+</p>
+
+<p>
+Create the Kali repository:
+  <pre><code>
+cat <<'EOF' | sudo tee /etc/apt/sources.list.d/kali.list
+deb [signed-by=/usr/share/keyrings/kali-archive-keyring.gpg] \
+http://http.kali.org/kali kali-last-snapshot main contrib non-free non-free-firmware
+EOF
+</code></pre>
+</p>
+
+
+
+<p>
+Update the revised Debian package list:
+<pre><code> 
+sudo apt update
+</code></pre>
+</p>
+
+
+<p>Install only the tools we need for the moment:
+<pre><code> 
+sudo apt install -y nmap metasploit-framework wireshark burpsuite john aircrack-ng
+</code></pre>
+</p>
+
+
+<!--
+<p>
+<pre><code> 
+</code></pre>
+</p>
+-->
+
+
+
+
+
+<p>
+<pre><code> 
+</code></pre>
+</p>
+
+
+
+<!-- ic end -->
+
+<p>Keep track of both the external and internal IP address of each instance. 
+  We will be using the internal IP address for the attacks, but will need to 
+  connect via the external IP addresses initially.</p>
 <ul>
 <li><code>kali_external_IP, kali_internal_IP</code></li>
 </ul>
@@ -160,7 +326,7 @@ export XAI_MODEL=&#34;grok-3&#34;</code></pre>
 <p>Add this to your <code>.bashrc</code> file to automatically set the key when you login each time.</p>
 </google-codelab-step>
 <google-codelab-step label="PortSwigger account" duration="5">
-<p>Visit <a href="https://portswigger.net/web-security" target="_blank">https://portswigger.net/web-security</a> and sign-up for an account using your pdx.edu e-mail address:</p>
+<p>Visit <a href="https://portswigger.net/web-security" target="_blank">https://portswigger.net/web-security</a> and sign-up for an account using your fau.edu e-mail address:</p>
 <p class="image-container"><img style="width:568px" src="img/908ecbae42325faf.png"></p>
 </google-codelab-step>
 <google-codelab-step label="SerpApi" duration="5">
@@ -192,18 +358,18 @@ export XAI_MODEL=&#34;grok-3&#34;</code></pre>
 <p>Add this to your <code>.bashrc</code> file to automatically set the key when you login each time.</p>
 </google-codelab-step>
 <google-codelab-step label="Gitlab repository" duration="7">
-<aside class="special"><p>For the following steps, you will be using a <code>ProjectName</code> that is a combination of the undergraduate course number along with your last name and OdinID. The format to follow is:<br> <code>gensec-</code>&lt;<code>LastName</code>&gt;<code>-</code>&lt;<code>OdinID</code>&gt;<br>For example, my <code>ProjectName</code> would be:</p>
+<aside class="special"><p>For the following steps, you will be using a <code>ProjectName</code> that is a combination of the undergraduate course number along with your last name and FAU ID. The format to follow is:<br> <code>gensec-</code>&lt;<code>LastName</code>&gt;<code>-</code>&lt;<code>FAU ID</code>&gt;<br>For example, a <code>ProjectName</code> would be:</p>
 <p><code> gensec-Feng-wuchang</code></p>
 </aside>
 <h2 is-upgraded>Setup account</h2>
 <ul>
-<li>Visit the MCECS Gitlab <a href="https://gitlab.cecs.pdx.edu/users/sign_in" target="_blank">site</a> and create a private GitLab repo with the <code>ProjectName</code> above. You will be using this repo for the rest of the term. This repo exists on the CECS intranet, and uses your CECS credentials for authentication.</li>
-<li>Using the instructor and TA&#39;s OdinIDs from the course web page, grant them <code>Developer</code> access to your repo. This will allow us to view your repo and provide feedback.</li>
+<li>Visit Github <a href="https://github.com" target="_blank">site</a> and create a new repo with the <code>ProjectName</code> above. You will be using this repo for the rest of the term.</li>
+<li>Using the instructor and TAs' email addresses from the Canvas course web page, grant them read access to your repo. This will allow us to view your repo and provide feedback.</li>
 <li>Create an initial blank submission for the first lab.</li>
 </ul>
-<pre><code>mkdir notebooks
-touch notebooks/Labs1.pdf
-git add notebooks
+<pre><code>mkdir homeworks
+mkdir homeworks/{Homework1,Homework2,Homework3,Homework4,Homework5,Homework6,Homework7,Homework8}
+git add homeworks
 git commit -m &#34;initial commit&#34;
 git push</code></pre>
 <ul>
