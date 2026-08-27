@@ -1,0 +1,111 @@
+
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1,user-scalable=yes">
+<meta name="theme-color" content="#4F7DC9">
+<meta charset="UTF-8">
+<title>01.3: Programmatic Model Access</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+<style>
+.success{color:#1e8e3e}.error{color:red} </style>
+</head>
+<body>
+<google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+<google-codelab codelab-gaid="" id="G01.3_ProgramModel" title="01.3: Programmatic Model Access" environment="web" feedback-link="https://docs.google.com/document/d/1VOhWFF_5SbSy7UymSeNbP76tAq9zOizCout0cm6okZg">
+<google-codelab-step label="Models via APIs" duration="3">
+<p>Bring up an <code>ssh</code> session on your Linux VM. Clone the course repository, create a 
+    Python virtual environment, activate it, and then install the packages for utilizing 
+    <code>langchain</code> with the different provider models. LangChain is a Python 
+    framework that enables developers to easily build applications across a range of language models.</p>
+
+<!-- ic <pre>git clone https://github.com/wu4f/cs475-src
+cd cs475-src/01*
+uv init --bare
+uv add -r requirements.txt</pre>
+-->
+
+<pre>git clone https://github.com/icardei/gensec-code.git
+cd gensec-code/01*
+uv init --bare
+uv add -r requirements.txt</pre>
+
+<p>Consider the program below that instantiates a model from a number of provider&#39;s, then calls the uniform <code>invoke()</code> method with a prompt to generate a completion. The <code>invoke()</code> call blocks until the entire response is generated before returning the result.</p>
+<pre><code>from langchain_google_genai import ChatGoogleGenerativeAI
+llm = ChatGoogleGenerativeAI(model=&#34;...&#34;)
+response = llm.invoke(&#34;Write me a haiku about Portland State University&#34;)
+print(response)
+
+from langchain_openai import ChatOpenAI
+llm = ChatOpenAI(model=&#34;...&#34;)
+response = llm.invoke(&#34;Write me a haiku about Portland State University&#34;)
+print(response)
+
+from langchain_anthropic import ChatAnthropic
+llm = ChatAnthropic(model=&#34;...&#34;)
+response = llm.invoke(&#34;Write me a haiku about Portland State University&#34;)
+print(response)</code></pre>
+<p>Ensure that all of the environment variables specifying API keys for each model provider has been set. Then, run the program and view the results each model returns.</p>
+<pre>uv run 01_models.py</pre>
+<ul>
+<li><strong>Take a screenshot of the results for one of the prompts that includes your FAU ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Ollama" duration="4">
+<p>We can programmatically access our Ollama models from Python as well. If it is not still running, bring up your Ollama server for your project. Then, within the Compute Engine interface make a note of its external IP address (e.g. 35.230.93.16 below)</p>
+<p class="image-container"><img style="width:624px" src="img/10ae11d2d4d9a48a.png"></p>
+<p>Consider the snippet below. It instantiates an Ollama model based on the name of a model that has been installed on the Ollama server (e.g. <code>llama3</code>) as well as the location of the API endpoint of the Ollama server as specified by the IP address in the <code>base_url</code> parameter.</p>
+<pre><code>from langchain_community.llms import Ollama
+llm = Ollama( model=&#34;llama3&#34;, base_url=&#34;http://35.230.93.16:11434&#34; )</code></pre>
+<p>With the model instantiated, instead of using a model&#39;s <code>invoke()</code> method as before, we can instead utilize its <code>stream()</code> method instead. This method returns results to the program as it is generated. As longer responses are produced, the model will pass back partial results in a generator that is iteratively output in the <code>for</code> loop. </p>
+<pre><code>for chunks in llm.stream(&#34;Write me a short story about a rabbit&#34;):
+    print(chunks,end=&#34;&#34;)</code></pre>
+<p>For this program, we wrap the execution of the model with a simple interactive shell that accepts input in a loop and sends it to the language model. The shell exits when a blank line is given.</p>
+<pre><code>while True:
+    line = input(&#34;llm&gt;&gt; &#34;)
+    if line:
+        for chunks in llm.stream(line):
+            print(chunks,end=&#34;&#34;)
+        print(&#34;&#34;)
+    else:
+        break</code></pre>
+<p>On your Linux VM, run the program below that implements a simple interactive shell for querying your Ollama server, supplying the IP address of your Ollama server and the model on the server you want to query as arguments. Test out the functionality of the models you&#39;ve installed.</p>
+<pre>uv run 02_ollama.py &lt;OllamaIPAddress&gt; &lt;OllamaModel&gt;</pre>
+<ul>
+<li><strong>Take a screenshot of the results for one of the prompts that includes your FAU ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Model laboratory" duration="4">
+<p>One of the benefits of LangChain is that it provides a unified interface for integrating models into an application. This allows one to plug-and-play different models and compare their behavior and performance for your application. One useful module in LangChain for doing so is the Model Laboratory. With this, one can instantiate a range of models and automatically run a given prompt across all of them, allowing one to analyze the results of each model. The snippet below shows an example using models pulled from HuggingFace, OpenAI, and Google. </p>
+<pre><code>from langchain.model_laboratory import ModelLaboratory
+from langchain_community.llms import HuggingFaceHub, HuggingFaceEndpoint, Ollama
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
+
+llms = [
+#    To instantiate an Ollama level
+#    Ollama( model=&#34;llama2&#34;, base_url=&#34;http://w.x.y.z:11434&#34;),
+    ChatGoogleGenerativeAI(model=&#34;...&#34;),
+    ChatOpenAI(model=&#39;...&#39;),
+    ChatAnthropic(model=&#34;...&#34;),
+]
+model_lab = ModelLaboratory.from_llms(llms)
+
+model_lab.compare(&#34;Who is the president of the United States?&#34;)</code></pre>
+<p>Examine the program provided in the repository that iteratively queries a set of LLMs with your prompts. Edit the file to only include the ones you want to compare including your Ollama one, then run the program and examine how the models compare across a variety of prompts.</p>
+<pre>uv run 03_multi.py</pre>
+<ul>
+<li><strong>Take a screenshot of the results for one of the prompts that includes your FAU ID</strong></li>
+</ul>
+</google-codelab-step>
+</google-codelab>
+<script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+<script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+<script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+<script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+<script src="https://support.google.com/inapp/api.js"></script>
+</body>
+</html>
