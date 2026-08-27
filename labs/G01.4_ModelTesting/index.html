@@ -1,0 +1,178 @@
+
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1,user-scalable=yes">
+<meta name="theme-color" content="#4F7DC9">
+<meta charset="UTF-8">
+<title>01.4: Model Testing</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+<style>
+.success{color:#1e8e3e}.error{color:red} </style>
+</head>
+<body>
+<google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+<google-codelab codelab-gaid="" id="G01.4_ModelTesting" title="01.4: Model Testing" environment="web" feedback-link="https://docs.google.com/document/d/1MaREIGTr20bkmnvyKusbDtWeLEGY346MnZImHPgaxA4">
+<google-codelab-step label="Model introspection" duration="3">
+<p>You now have access to a variety of LLMs via front-end web interfaces as well as via Python programs. In this lab, you will select two different LLMs and compare them across a variety of tasks. The goal is to test the capabilities and limitations of each model to get a better understanding of what they can be reliably used for.</p>
+<p>One of the first things to do when utilizing various LLMs is to understand how they were designed, how they were built, and what their capabilities are. To begin with, prompt an LLM for a series of questions that you can ask it to reveal the following characteristics.</p>
+<ul>
+<li>The amount of data it has been trained on</li>
+<li>The types of data it has been trained on</li>
+<li>The time-range of the data it has been trained on</li>
+<li>The number of parameters in its model</li>
+<li>The instructions it has been given</li>
+<li>The tools it has access to, including its ability to retrieve real-time information and the sources it is allowed to access</li>
+</ul>
+<p>Then, prompt each LLM for the above information about itself. </p>
+<ul>
+<li><strong>Include a table that shows the answers returned for each LLM for each characteristic for your lab notebook.</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Retrieval capabilities" duration="3">
+<p>LLM services are programmed to retrieve real-time information in order to generate an accurate response via retrieval-augmented generation. In this exercise, attempt to find the limits and characteristics of the retrieval capabilities for each LLM. </p>
+<ul>
+<li><em>Obscure information</em>: Can the service access &#39;needles&#39; in an information haystack (e.g. information in a particular page of the PSU academic bulletin)</li>
+<li><em>Private information</em>: Can the service access personal information (e.g. Google Drive documents from Gemini)</li>
+<li><em>Real-time information</em>: Can the service access information from real-time data sources (e.g. scores from on-going sports events, instructor for CS 161 this quarter, weather today)</li>
+<li><em>Diverse information</em>: Can the service synthesize data from a multitude of sources in producing a response (e.g. comparing manufacturer-published data on particular products such as cars, beverages, breakfast cereals, etc.)</li>
+<li><em>Biased information</em>: Does the service access information that answers based on biased sources (e.g. the bias ratings according to <a href="https://www.allsides.com/media-bias/media-bias-chart" target="_blank">AllSides</a> of the information sources used to summarize a recent controversial government action)</li>
+</ul>
+<p>Ask a series of questions to find out how well each model is able to incorporate each class of information described.</p>
+<ul>
+<li><strong>Include a table that shows the answers returned for each LLM for the prompt used in each category for your lab notebook.</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Generation" duration="3">
+<h2 is-upgraded>Text generation</h2>
+<p>LLMs are known for their ability to generate both text and code across a variety of languages. In this exercise, prompt each LLM for a text generation task that it excels at. Then, run each prompt on both LLMs</p>
+<ul>
+<li><strong>Describe and show qualitative differences between the models for each prompt</strong></li>
+</ul>
+<h2 is-upgraded><strong>Image generation</strong></h2>
+<p>Multi-modal models can generate content in arbitrary audio and visual formats. In this exercise, prompt each LLM for a meme about LLMs.</p>
+<ul>
+<li><strong>Take a screenshot including your FAU ID of the results for your lab notebook</strong></li>
+</ul>
+<h2 is-upgraded><strong>Content guardrails</strong></h2>
+<p>Models have guardrails that prevent it from generating inappropriate content. Find examples of guardrails that have been put in place by models to suppress generation of such content. Examples might include producing an e-mail soliciting its recipient to download and install a cryptocurrency trading application or generating a program for performing brute-force credential stuffing attacks.</p>
+<ul>
+<li><strong>For each LLM, take a screenshot including your FAU ID of the results of guardrails being applied to suppress output for your lab notebook</strong></li>
+</ul>
+<p>For each LLM, adapt the prompt to bypass the guardrail.</p>
+<ul>
+<li><strong>For each LLM, take a screenshot including your FAU ID of the results of the most effective bypass for each LLM for your lab notebook</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Summarization" duration="3">
+<p>LLMs are able to digest large amounts of information and generate summaries of it. In this exercise, we will test the ability of an LLM to summarize content in a variety of input formats and in a variety of target lengths and reading levels. </p>
+<h2 is-upgraded><strong>Text summarization</strong></h2>
+<p>In this exercise, identify a large recent Congressional bill (<a href="https://www.congress.gov/most-viewed-bills" target="_blank">https://www.congress.gov/most-viewed-bills</a>). Each bill contains a short summary as well as its full-length text. Ask each LLM to summarize the full-length text as a one-paragraph summary written for middle-school students:</p>
+<ul>
+<li><strong>Show the output and describe any differences between them</strong></li>
+</ul>
+<p>Next, ask an LLM to summarize the full-length text as a one-page summary written for politicians to both justify or criticize the bill.</p>
+<ul>
+<li><strong>Show the output and describe the differences between them</strong></li>
+</ul>
+<h2 is-upgraded>Image summarization</h2>
+<p>LLMs can include image and vision models for reasoning about and producing images. Perform an image search for the internal architecture of the transformer neural network that is the basis for modern LLMs. Ask each LLM to summarize the contents of the image.</p>
+<ul>
+<li><strong>Compare the outputs produced</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Information extraction" duration="3">
+<p>LLMs can extract information from a large amount of input text. Such extraction forms the basis of &#34;<a href="https://blog.langchain.dev/multi-needle-in-a-haystack/" target="_blank">needle in the haystack</a>&#34; challenges where needles of information are placed in a haystack of information that the LLM is then asked to produce. In this exercise, prompt an LLM or search for a needle-in-the-haystack problem challenge. The challenge can range from textual input, codebases, structured datasets, or multimedia content. Run the challenge for each LLM</p>
+<ul>
+<li><strong>Show the results and describe the differences between them</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Classification" duration="3">
+<p>LLMs have the ability to perform classification of text. In this exercise, have one LLM generate two versions of the same password checking program: one that is securely and safely implemented and one that contains a subtle memory or side-channel vulnerability. Use the other LLM to classify each program as safe or vulnerable:</p>
+<ul>
+<li><strong>Show the results of the classification</strong></li>
+</ul>
+<p>Another useful classification is whether code is innocuous or malicious. Have an LLM generate two versions of a Python web scraper program: one that is innocuous and scrapes the links of a given URL and one that does the same, but adds one additional request to Pastebin that sends information about the machine in a cookie. Use the other LLM to classify each program as innocuous or malicious:</p>
+<ul>
+<li><strong>Show the results of the classification</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<p>One technique for helping an LLM generate output that you desire is to give it examples of what you&#39;re looking for. Without any examples (e.g. zero-shot), the model has the inability to learn what you&#39;re looking for within the prompt itself. By giving examples in the prompt (e.g. few-shot), the model is given the opportunity to learn the task and generate the result that you&#39;re looking for. We can apply this to our prior classification task.</p>
+<h3 is-upgraded>Zero-shot prompting</h3>
+<p>Consider the following prompt attempting to classify an email subject line.</p>
+<pre>Classify the email subject text below, delimited by three dashes (-),
+as being malicious or benign. Explain why.
+
+---
+Account email verification code, enter now and reply
+---</pre>
+<ul>
+<li><strong>Examine the performance of an LLM on this task</strong></li>
+</ul>
+<h3 is-upgraded>Few-shot prompting</h3>
+<p>It often helps LLMs if the prompt includes some examples that it can use to understand the task better as well as generate better results. Consider the following prompt that does a similar task, but with a few examples included. </p>
+<pre>Classify the email subject text below, delimited by triple backticks (&#39;&#39;&#39;),
+as being malicious or benign. Explain why.
+
+Examples:
+
+Subject: CY23 Email Verification Now
+Label: malicious
+
+Subject: Enter Market Email Verification Code Today
+Label: malicious
+
+Subject: New Account Email Verification Code Verify now
+Label: malicious
+
+Subject: Submit your code review today
+Label: benign
+
+Subject: &#39;&#39;&#39;Account email verification code, enter now and reply&#39;&#39;&#39;
+Label:</pre>
+<ul>
+<li><strong>Examine the improved effectiveness (if any) of the LLM compared to the zero-shot example</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Reasoning" duration="3">
+<p>A common task one might ask an LLM to perform is a reasoning one. For such tasks, it is often helpful for the model (as with humans) to break down the task into smaller parts. In this exercise, we&#39;ll examine how step-by-step and chain-of-thought reasoning may help an LLM accomplish a particular task.</p>
+<h3 is-upgraded>Step-by-step prompting</h3>
+<p>Prompting an LLM to think step-by-step or providing few-shot examples of step-by-step reasoning can improve the utility of its responses. In this section, we&#39;ll examine multiple prompts that allow us to determine whether a particular LLM is sensitive to the approach. Consider the following two prompts:</p>
+<pre>How do I get to Peru from Portland?</pre>
+<pre>How do I get to Peru from Portland step-by-step?</pre>
+<ul>
+<li><strong>Show how the output differs when given to an LLM</strong></li>
+</ul>
+<h3 is-upgraded>Zero-shot Chain-of-thought prompting</h3>
+<p>More complex reasoning tasks can be made more accurate by this approach. Consider the following two prompts:</p>
+<pre>A juggler can juggle 16 balls.  Half of the balls are golf balls and half of the golf balls are blue.  How many blue golf balls are there?</pre>
+<pre>A juggler can juggle 16 balls.  Half of the balls are golf balls and half of the golf balls are blue. How many blue golf balls are there?  Let&#39;s think step by step</pre>
+<ul>
+<li><strong>Show the effectiveness of the different prompt strategies on the output of an LLM </strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<h3 is-upgraded>Types of reasoning</h3>
+<p>Prompting an LLM to perform a reasoning task allows us to evaluate its suitability for doing complex tasks. To compare the performance of models on reasoning tasks, several benchmarks have been developed. Prompt an LLM for a challenging benchmark task from each of the types of tasks below. Have the LLM identify the benchmark the task is from and the solution to the task.</p>
+<ul>
+<li>Deductive reasoning </li>
+<li>Inductive reasoning </li>
+<li>Mathematical reasoning</li>
+<li>Reasoning by analogy</li>
+</ul>
+<p>Ask each LLM to solve each task.</p>
+<ul>
+<li><strong>Show the results from each LLM and compare the accuracy of each in solving each task.</strong></li>
+</ul>
+</google-codelab-step>
+</google-codelab>
+<script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+<script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+<script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+<script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+<script src="https://support.google.com/inapp/api.js"></script>
+</body>
+</html>
