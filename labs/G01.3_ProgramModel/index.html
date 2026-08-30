@@ -32,7 +32,19 @@ cd gensec-code/01*
 uv init --bare
 uv add -r requirements.txt</pre>
 
-<p>Consider the program below that instantiates a model from a number of provider&#39;s, then calls the uniform <code>invoke()</code> method with a prompt to generate a completion. The <code>invoke()</code> call blocks until the entire response is generated before returning the result.</p>
+<p>Consider the program below that instantiates a model from a number of provider&#39;s, 
+    then calls the uniform <code>invoke()</code> method with a prompt to generate a completion. 
+    The <code>invoke()</code> call blocks until the entire response is generated before 
+    returning the result.</p>
+
+<!-- ic start -->
+<p>
+Comment out the code for the models you do not want to test.
+The labs code will use mostly Gemini, but the code is fully compatible with the other LLM
+providers.  
+</p> 
+<!-- ic end -->
+ 
 <pre><code>from langchain_google_genai import ChatGoogleGenerativeAI
 llm = ChatGoogleGenerativeAI(model=&#34;...&#34;)
 response = llm.invoke(&#34;Write me a haiku about Portland State University&#34;)
