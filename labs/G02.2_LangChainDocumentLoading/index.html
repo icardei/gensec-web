@@ -26,7 +26,7 @@
 <p>In this lab, we&#39;ll be experimenting with a variety of document loaders and transformations within LangChain that are used to build such document querying applications. This forms the foundation of a retrieval-augmented generation application in the following lab.</p>
 <h2 is-upgraded><strong>Setup</strong></h2>
 <p>To begin with, change into the source directory containing the examples, create a virtual environment, activate it, and install the packages.</p>
-<pre>cd cs475-src/02*/07_RAG
+<pre>cd gensec-class/02_LangChain/07_RAG
 git pull
 uv init --bare
 uv add -r requirements.txt</pre>
@@ -37,7 +37,7 @@ uv add -r requirements.txt</pre>
 <p>To begin with, visit the following URL for the department and find the text that gives statistics for job placement and average salary. <a href="https://www.pdx.edu/academics/programs/undergraduate/computer-science" target="_blank">https://www.pdx.edu/academics/programs/undergraduate/computer-science</a> </p>
 <p>Then, right click on the page and attempt to find the text in the page&#39;s source. </p>
 <ul>
-<li><strong>Take a screenshot of the text within the page source that includes your OdinId</strong></li>
+<li><strong>Take a screenshot of the text within the page source that includes your FAUId</strong></li>
 </ul>
 <p>In order to bring this context to an LLM, a document loader is required that will retrieve the page and selectively identify the relevant snippet to give to the model. LangChain provides an extensive library of <a href="https://python.langchain.com/docs/integrations/document_loaders" target="_blank">document loaders</a>. A full set of them can be found at: <a href="https://python.langchain.com/docs/integrations/document_loaders" target="_blank"><strong>Document loaders | 🦜️🔗 Langchain</strong></a>. One of the basic loaders is <code>AsyncHtmlLoader</code>. This loader takes a URL or a list of URLs and asynchronously downloads them, saving them into a set of corresponding HTML documents. The code for loading a set of URLs into a list of documents and returning the raw HTML content of the first document is shown below.</p>
 <pre><code>from langchain_community.document_loaders import AsyncHtmlLoader
@@ -55,10 +55,11 @@ print(f&#34;Page content: {docs[0].page_content}&#34;)</code></pre>
 #     &lt;script async src=&#34;https://www.googletagmanager.com/gtag/js?id=UA-4991908-1&#34;&gt;&lt;/script&gt;
 #     &lt;script&gt;window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments
 # ...</code></pre>
-<p>The output reveals two issues with this approach. The first is that the size of a page is over a hundred kilobytes, a size that will be truncated by some LLMs and that leads to high token costs and poor performance. The second is that the page contains many functions and formatting elements that do not contribute to the semantic content of the page. An effective document loader is essential in extracting the relevant data out of a document. As a result, there are many open-source and proprietary loaders to choose from, as well as transformation packages to augment document loading.</p>
+<p>The output reveals two issues with this approach. The first is that the size of a page is over a hundred kilobytes, a size that will be truncated by some LLMs and that leads to high token costs and poor performance. 
+    The second is that the page contains many functions (e.g. Javascript) and formatting elements (HTML, CSS) that do not contribute to the semantic content of the page. An effective document loader is essential in extracting the relevant data out of a document. As a result, there are many open-source and proprietary loaders to choose from, as well as transformation packages to augment document loading.</p>
 </google-codelab-step>
 <google-codelab-step label="Document transformers" duration="3">
-<p>One way of extracting information out of documents is to transform it. LangChain also provides a library of <a href="https://python.langchain.com/docs/integrations/document_transformers/" target="_blank">document transformers</a>. For example, in our prior example, the HTML payload for the Portland State University site is generated from Drupal. As part of the page, a large amount of ancillary HTML and Javascript is included to implement the visual elements. For Drupal sites, the main semantic content for the page is contained within an <code>&lt;article&gt;</code> tag. We can take our initial document and transform it so that it only contains the content in this tag. We can then compare the two approaches using the program below. As the code shows, a simple question about the job placement is posed and <code>query_page()</code> will ask the LLM to answer it based on the content passed to it, timing the amount of time taken for the LLM to perform the task. We then pass <code>query_page()</code> both the original HTML as well as the transformed one.</p>
+<p>One way of extracting information out of documents is to transform it. LangChain also provides a library of <a href="https://reference.langchain.com/python/langchain-community/document_transformers" target="_blank">document transformers</a>. For example, in our prior example, the HTML payload for the Portland State University site is generated from Drupal. As part of the page, a large amount of ancillary HTML and Javascript is included to implement the visual elements. For Drupal sites, the main semantic content for the page is contained within an <code>&lt;article&gt;</code> tag. We can take our initial document and transform it so that it only contains the content in this tag. We can then compare the two approaches using the program below. As the code shows, a simple question about the job placement is posed and <code>query_page()</code> will ask the LLM to answer it based on the content passed to it, timing the amount of time taken for the LLM to perform the task. We then pass <code>query_page()</code> both the original HTML as well as the transformed one.</p>
 <pre><code>from langchain_google_genai import GoogleGenerativeAI
 from langchain_community.document_loaders import AsyncHtmlLoader
 from langchain_community.document_transformers import BeautifulSoupTransformer
@@ -73,7 +74,7 @@ def query_page(content):
    start = time.time()
    response = llm.invoke(prompt)
    end = time.time()
-   print(f&#34;Time elapsed: {end-start} seconds\nResponse: {response}&#34;)
+   print(f&#34;Time elapsed: {end-start} seconds\nResponse: {response.content[0]['text']}&#34;)
 
 loader = AsyncHtmlLoader(&#34;https://www.pdx.edu/academics/programs/undergraduate/computer-science&#34;)
 docs = loader.load()
@@ -84,7 +85,7 @@ query_page(docs_tr[0].page_content)</code></pre>
 <p>Run the program and examine the querying and timing results.</p>
 <pre>uv run 01_loaders_transformers.py</pre>
 <ul>
-<li><strong>Take a screenshot of the output that includes your OdinId comparing the results.</strong></li>
+<li><strong>Take a screenshot of the output that includes your FAU Id comparing the results.</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="Chunking" duration="3">
@@ -94,7 +95,7 @@ query_page(docs_tr[0].page_content)</code></pre>
 <p class="image-container"><img style="width:609px" src="img/d002c33ddf689d13.png"></p>
 <p>If the application needs context about the lazy load feature, the chunks available will present a very limited understanding of what this sentence is trying to say. For example the quote &#34;lazy load&#34; appears across multiple chunks. When ineffective chunking strategies are employed, information loss can occur across page boundaries, paragraphs, or article sections. One way of ameliorating this is to allow chunks to overlap, with the aim of generating one chunk that encompasses the semantic meaning we&#39;re interested in retaining. Visit <a href="https://chunkviz.up.railway.app/" target="_blank">https://chunkviz.up.railway.app/</a>. Copy and paste the text contents from the department&#39;s site in prior steps and experiment with chunk sizes until the entire text fits in 5 chunks.</p>
 <ul>
-<li><strong>Take a screenshot of the chunk size needed to perform the operation that includes your OdinId.</strong></li>
+<li><strong>Take a screenshot of the chunk size needed to perform the operation that includes your FAUId.</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="-" duration="3">
@@ -117,7 +118,7 @@ for i in article_chunks:
 <p>Run the program.</p>
 <pre>uv run 02_chunkers.py</pre>
 <ul>
-<li><strong>Take a screenshot showing the number of chunks created and the chunk numbers containing the string that includes your OdinId</strong></li>
+<li><strong>Take a screenshot showing the number of chunks created and the chunk numbers containing the string that includes your FAUId</strong></li>
 <li><strong>Did the query use more or less tokens than the Document Transformer approach?</strong></li>
 </ul>
 <p>In these examples, we use basic chunking approaches and assume the content being split is generic text. LangChain, however, provides splitters that utilize semantic information about the document being processed (such as HTML) to perform the chunking operation. More information on them can be found here: <a href="https://python.langchain.com/docs/modules/data_connection/document_transformers/" target="_blank">Text Splitters | 🦜️🔗 Langchain</a> </p>
@@ -149,7 +150,7 @@ print(f&#34;Downloaded and parsed {len(docs)} URLs&#34;)</code></pre>
 <pre><code>docs[1].page_content
 docs[1].metadata[&#39;source&#39;]</code></pre>
 <ul>
-<li><strong>Take a screenshot of the output that includes your OdinId</strong></li>
+<li><strong>Take a screenshot of the output that includes your FAUId</strong></li>
 </ul>
 <p>The pages from the web site have been retrieved and processed in a way that allows it to be utilized in a document querying effectively. Note that this can form the basis of a custom document loader as described in LangChain&#39;s site: <a href="https://python.langchain.com/docs/modules/data_connection/document_loaders/custom" target="_blank">Custom Document Loader | 🦜️🔗 Langchain</a>. Exit the interpreter via <code>Ctrl+d</code>.</p>
 </google-codelab-step>
@@ -184,7 +185,7 @@ Supercalifragilisticexpialidocious
 I got tripped up figuring out tokenization</pre>
 <p>Generate a sentence of your own to tokenize.</p>
 <ul>
-<li><strong>Take a screenshot of the output that includes your OdinId</strong></li>
+<li><strong>Take a screenshot of the output that includes your FAUId</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="Token costs" duration="3">
@@ -206,7 +207,7 @@ I got tripped up figuring out tokenization</pre>
 <p>As is seen in the code, LangChain enables token counting for Gemini by using the simple function <code>get_num_tokens</code>. Other integrations with LangChain, such as Anthropic and OpenAI offer similar endpoints, and also have token counts as part of chat completion responses. Once the tokens are counted, then the cost is calculated by using the published rate of the input and output tokens for the model. As with most models, output token costs will be more expensive. </p>
 <p>The program in the repository takes an input from the user, sends it to the LLM, then calculates the token costs. Based on the pricing for the model you are using, update the token costs within the program:</p>
 <ul>
-<li><strong>Take a screenshot of the lines modified to set the costs that includes your OdinId</strong></li>
+<li><strong>Take a screenshot of the lines modified to set the costs that includes your FAUId</strong></li>
 </ul>
 <pre>uv run 05_token_costs.py</pre>
 <p>Try different queries with output lengths that vary in order to see how it affects the total cost.</p>
@@ -215,7 +216,7 @@ I got tripped up figuring out tokenization</pre>
 Write a haiku about Portland State University</pre>
 <p>Generate a prompt of your own that will output a paragraph of output.</p>
 <ul>
-<li><strong>Take a screenshot of the results that includes your OdinId</strong></li>
+<li><strong>Take a screenshot of the results that includes your FAUId</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="Embedding" duration="3">
@@ -223,7 +224,7 @@ Write a haiku about Portland State University</pre>
 <p>The embeddings themselves are generated by embedding models. LangChain has many useful abstractions for working with different LLM providers to create embeddings for VectorStores. The code below calls an embedding model with an input sentence and outputs the number of dimensions that the vector produced by the embedding model produces and its initial values.</p>
 <pre><code>from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
-embeddings=GoogleGenerativeAIEmbeddings(model=&#34;models/embedding-001&#34;, task_type=&#34;retrieval_query&#34;)
+embeddings=GoogleGenerativeAIEmbeddings(model=&#34;models/gemini-embedding-001&#34;, task_type=&#34;retrieval_query&#34;)
 
 phrase = &#34;This is a test string.&#34;
 vector = embeddings.embed_query(phrase)
@@ -246,7 +247,7 @@ print(f&#34;Embedding [:10]: {vector[:10]}&#34;)</code></pre>
 <p>Test the embedding model by running the program in the repository that generates vector distances from a particular string. Use 2 different strings: one that is extremely close to the given text string and one that is far away from it. </p>
 <pre>uv run 06_embeddings.py</pre>
 <ul>
-<li><strong>Take a screenshot of the results that includes your OdinId</strong></li>
+<li><strong>Take a screenshot of the results that includes your FAUId</strong></li>
 </ul>
 </google-codelab-step>
 </google-codelab>
