@@ -1,0 +1,260 @@
+
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1,user-scalable=yes">
+<meta name="theme-color" content="#4F7DC9">
+<meta charset="UTF-8">
+<title>02.3: LangChain RAG application</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+<style>
+.success{color:#1e8e3e}.error{color:red} </style>
+</head>
+<body>
+<google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+<google-codelab codelab-gaid="" id="G02.3_LangChainRAG" title="02.3: LangChain RAG application" environment="web" feedback-link="https://docs.google.com/document/d/1hADGmrNHs1xfCE-DS1a34eE35MgLZ6vFWv505kl5kZI">
+<google-codelab-step label="Retrieval Augmented Generation" duration="3">
+<p>One of the more common chains one might build is a &#34;retrieval augmented generation&#34; (RAG) chain. This chain addresses the problem of generative models producing or fabricating results that are incorrect, sometimes referred to as hallucinations. Consider the application below where a user wants to ask a question to a set of documents in a knowledge base. With RAG, one indexes the documents and the question that is being asked by the user. Based on the similarity of questions and particular documents in the index, the question and the relevant document is sent to the generation model to produce the answer.<img style="width:645.5px" src="img/663279638438f89b.png"></p>
+<h2 is-upgraded>Cloud Shell</h2>
+<p>Bring up a Cloud Shell session and install <code>uv</code> and update your path by sourcing the modified <code>.bashrc</code> after installation.</p>
+<pre>curl -LsSf https://astral.sh/uv/install.sh | sh
+source ~/.bashrc</pre>
+<p>Then change into the source directory containing the examples, create a virtual environment, activate it, and install the packages.</p>
+<pre><code>cd cs475-src/02*/07_RAG
+git pull
+uv init --bare
+uv add -r requirements.txt</code></pre>
+</google-codelab-step>
+<google-codelab-step label="Document loading" duration="3">
+<p>A simple RAG application is provided for you in the course repository. It is split up into two main parts: a document loading part and a querying part. The document loading part takes a set of documents in a variety of formats, generates vector embeddings for them, and then inserts them into a vector database. The code first instantiates the vector database (Chroma) as well as the vector embedding model (from Google), storing the vector database locally in the filesystem. It then defines a function <code>load_docs</code>, that takes a set of documents from a document loader, splits them into chunks using a text splitter (<code>RecursiveCharacterTextSplitter</code>), and adds them to the vector store using the embedding model.</p>
+<pre><code>from langchain_community.vectorstores import Chroma
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+vectorstore = Chroma(
+     persist_directory=&#34;./rag_data/.chromadb&#34;, 
+     embedding_function=GoogleGenerativeAIEmbeddings(
+        model=&#34;models/embedding-001&#34;,
+        task_type=&#34;retrieval_query&#34;
+     )
+)
+
+def load_docs(docs):
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=10)
+    splits = text_splitter.split_documents(docs)
+    vectorstore.add_documents(documents=splits)</code></pre>
+</google-codelab-step>
+<google-codelab-step label="Document loading code" duration="3">
+<h3 is-upgraded>Internet sources</h3>
+<p>Using this function, it loads a range of documents of various types. For example, the loader below (<code>AsyncHTMLLoader</code>) will download and parse HTML content for a set of URLs given to it</p>
+<pre><code>from langchain_community.document_loaders import AsyncHTMLLoader
+
+def load_urls(urls):
+    load_docs(AsyncHTMLLoader(urls).load())</code></pre>
+<p>Some web sites are so commonly accessed that custom loaders can be written that are tailored for the content they provide. A few examples are Wikipedia and <code>arXiv</code>. We can utilize these loaders based on a query we provide to the site as shown in the code below.</p>
+<pre><code>from langchain_community.document_loaders import WikipediaLoader, ArxivLoader
+
+def load_wikipedia(query):
+    load_docs(WikipediaLoader(query=query, load_max_docs=1).load())
+
+def load_arxiv(query):
+    load_docs(ArxivLoader(query=query, load_max_docs=1).load())</code></pre>
+<p>Another useful example is the GitHub document Loader. The GitHub document loader below utilizes the personal access token set up previously to load code from the course&#39;s GitHub repository into the vector database. There are two separate loaders that can be employed: a file loader and an issues loader. The issue loader can be used to load PRs and issues, while the file loader can be used to load the content of the files in the repository.. In this example we will use the file loader.</p>
+<pre><code>def load_github(file):
+  loader = GithubFileLoader(
+       repo=&#34;wu4f/cs475-src&#34;,  # the repo name
+       branch=&#34;main&#34;,  # the branch name
+       github_api_url=&#34;https://api.github.com&#34;,
+       file_filter=lambda file_path: file_path.endswith(
+         file
+       ),  # File from the last week in class 
+    )
+    documents = loader.load() 
+    load_docs(documents)</code></pre>
+<p>Finally, we can create our own custom document loader, by retrieving content from a source and then utilizing the underlying <code>Document</code> class to create a document from it. Consider the code below that uses the YouTube Transcript package to load a transcript from an arbitrary video given its YouTube video ID. The code extracts all of the entries in the transcript and combines them into a single document and then sets the metadata of the <code>Document</code> to indicate its source.</p>
+<pre><code>def load_youtube(video_id):
+    transcript = YouTubeTranscriptApi.get_transcript(video_id)
+    text = &#39; &#39;.join([entry[&#39;text&#39;] for entry in transcript])
+    docs = [Document(page_content=text, metadata={&#39;source&#39;: f&#39;youtube:{video_id}&#39;})]
+    load_docs(docs)</code></pre>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<h3 is-upgraded>Local file system sources</h3>
+<p>While the above loaders are good for web sources, it may be the case that we want the RAG application to load directories containing documents of text files, PDFs files, Microsoft Word files, Markdown files, and CSV files. Each format has its own specialized loader to handle its conversion into text. In addition, a generic <code>DirectoryLoader</code> class can be leveraged to load a directory of files of a particular file type (e.g. <code>TextLoader</code>, <code>PyPDFLoader, Docx2txtLoader</code>, <code>UnstructuredMarkdownLoader, CSVLoader</code>). </p>
+<pre><code>from langchain_community.document_loaders import DirectoryLoader, 
+TextLoader, PyPDFDirectoryLoader, Docx2txtLoader, UnstructuredMarkdownLoader,
+WikipediaLoader, ArxivLoader, CSVLoader
+
+def load_txt(directory):
+    load_docs(DirectoryLoader(directory, glob=&#34;**/*.txt&#34;, loader_cls=TextLoader).load())
+
+def load_pdf(directory):
+    load_docs(PyPDFDirectoryLoader(directory).load())
+
+def load_docx(directory):
+    load_docs(DirectoryLoader(directory, glob=&#34;**/*.docx&#34;, loader_cls=Docx2txtLoader).load())
+
+def load_md(directory):
+    load_docs(DirectoryLoader(directory, glob=&#34;**/*.md&#34;, loader_cls=UnstructuredMarkdownLoader).load())
+
+def load_csv(directory):
+    load_docs(DirectoryLoader(directory, glob=&#34;**/*.csv&#34;, loader_cls=CSVLoader).load())</code></pre>
+</google-codelab-step>
+<google-codelab-step label="Document corpus" duration="3">
+<p>The RAG application in the repository loads a set of URLs as well as a set of local documents stored in the repository. We first load two URLs related to Portland State&#39;s Department of Computer Science, then Wikipedia&#39;s information on LangChain, and lastly a research paper from <code>arXiv</code> related to an automatic compiler for LLMs called DSPy.</p>
+<pre><code>load_urls([&#34;https://www.pdx.edu/academics/programs/undergraduate/computer-science&#34;,
+           &#34;https://www.pdx.edu/computer-science/&#34;])
+load_wikipedia(&#34;LangChain&#34;)
+load_arxiv(&#34;2310.03714&#34;)
+load_github(&#34;butcher.py&#34;)
+load_youtube(&#34;78600iosmis&#34;)</code></pre>
+<p>The corpus also includes a set of local files of varying formats. Specifically, the text files contain the full text of the US Constitution and its amendments, the PDF file contains Python documentation, the <code>docx</code> file contains famous quotes, the Markdown file contains a tutorial on the Markdown format, and the CSV file contains nutritional information on popular breakfast cereals.</p>
+<pre>txt/constitution.txt               docx/FamousQuotes.docx
+txt/amendments.txt                 md/Markdown.md          
+pdf/python_cheat_sheet.pdf         csv/cereal.csv</pre>
+<p>The code then loads the set of local files into the vector database using their respective loading functions.</p>
+<pre><code>load_txt(&#34;rag_data/txt&#34;)
+load_pdf(&#34;rag_data/pdf&#34;)
+load_docx(&#34;rag_data/docx&#34;)
+load_md(&#34;rag_data/md&#34;)
+load_csv(&#34;rag_data/csv&#34;)</code></pre>
+<p>Finally, after inserting the document corpus, we can examine the documents in the database through the metadata that is generated and stored during document loading. The code below goes through all of the chunks in the database and extracts their sources, printing out a list of document locations.</p>
+<pre><code>document_data_sources = set()
+for doc_metadata in retriever.vectorstore.get()[&#39;metadatas&#39;]:
+    document_data_sources.add(doc_metadata[&#39;source&#39;])
+for doc in document_data_sources:
+    print(f&#34;  {doc}&#34;)</code></pre>
+<p>Run the document loading code that has been implemented in the repository. </p>
+<pre>uv run 07_rag_loaddb.py</pre>
+</google-codelab-step>
+<google-codelab-step label="Document search" duration="3">
+<p>Once we have ingested the various documents into the vector database, it&#39;s a simple matter of doing a similarity search on the database with a particular query, to find documents that are closely related to the query. The function shown below performs this:</p>
+<pre><code>def search_db(vectorstore, query):
+    docs = vectorstore.similarity_search(query)
+    print(f&#34;Query database for: {query}&#34;)
+    if docs:
+        print(f&#34;Closest document match in database: {docs[0].metadata}&#34;)
+    else:
+        print(&#34;No matching documents&#34;)</code></pre>
+<h2 is-upgraded><strong>Test code</strong></h2>
+<p>Run the document loading and searching code that has been implemented in the repository. The code implements an interactive interface for performing searches on the vector database given a query that the user enters. </p>
+<pre>uv run 08_rag_docsearch.py</pre>
+<p>Search the database to find the documents that are most related to the following queries.</p>
+<pre>What will PSU&#39;s Computer Science degree prepare me for?
+Who created LangChain?
+What is the DSPy programming model?
+What is the persona used in the Pig Butcher Python program?
+How do I remove a scratch on a car?
+What is the first amendment of the Constitution?
+What is Python used for?
+What are some famous quotes from Martin Luther King Jr?
+How do you create a heading in Markdown?
+How many calories per serving are in Honey Nut Cheerios?</pre>
+<ul>
+<li><strong>Take a screenshot of the results of two different searches that includes your OdinId</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Document querying" duration="3">
+<p>So far, in our RAG application, we&#39;ve loaded our documents, split them into chunks, created vector embeddings for each chunk, inserted them into a vector database, and performed searches on the database given a query. In this step, we can now implement the rest of our RAG application by taking a query and the contents of the document that is most closely similar to it, and sending it to our LLM to answer.</p>
+<h2 is-upgraded><strong>LangChain Hub prompt template</strong></h2>
+<p>Much like GitHub is a repository for useful source code, DockerHub is a repository for useful containers, and HuggingFaceHub is a repository for useful machine learning models, LangChainHub is a central resource for sharing and discovering useful prompts, chains and agents that one can combine together to form complex LLM applications. In our RAG application we want the prompt to include not only the user&#39;s query, but also all relevant documents that can answer the query. This can then be sent to the model to produce the result. Towards this end, we can pull a useful prompt template from LangChain Hub via its name as shown in the code below. Additionally, we can print it out.</p>
+<pre><code>from langchain import hub
+prompt = hub.pull(&#34;rlm/rag-prompt&#34;)
+prompt.pretty_print()</code></pre>
+<p>This leads to the following output.</p>
+<pre>You are an assistant for question-answering tasks. Use the following pieces
+of retrieved context to answer the question. If you don&#39;t know the answer,
+just say that you don&#39;t know. Use three sentences maximum and keep the
+answer concise.
+Question: {question}
+Context: {context}
+Answer:</pre>
+</google-codelab-step>
+<google-codelab-step label="Document querying code" duration="3">
+<h2 is-upgraded><strong>Vector database</strong></h2>
+<p>After setting the prompt, the next step is to open the vector database and instantiate a <code>retriever</code> that will return the most relevant documents in the database related to the user&#39;s query.</p>
+<pre><code>from langchain_community.vectorstores import Chroma
+vectorstore = Chroma(
+     persist_directory=&#34;./rag_data/.chromadb&#34;, 
+     embedding_function=GoogleGenerativeAIEmbeddings(
+        model=&#34;models/embedding-001&#34;,
+        task_type=&#34;retrieval_query&#34;
+     )
+)
+retriever = vectorstore.as_retriever()</code></pre>
+<p>When the retriever is invoked with a user&#39;s input, it returns a set of document chunks related to the query. In order to pass all of this through as a single <code>context</code> to the template, we define a function to concatenate the chunks together so they can be included into the prompt that is sent to the model.</p>
+<pre><code>def format_docs(docs):
+    return &#34;\n\n&#34;.join(doc.page_content for doc in docs)</code></pre>
+<h2 is-upgraded><strong>RAG chain</strong></h2>
+<p>With the prompt template, the vector database, and the retriever set, we can then instantiate the RAG chain that performs the document querying. As shown in the code below, the first part of the chain pulls the related document chunks from the retriever and concatenates them together, setting the <code>context</code> key with the result. The <code>question</code> key is then set to the user&#39;s input. With these two set, they can be sent to the prompt template to create the final prompt which is sent to the model.</p>
+<pre><code>rag_chain = (
+    {&#34;context&#34;: retriever | format_docs, &#34;question&#34;: RunnablePassthrough()}
+    | prompt
+    | llm
+    | StrOutputParser()
+)</code></pre>
+</google-codelab-step>
+<google-codelab-step label="Document Q&amp;A" duration="3">
+<h2 is-upgraded><strong>Test code</strong></h2>
+<p>We can now test our application. Run the querying program and ask a set of questions related to the source documents that have been inserted into the vector database.</p>
+<pre>uv run 09_rag_query.py</pre>
+<p>Test some of the prior document search queries to determine how reliable the application is.</p>
+<pre>What will PSU&#39;s Computer Science degree prepare me for?
+Who created LangChain?
+What is the DSPy programming model?
+What is the persona used in the Pig Butcher Python program?
+How do I remove a scratch on a car?
+What is the first amendment of the Constitution?
+What is Python used for?
+What are some famous quotes from Martin Luther King Jr?
+How do you create a heading in Markdown?
+How many calories per serving are in Honey Nut Cheerios?</pre>
+<ul>
+<li><strong>Take a screenshot of the results of two different queries that includes your OdinId</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Chat interface with Chainlit" duration="3">
+<p class="image-container"><img style="width:466px" src="img/8df2342a15e82894.png"></p>
+<p>Chainlit is an open-source Python package to build production ready Conversational AI. The prior steps have initialized the vector database and implemented an LLM chain to query the documents in it. We can build a simple web interface for the application using the code below. </p>
+<pre><code>import chainlit as cl
+
+@cl.on_chat_start
+async def on_chat_start():
+    welcome_text = (
+       &#34;**Welcome to the PSU Generative Security Chatbot!**\n\n&#34;
+        &#34;Ask me anything from my set of documents.\n\n&#34;
+    )
+    await cl.Message(content=welcome_text).send()
+
+@cl.on_message
+async def on_message(message: cl.Message):
+    user_query = message.content
+    answer = rag_chain.invoke(user_query)
+    await cl.Message(content=answer).send()
+
+if __name__ == &#34;__main__&#34;:
+    cl.run()</code></pre>
+<p>As the code shows, we import the RAG chain from the query program, then register 2 event handlers. The first sends a welcome message when the chat interface is loaded. The other responds to a user query, sending the message to the RAG chain and returning its results. Run the application, allowing connections from all hosts.</p>
+<pre><code>uv run chainlit run --host 0.0.0.0 10_chainlit_rag_query.py</code></pre>
+<p>By default, the application will listen on port 8000. Click on Cloud Shell&#39;s Web Preview icon and then change the port to 8000 to view the Chainlit application running. </p>
+<p class="image-container"><img style="width:404px" src="img/5b744908a0dfbb79.png"></p>
+<p>If the preview does not work after changing the port, try opening a firewall port in the cloud console:</p>
+<pre><code>gcloud compute firewall-rules create default-allow-8000 --allow=tcp:8000 --target-tags=http-server</code></pre>
+<p>Then open up http://&lt;EXTERNAL_IP&gt;:8000/ in your web browser.</p>
+<p class="image-container"><img style="width:624px" src="img/7617d66dd68d5e71.png"></p>
+<p>Query the chatbot to see that it is able to respond to your questions.</p>
+<ul>
+<li><strong>Take a screenshot that includes the URL and the results of a successful query that includes your OdinId</strong></li>
+</ul>
+<p>Back in Cloud Shell, <code>Ctrl+c</code> to exit the application.</p>
+</google-codelab-step>
+</google-codelab>
+<script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+<script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+<script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+<script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+<script src="https://support.google.com/inapp/api.js"></script>
+</body>
+</html>
