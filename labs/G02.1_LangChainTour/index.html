@@ -158,7 +158,22 @@ gender_prompt = ChatPromptTemplate.from_messages(
         (&#34;human&#34;, &#34;{story}&#34;)
     ]
 )</code></pre>
-<p>With these two prompts, we can then test genders of stories that the model generates for each occupation. As the program below shows, a chain is defined that takes the user&#39;s input and passes it as the &#34;<code>occupation</code>&#34; to the first prompt template. The resulting prompt is sent to the LLM to perform the story generation. The story is then sent to the second prompt template via the &#34;<code>story</code>&#34; parameter to detect and output the gender of the character in the story. One can then use <code>invoke()</code> to launch the chain with an input. </p>
+<p>With these two prompts, we can then test genders of stories that the model 
+    generates for each occupation. As the program below shows, a chain is defined 
+    that takes the user&#39;s input and passes it as the &#34;<code>occupation</code>&#34; 
+    to the first prompt template. The resulting prompt is sent to the LLM to perform 
+    the story generation. The story is then sent to the second prompt template via 
+    the &#34;<code>story</code>&#34; parameter to detect and output the gender of 
+    the character in the story. One can then use <code>invoke()</code> to launch the 
+    chain with an input. </p>
+    <p>
+    A Python lambda expression is an in-place definition of an anonymous function.
+    For example let's define fun to be a function of string <code>s</code> that returns the 
+    lowercase version of <code>s</code>: </code>fun = lambda s: s.lower()</code>. 
+    The function returns the expression on the right hand side of the ':' character.
+    Now, we can use <code>fun</code> like any other function: 
+    <code>fun("Hello")</code> returns <code>"hello"</code>.    
+    </p>
 <pre><code>occupation_chain = (
       story_prompt
       | llm
@@ -168,9 +183,9 @@ gender_prompt = ChatPromptTemplate.from_messages(
   )
 
     ...
-    gender = occupation_chain.invoke({&#39;occupation&#39;: occupation}).content</code></pre>
-<p>The program in the repository calculates the genders of 10 stories for a given occupation. It implements an interactive shell for doing so. Run the program and test it using a range of occupations that may have gender stereotypes associated with them. Note that if you wish to see the stories produced, replace the intermediate <code>lambda</code> chain with the following:</p>
-<pre><code>      | (lambda output: print(output.content) or {&#39;story&#39;: output.content})</code></pre>
+    gender = occupation_chain.invoke({&#39;occupation&#39;: occupation}).content[0]['text']</code></pre>
+<p>The program in the repository calculates the genders of 10 stories for a given occupation. It implements an interactive shell for doing so. Run the program and test it using a range of occupations that may have gender stereotypes associated with them. Note that if you wish to see the stories printed, replace the intermediate <code>lambda</code> chain with the following:</p>
+<pre><code>      | (lambda output: print(output.content[0]['text']) or {&#39;story&#39;: output.content[0]['text']})</code></pre>
 <pre>uv run 04_lcel_chains.py</pre>
 <ul>
 <li><strong>Take a screenshot showing the bias results for 3 occupations of your choice that includes your FAU ID.</strong></li>
@@ -197,21 +212,40 @@ prompt = ChatPromptTemplate.from_messages([
     HumanMessagePromptTemplate.from_template(&#34;{input}&#34;)
 ])
 
-chain = prompt | llm</code></pre>
+chain = prompt | llm
+
+# Store the history instance separately so we can print it
+message_history = InMemoryChatMessageHistory()
+
+# Wrap the chain so LangChain automatically injects and updates history.
+chat_chain = RunnableWithMessageHistory(
+    chain,
+    lambda session_id: message_history,  # You could also return a new one per session
+    input_messages_key="input",
+    history_messages_key="history"
+)
+
+
+</code></pre>
 <p>In a loop, we can then load the conversation into memory, send it in with the user&#39;s input, then update the conversation with the response from the LLM. </p>
 <pre><code>while True:
-    content = input(&#34;&gt;&gt; &#34;)
+while True:
+    content = input(">> ")
     if content:
-        memory_vars = memory.load_memory_variables({})
-        response = chain.invoke({&#34;history&#34;: memory_vars[&#34;history&#34;], &#34;input&#34;: content})
-        result = response.content
-        print(result)
-        memory.save_context({&#34;input&#34;: content}, {&#34;output&#34;: result})
-        pretty_print_history(memory_vars[&#39;history&#39;])</code></pre>
+        # Invoke the chain with memory and the configured session ID.
+        response = chat_chain.invoke({"input": content}, 
+                        config={"configurable": {"session_id": session_id}})
+        print("RESPONSE:", response.content[0]['text'])
+
+        # Print the history from the retained instance
+        pretty_print_history(message_history.messages)
+    else:
+        break</code></pre>
+
 <p>Run the program and test its ability to have a conversation with context. For example, ask for the current OWASP Top 10 and then ask for a remediation for the &#34;last&#34; one in the list.</p>
 <pre>uv run 05_memory.py</pre>
 <ul>
-<li><strong>Take a screenshot showing the results that includes your FAUID.</strong></li>
+<li><strong>Take a screenshot showing the results that includes your FAU ID.</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="Parsers" duration="3">
@@ -226,6 +260,7 @@ import readline
 
 # Define your desired data structure.
 class GenreMovies(BaseModel):
+    """Structured response containing a genre and representative movies."""
     genre: str = Field(description=&#34;genre to lookup&#34;)
     movies: list[str] = Field(description=&#34;list of movies in genre&#34;)
 
@@ -244,11 +279,12 @@ print(f&#34;Format instructions given to the LLM from parser:\n {json_parser.get
 llm = GoogleGenerativeAI(model=&#34;...&#34;)
 
 chain = json_prompt | llm | json_parser
-chain.invoke({&#34;genre&#34;: &#34;Science Fiction&#34;})</code></pre>
+
+print(chain.invoke({&#34;genre&#34;: &#34;Science Fiction&#34;}))</code></pre>
 <p>Run the program included to test out its ability to recommend movies across a variety of genres (e.g. action, science fiction, drama, comic book).</p>
 <pre>uv run 06_parsers_pydantic.py</pre>
 <ul>
-<li><strong>Take a screenshot showing the results that includes your FAUID.</strong></li>
+<li><strong>Take a screenshot showing the results that includes your FAU ID.</strong></li>
 </ul>
 </google-codelab-step>
 </google-codelab>
