@@ -18,17 +18,20 @@
 <google-codelab-step label="Retrieval Augmented Generation" duration="3">
 <p>One of the more common chains one might build is a &#34;retrieval augmented generation&#34; (RAG) chain. This chain addresses the problem of generative models producing or fabricating results that are incorrect, sometimes referred to as hallucinations. Consider the application below where a user wants to ask a question to a set of documents in a knowledge base. With RAG, one indexes the documents and the question that is being asked by the user. Based on the similarity of questions and particular documents in the index, the question and the relevant document is sent to the generation model to produce the answer.<img style="width:645.5px" src="img/663279638438f89b.png"></p>
 <h2 is-upgraded>Cloud Shell</h2>
-<p>Bring up a Cloud Shell session and install <code>uv</code> and update your path by sourcing the modified <code>.bashrc</code> after installation.</p>
+<p>Bring up a Cloud Shell session and install <code>uv</code> and update your path by sourcing the modified <code>.bashrc</code> after installation. 
+    <code>uv</code> is a very fast Python package manager, similar to <code>pip</code>.</p>
 <pre>curl -LsSf https://astral.sh/uv/install.sh | sh
 source ~/.bashrc</pre>
-<p>Then change into the source directory containing the examples, create a virtual environment, activate it, and install the packages.</p>
-<pre><code>cd cs475-src/02*/07_RAG
+<p>Then change into the source directory containing the examples, create a virtual environment, activate it (<code>uv init), and install the 
+    requried packages (<code>uv add</code>).</p>
+<pre><code>cd gensec-class/02_LangChain/07_RAG
 git pull
 uv init --bare
 uv add -r requirements.txt</code></pre>
 </google-codelab-step>
 <google-codelab-step label="Document loading" duration="3">
 <p>A simple RAG application is provided for you in the course repository. It is split up into two main parts: a document loading part and a querying part. The document loading part takes a set of documents in a variety of formats, generates vector embeddings for them, and then inserts them into a vector database. The code first instantiates the vector database (Chroma) as well as the vector embedding model (from Google), storing the vector database locally in the filesystem. It then defines a function <code>load_docs</code>, that takes a set of documents from a document loader, splits them into chunks using a text splitter (<code>RecursiveCharacterTextSplitter</code>), and adds them to the vector store using the embedding model.</p>
+
 <pre><code>from langchain_community.vectorstores import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -45,6 +48,94 @@ def load_docs(docs):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=10)
     splits = text_splitter.split_documents(docs)
     vectorstore.add_documents(documents=splits)</code></pre>
+
+
+<!-- ic start -->
+<p>
+Computing embeddings is token-heavy, plus, chunking a big file involves sending many 
+requests to the embedding service in a short time.
+With GoogleGenerativeAIEmbeddings, computing the embedding for the PDF files in this program causes a 
+<code>GoogleGenerativeAIError</code> exception with the error message
+<code>"Error embedding content (RESOURCE_EXHAUSTED): 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, ..."</code>
+<p/>
+
+<p>It turns out that Google prohibits accounts with educational credits from having a credit card (or some other payment method) and 
+    it keeps them in the Free Tier, that has quotas: RPD (requests per day), RPM (requests per minute), TPM (tokens per minute). 
+The TPM quota is exceeded when executing this statement in file <pre>07_rag_loaddb.py</pre>, on line 72:
+
+<pre><code>vectorstore.add_documents(documents=splits)</code></pre>.
+
+The vector store calls the embedding function given as constructor parameter.
+For the cs.pdx website the total number of characters sent exceeds 100K and the total split count exceeds 10, 
+resulting in TPM quota excess, hence the RESOURCE_EXHAUSTED error from the embedding service. 
+</p>
+
+
+<h2>The Solution to rate limits: Bypass AI Studio and Use Vertex AI</h2>
+<p>To mitigate the situation we will use an alternative embedding model from Google, 
+    <code>VertexAIEmbeddings</code>, 
+    which has higher quota limits than <code>GoogleGenerativeAIEmbeddings</code>.
+    In addition, the <code>VertexAIEmbeddings</code> service uses your GCP Project ID for billing.
+</p>
+
+
+<h3>Instructions:</h3>
+<p>
+Ensure you have successully set up <i>kali-vm</i> to allow you to connect from your PC with 
+the  Remote Desktop client, as done in <a href="../G01.1_Setup/index.html?index=..%2F..gensec-web#2" target="_blank">Lab 01.1 Setup</a>. 
+Then, open a terminal window (console) on the <i>kali-vm</i> 
+desktop user interface and follow  instructions below.
+</p>
+<p>
+Setup the following environment variable (in <pre>~/.bashrc</pre> or some other script) before running the programs:
+
+<pre>export GOOGLE_CLOUD_PROJECT="YOUR_GCP_PROJECT_ID"</pre> 
+Use your  Google cloud project ID, not the project name. You can find it in the Google Cloud console, 
+under IAM & Admin -> Settings.
+</p>
+
+<p>
+Ensure that  you have the following lines in file <pre>requirements.txt</pre> in directory <pre>02_LangChain/07_RAG</pre> the following line:
+<code>
+langchain-google-vertexai
+google-cloud-aiplatform
+</code> 
+This adds two packages to the current virtual environment, needed to use VertexAI. 
+Then, run the following  command to install these packages.
+<code>
+    uv add -r requirements.txt</code>
+
+Next, authenticate your <i>kali-vm</i> environment with your Google account (no API keys needed):
+<code>
+gcloud auth application-default login</code>. 
+This opens a browser window on the <i>kali-vm</i> desktop user interface to log in your google cloud account 
+and to give various access permissions.
+</p>
+
+<h3>Enable Vertex AI API from console</h3>
+<p>
+Any new Google API service needs to be enabled before use.     
+Go to the Google Cloud console and execute these shell commands:
+
+<code>
+# Set project from bash:
+gcloud config set project $GOOGLE_CLOUD_PROJECT 
+
+# enable VertexAI API:
+gcloud services enable aiplatform.googleapis.com
+
+# specify which Google Cloud project will be charged for API quotas and billing for API requests
+gcloud auth application-default set-quota-project $GOOGLE_CLOUD_PROJECT </code>
+    
+</p>
+
+
+<p>Note that the Github loader requires a GitHub personal access token to work. 
+You can set it as an environment variable GITHUB_PERSONAL_ACCESS_TOKEN or pass it as a 
+parameter to the GithubFileLoader constructor.
+</p>
+<!-- ic end-->
+
 </google-codelab-step>
 <google-codelab-step label="Document loading code" duration="3">
 <h3 is-upgraded>Internet sources</h3>
@@ -153,7 +244,7 @@ What are some famous quotes from Martin Luther King Jr?
 How do you create a heading in Markdown?
 How many calories per serving are in Honey Nut Cheerios?</pre>
 <ul>
-<li><strong>Take a screenshot of the results of two different searches that includes your OdinId</strong></li>
+<li><strong>Take a screenshot of the results of two different searches that includes your FAU Id</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="Document querying" duration="3">
@@ -212,7 +303,7 @@ What are some famous quotes from Martin Luther King Jr?
 How do you create a heading in Markdown?
 How many calories per serving are in Honey Nut Cheerios?</pre>
 <ul>
-<li><strong>Take a screenshot of the results of two different queries that includes your OdinId</strong></li>
+<li><strong>Take a screenshot of the results of two different queries that includes your FAU Id</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="Chat interface with Chainlit" duration="3">
@@ -246,7 +337,7 @@ if __name__ == &#34;__main__&#34;:
 <p class="image-container"><img style="width:624px" src="img/7617d66dd68d5e71.png"></p>
 <p>Query the chatbot to see that it is able to respond to your questions.</p>
 <ul>
-<li><strong>Take a screenshot that includes the URL and the results of a successful query that includes your OdinId</strong></li>
+<li><strong>Take a screenshot that includes the URL and the results of a successful query that includes your FAU Id</strong></li>
 </ul>
 <p>Back in Cloud Shell, <code>Ctrl+c</code> to exit the application.</p>
 </google-codelab-step>
