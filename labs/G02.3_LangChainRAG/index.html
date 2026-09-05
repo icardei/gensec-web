@@ -24,22 +24,34 @@
 source ~/.bashrc</pre>
 <p>Then change into the source directory containing the examples, create a virtual environment, activate it (<code>uv init), and install the 
     requried packages (<code>uv add</code>).</p>
-<pre><code>cd gensec-class/02_LangChain/07_RAG
+<pre>cd gensec-class/02_LangChain/07_RAG
 git pull
 uv init --bare
-uv add -r requirements.txt</code></pre>
+uv add -r requirements.txt</pre>
 </google-codelab-step>
 <google-codelab-step label="Document loading" duration="3">
-<p>A simple RAG application is provided for you in the course repository. It is split up into two main parts: a document loading part and a querying part. The document loading part takes a set of documents in a variety of formats, generates vector embeddings for them, and then inserts them into a vector database. The code first instantiates the vector database (Chroma) as well as the vector embedding model (from Google), storing the vector database locally in the filesystem. It then defines a function <code>load_docs</code>, that takes a set of documents from a document loader, splits them into chunks using a text splitter (<code>RecursiveCharacterTextSplitter</code>), and adds them to the vector store using the embedding model.</p>
+<p>A simple RAG application is provided for you in this directory of the course repository. It is split up into two main 
+    parts: a document loading part and a querying part. The document loading part takes a set of documents 
+    in a variety of formats, generates vector embeddings for them, and then inserts them into a vector database. 
+    The code first instantiates the vector database (Chroma) as well as the vector embedding model (from Google), 
+    storing the vector database locally in the filesystem. It then defines a function 
+    <code>load_docs</code>, that takes a set of documents from a document loader, splits them into 
+    chunks using a text splitter (<code>RecursiveCharacterTextSplitter</code>), and adds them to the vector 
+    store using the embedding model.</p>
 
+    <p>
+        The original code in file <code>02_LangChain/07_RAG/07_rag_loaddb.py</code> 
+        used <code>GoogleGenerativeAIEmbeddings</code> to compute the embeddings for the documents,
+as follows:
+    </p>
 <pre><code>from langchain_community.vectorstores import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 vectorstore = Chroma(
-     persist_directory=&#34;./rag_data/.chromadb&#34;, 
-     embedding_function=GoogleGenerativeAIEmbeddings(
-        model=&#34;models/embedding-001&#34;,
+     persist_directory=&#34;./rag_data/.chromadb&#34;,     # directory to store the vector database
+     embedding_function=GoogleGenerativeAIEmbeddings(      # object for the embedding model that computes them
+        model=&#34;models/embedding-001&#34;,              # model name
         task_type=&#34;retrieval_query&#34;
      )
 )
@@ -47,6 +59,8 @@ vectorstore = Chroma(
 def load_docs(docs):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=10)
     splits = text_splitter.split_documents(docs)
+
+    # add the chunks to the vector database  
     vectorstore.add_documents(documents=splits)</code></pre>
 
 
@@ -54,14 +68,14 @@ def load_docs(docs):
 <p>
 Computing embeddings is token-heavy, plus, chunking a big file involves sending many 
 requests to the embedding service in a short time.
-With GoogleGenerativeAIEmbeddings, computing the embedding for the PDF files in this program causes a 
+With <code>GoogleGenerativeAIEmbeddings</code>, computing the embedding for the PDF files in this program causes a 
 <code>GoogleGenerativeAIError</code> exception with the error message
 <code>"Error embedding content (RESOURCE_EXHAUSTED): 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, ..."</code>
 <p/>
 
 <p>It turns out that Google prohibits accounts with educational credits from having a credit card (or some other payment method) and 
     it keeps them in the Free Tier, that has quotas: RPD (requests per day), RPM (requests per minute), TPM (tokens per minute). 
-The TPM quota is exceeded when executing this statement in file <pre>07_rag_loaddb.py</pre>, on line 72:
+The TPM quota is exceeded when executing this statement in file <code>07_rag_loaddb.py</code>, on line 72:
 
 <pre><code>vectorstore.add_documents(documents=splits)</code></pre>.
 
@@ -72,10 +86,42 @@ resulting in TPM quota excess, hence the RESOURCE_EXHAUSTED error from the embed
 
 
 <h2>The Solution to rate limits: Bypass AI Studio and Use Vertex AI</h2>
+
 <p>To mitigate the situation we will use an alternative embedding model from Google, 
     <code>VertexAIEmbeddings</code>, 
     which has higher quota limits than <code>GoogleGenerativeAIEmbeddings</code>.
     In addition, the <code>VertexAIEmbeddings</code> service uses your GCP Project ID for billing.
+</p>
+
+<p>
+The current code in file <code>07_rag_loaddb.py</code> give the user the option to use either <code>GoogleGenerativeAIEmbeddings</code> 
+or <code>VertexAIEmbeddings</code> by setting the variable <code>use_vertex_embeddings</code> to <code>False</code> or <code>True</code>:
+
+<pre><code>
+from langchain_google_vertexai import VertexAIEmbeddings
+
+# Configure the embedding model used when adding documents to Chroma.
+embedding_function = VertexAIEmbeddings(
+    model_name="gemini-embedding-001",
+    project=os.getenv("GOOGLE_CLOUD_PROJECT"),
+    location="us-west1"
+)
+
+
+# set to True to use VertexAI embeddings. Ignore the deprecation message for now. 
+use_vertex_embeddings = True
+
+if use_vertex_embeddings:
+    vectorstore = Chroma(
+        embedding_function=embedding_function,
+        persist_directory="./rag_data/.chromadb"    # <===== location of the vector store database. Run once and reuse.
+    )
+else:
+    # original repo code uses Google AI studio, that cause a rate limit quota error. 
+    vectorstore = Chroma(
+       embedding_function=GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001", task_type="retrieval_query"),
+       persist_directory="./rag_data/.chromadb"
+    )</code></pre>  
 </p>
 
 
