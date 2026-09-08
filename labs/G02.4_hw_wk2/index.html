@@ -1,0 +1,84 @@
+
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1,user-scalable=yes">
+<meta name="theme-color" content="#4F7DC9">
+<meta charset="UTF-8">
+<title>02.4: Homework</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+<style>
+.success{color:#1e8e3e}.error{color:red} </style>
+</head>
+<body>
+<google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+<google-codelab codelab-gaid="" id="G02.4_hw_wk2" title="02.4: Homework" environment="web" feedback-link="https://docs.google.com/document/d/13CU_LWEhHyzJSAubdn119Qzf8XZDu4b9RUbYAGFUEgw">
+<google-codelab-step label="Custom LangChain RAG application" duration="180">
+<p>Change into your course repository</p>
+<pre>cd &lt;path_to_repo&gt;</pre>
+<p>Create a <code>.gitignore</code> file containing the following in it.</p>
+<pre>env
+.venv
+.chromadb
+__pycache__
+*.pyc</pre>
+<p>Within your course repository, create a directory for the homework, populate it with the files you&#39;ll be working on for this homework, then commit and push to your remote repository. </p>
+<pre>cd &lt;path_to_repo&gt;
+mkdir hw2
+touch hw2/app.py
+touch hw2/screencast_url.txt
+git add hw2
+git commit -m &#34;initial commit&#34;
+git push</pre>
+<p>In this homework, you will experiment with creating your own LangChain RAG application by augmenting the lab examples with your own custom functionality to build a &#34;<a href="https://notebooklm.google/" target="_blank">NotebookLM</a>&#34;-like service. Custom functionality can include (in increasing level of difficulty):</p>
+<ul>
+<li>Adding support for additional pre-built loaders found <a href="https://python.langchain.com/docs/integrations/document_loaders/" target="_blank">here</a></li>
+<li>Creating a custom loader of your own that extends LangChain&#39;s <a href="https://docs.langchain.com/oss/python/integrations/document_loaders" target="_blank">BaseLoader</a></li>
+<li>Utilizing alternative architectures for implementing RAG (e.g. Multi-RAG) as described <a href="https://github.com/langchain-ai/rag-from-scratch" target="_blank">here</a>.</li>
+</ul>
+<p>Your development should be organized and incremental, with frequent commits into your git repository. Code should also be properly documented via Python <a href="https://peps.python.org/pep-0257/" target="_blank">docstrings</a>. In addition, you must also ensure API keys do not show up in your source files, but rather are passed in via environment variables. Ensure your application code is pushed to your repository before class. </p>
+</google-codelab-step>
+<google-codelab-step label="Screencast" duration="30">
+<p>Upon completing your application, via a narrated screencast of no longer than 5 minutes, you will perform a demonstration and source code walk-through of the application. Ensure that the video camera is turned on initially in your screencast. The screencast should follow the order given below: </p>
+<ul>
+<li>Check out the application source code from your course repository.</li>
+<li>Demonstrate the application running showing both its capabilities as well as its limitations</li>
+<li>Perform a source code walk-through showing the diffs of each commit in your git repository using the MCECS Gitlab website to explain how the application was implemented.</li>
+</ul>
+<p>You may use screencast software of your choice. Options include video conferencing applications such as Google Meet and Zoom or dedicated programs such as OBS Screen Recorder, QuickTime (MacOS), Screencast-O-Matic (Windows), or RecordMyDesktop (Linux). In addition, CaptureSpace Lite is available via PSU&#39;s Media Space (<a href="https://media.pdx.edu" target="_blank">https://media.pdx.edu</a>). </p>
+</google-codelab-step>
+<google-codelab-step label="Submission" duration="5">
+<h3 is-upgraded>Screencast</h3>
+<p>Upload your completed screencast on MediaSpace. Ensure that it is published as &#34;Unlisted&#34;. To do so, visit MediaSpace and click on &#34;My Media&#34;.</p>
+<p class="image-container"><img style="width:353px" src="img/52fed550e877fc6d.png"></p>
+<p>Click on the screencast video that has been uploaded. Then, in the tabs below, select the &#34;Publish&#34; tab, click on &#34;Unlisted&#34;, and then &#34;Save&#34;.</p>
+<p class="image-container"><img style="width:624px" src="img/6545911b3572b154.png"></p>
+<p>Then, update the file <code>screencast_url.txt</code> in the homework&#39;s directory to contain the URL that your unlisted screencast on MediaSpace is located. Push the changes that include the updated URL to your repository before class.</p>
+</google-codelab-step>
+<google-codelab-step label="Rubric" duration="1">
+<p>We will be using your screencast and git repository to evaluate your homework.</p>
+<table>
+<tr><td colspan="1" rowspan="1"><p>Code checkout shown</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Demonstration of the various capabilities and limitations of the application</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Functionality added</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Code quality (clean with no unused code or variables, readable, modular, documented with Docstrings and comments, no hard-coded keys within source code)</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Walkthrough of source code via git commits shown on Gitlab. (Quantity of submitted code explained minus the quantity of submitted code not explained)</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Instructions followed properly including code submission in the specified repository files, sequencing and length of screencast.</p>
+</td></tr>
+</table>
+</google-codelab-step>
+</google-codelab>
+<script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+<script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+<script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+<script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+<script src="https://support.google.com/inapp/api.js"></script>
+</body>
+</html>
