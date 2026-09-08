@@ -315,10 +315,11 @@ Answer:</pre>
 <pre><code>from langchain_community.vectorstores import Chroma
 vectorstore = Chroma(
      persist_directory=&#34;./rag_data/.chromadb&#34;, 
-     embedding_function=GoogleGenerativeAIEmbeddings(
-        model=&#34;models/embedding-001&#34;,
-        task_type=&#34;retrieval_query&#34;
-     )
+     embedding_function=VertexAIEmbeddings(
+        model_name="gemini-embedding-001",
+        project=os.getenv("GOOGLE_CLOUD_PROJECT"),
+        location="us-west1"
+    )
 )
 retriever = vectorstore.as_retriever()</code></pre>
 <p>When the retriever is invoked with a user&#39;s input, it returns a set of document chunks related to the query. In order to pass all of this through as a single <code>context</code> to the template, we define a function to concatenate the chunks together so they can be included into the prompt that is sent to the model.</p>
