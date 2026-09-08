@@ -198,7 +198,7 @@ def load_wikipedia(query):
 
 def load_arxiv(query):
     load_docs(ArxivLoader(query=query, load_max_docs=1).load())</code></pre>
-<p>Another useful example is the GitHub document Loader. The GitHub document loader below utilizes the personal access token set up previously to load code from the course&#39;s GitHub repository into the vector database. There are two separate loaders that can be employed: a file loader and an issues loader. The issue loader can be used to load PRs and issues, while the file loader can be used to load the content of the files in the repository.. In this example we will use the file loader.</p>
+<p>Another useful example is the GitHub document Loader. The GitHub document loader below utilizes the personal access token set up previously to load code from the course&#39;s GitHub repository into the vector database. There are two separate loaders that can be employed: a file loader and an issues loader. The issue loader can be used to load pull requests (PRs) and issues, while the file loader can be used to load the content of the files in the repository.. In this example we will use the file loader.</p>
 <pre><code>def load_github(file):
   loader = GithubFileLoader(
        repo=&#34;wu4f/cs475-src&#34;,  # the repo name
