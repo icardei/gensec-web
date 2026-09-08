@@ -17,7 +17,20 @@
 <google-codelab codelab-gaid="" id="G02.4_hw_wk2" title="02.4: Homework" environment="web" feedback-link="https://docs.google.com/document/d/13CU_LWEhHyzJSAubdn119Qzf8XZDu4b9RUbYAGFUEgw">
 <google-codelab-step label="Custom LangChain RAG application" duration="180">
 <p>Change into your course repository</p>
-<pre>cd &lt;path_to_repo&gt;</pre>
+<!-- ic start -->
+<!--<pre>cd &lt;path_to_repo&gt;</pre> -->
+<pre>cd gensec-code</pre>
+
+<!--
+Change into the source directory containing the examples, create a virtual environment, activate it, and install the packages.
+
+cd gensec-code/02_LangChain
+git pull
+uv init --bare
+uv add -r requirements.txt
+-->
+<!-- ic end -->
+
 <p>Create a <code>.gitignore</code> file containing the following in it.</p>
 <pre>env
 .venv
@@ -38,6 +51,26 @@ git push</pre>
 <li>Creating a custom loader of your own that extends LangChain&#39;s <a href="https://docs.langchain.com/oss/python/integrations/document_loaders" target="_blank">BaseLoader</a></li>
 <li>Utilizing alternative architectures for implementing RAG (e.g. Multi-RAG) as described <a href="https://github.com/langchain-ai/rag-from-scratch" target="_blank">here</a>.</li>
 </ul>
+
+<!-- ic start -->
+<h2>Agentic Code Help and Proper Documentation</h2>
+<p>
+For this assignment you must use a coding agent from VSCode (e.g. Claude, Codex).
+<ul>
+<li>Download the <a href="https://icardei.github.io/gensec-web/lab-template.docx" target="_blank">Lab Template file</a>.</li>
+<li>Rename it to <i>hw2_n-FAUID.docx</i>, with FAUID being your FAU ID.</li>
+<li>During developement, for every significant task given to the agent you must:
+    <ul>
+    <li>take a screenshot of your VSCode window showing the prompt you gave to the agent and the response it gave you back. </li>
+    <li>take a screenshot of your VSCode window showing at least the top few lines 
+    of code that were generated or modified by the agent.</li>
+    Insert these screenshots into the homework Word document, along with task prompt given to the agent.
+    </ul>
+    </li>
+</ul>
+
+</p>
+<!-- ic end -->
 <p>Your development should be organized and incremental, with frequent commits into your git repository. Code should also be properly documented via Python <a href="https://peps.python.org/pep-0257/" target="_blank">docstrings</a>. In addition, you must also ensure API keys do not show up in your source files, but rather are passed in via environment variables. Ensure your application code is pushed to your repository before class. </p>
 </google-codelab-step>
 <google-codelab-step label="Screencast" duration="30">
