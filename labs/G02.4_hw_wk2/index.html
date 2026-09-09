@@ -50,6 +50,13 @@ git push</pre>
     <a href="https://notebooklm.google/" target="_blank">NotebookLM</a>&#34;-like service. 
     Custom functionality can include (in increasing level of difficulty):
 </p>
+ 
+<ul>
+<li>Adding support for additional pre-built loaders found <a href="https://python.langchain.com/docs/integrations/document_loaders/" target="_blank">here</a></li>
+<li>Creating a custom loader of your own that extends LangChain&#39;s <a href="https://docs.langchain.com/oss/python/integrations/document_loaders" target="_blank">BaseLoader</a></li>
+<li>Utilizing alternative architectures for implementing RAG (e.g. Multi-RAG) as described <a href="https://github.com/langchain-ai/rag-from-scratch" target="_blank">here</a>.</li>
+</ul>
+
 <!-- ic start -->
 <p>
     Start from the RAG code examples provided in 
@@ -61,15 +68,11 @@ git push</pre>
     <a href="https://github.com/icardei/gensec-code/tree/main/02_LangChain/07_RAG" target="_blank">02_LangChain/07_RAG</a> directory..
     <br/>
     <b>A solution that does not follow this requirement won't received any credit.</b>
+    Keep in mind that coding agents know how to work with Github repositories from VSCode or a command line program, 
+    if properly configured.  
 </p>
  
 <!-- ic end -->
- 
-<ul>
-<li>Adding support for additional pre-built loaders found <a href="https://python.langchain.com/docs/integrations/document_loaders/" target="_blank">here</a></li>
-<li>Creating a custom loader of your own that extends LangChain&#39;s <a href="https://docs.langchain.com/oss/python/integrations/document_loaders" target="_blank">BaseLoader</a></li>
-<li>Utilizing alternative architectures for implementing RAG (e.g. Multi-RAG) as described <a href="https://github.com/langchain-ai/rag-from-scratch" target="_blank">here</a>.</li>
-</ul>
 
  
 <p>Your development should be organized and incremental, with frequent commits into your git repository. 
@@ -119,22 +122,42 @@ For this assignment you must use a coding agent from VSCode (e.g. Claude, Codex)
 
 <h2>Screencast Upload Instructions</h2>    
 Upload your screencast video file to your Youtube account. Ensure that it is unlisted and that the video URL is accessible 
-without an account. Use your browser in incognito mode.
+without an account. Use your browser in incognito mode to check the video URL. Add the recording URL to the homework PDF file.
 </google-codelab-step>
 <google-codelab-step label="Submission" duration="5">
+
+<!-- ic start 
 <h3 is-upgraded>Screencast</h3>
 <p>Upload your completed screencast on MediaSpace. Ensure that it is published as &#34;Unlisted&#34;. To do so, visit MediaSpace and click on &#34;My Media&#34;.</p>
 <p class="image-container"><img style="width:353px" src="img/52fed550e877fc6d.png"></p>
 <p>Click on the screencast video that has been uploaded. Then, in the tabs below, select the &#34;Publish&#34; tab, click on &#34;Unlisted&#34;, and then &#34;Save&#34;.</p>
 <p class="image-container"><img style="width:624px" src="img/6545911b3572b154.png"></p>
 <p>Then, update the file <code>screencast_url.txt</code> in the homework&#39;s directory to contain the URL that your unlisted screencast on MediaSpace is located. Push the changes that include the updated URL to your repository before class.</p>
+-- ic end -->
+
+<!-- ic start -->
+Follow these instructions to submit your homework:
+<ol>
+    <li>Ensure the latest homework code is pushed to your course repository on Github.</li>
+    <li>Enter your <b>repository URL</b> on the provided field in the homework Word document.</li>
+    <li>Enter the <b>screencast URL</b> on the provided field in the homework Word document.</li>
+    <li>Convert the Word document to PDF.</li>
+    <li>Upload the PDF to the Homework 2 Canvas page before the deadline.</li>
+</ol>
+<!-- ic end -->
+
 </google-codelab-step>
 <google-codelab-step label="Rubric" duration="1">
-<p>We will be using your screencast and git repository to evaluate your homework.</p>
+<p>We will be using your homework PDF file, screencast and git repository to evaluate your homework.</p>
 <table>
-<tr><td colspan="1" rowspan="1"><p>Code checkout shown</p>
+<tr><td colspan="1" rowspan="1"><p>Screenshots with your coding agent prompts, answers (with your FAU ID) in the 
+    homework PDF file you submitted</p>
 </td></tr>
-<tr><td colspan="1" rowspan="1"><p>Demonstration of the various capabilities and limitations of the application</p>
+<tr><td colspan="1" rowspan="1"><p>Solution code started from the 07_RAG/*.py examples</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Code checkout shown in screencast</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Demonstration of the various capabilities and limitations of the application shown in screencast</p>
 </td></tr>
 <tr><td colspan="1" rowspan="1"><p>Functionality added</p>
 </td></tr>
