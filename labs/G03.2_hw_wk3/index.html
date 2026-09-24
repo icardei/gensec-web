@@ -1,0 +1,122 @@
+
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1,user-scalable=yes">
+<meta name="theme-color" content="#4F7DC9">
+<meta charset="UTF-8">
+<title>03.2: Homework</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="/gensec-web/scripts/codelab-elements.css">
+<style>
+.success{color:#1e8e3e}.error{color:red} </style>
+</head>
+<body>
+<google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+<google-codelab codelab-gaid="" id="G03.2_hw_wk3" title="03.2: Homework" environment="web" feedback-link="https://docs.google.com/document/d/1jvQAH4ibrGcxggDkmFbClM5y3qOxsOreIG2owtGq-ck">
+<google-codelab-step label="Custom LangChain agent and tools" duration="180">
+<p>Within your course repository, create a directory for the homework, then commit and push to 
+    your remote repository.</p>
+<pre>cd &lt;path_to_repo&gt;
+mkdir hw3
+touch hw3/app.py
+touch hw3/screencast_url.txt
+git add hw3
+git commit -m &#34;initial commit&#34;
+git push</pre>
+<p>In this homework, based on the lab exercises, you will experiment with creating your own LangChain agent 
+    by augmenting the lab examples with additional tools or architectures. 
+    The LangChain tools doc page is <a href="https://docs.langchain.com/oss/python/langchain/tools" target="_blank">here</a>.
+    
+    Custom functionality can include (in increasing level of difficulty):</p>
+<ul>
+<li>Adding support for additional <a href="https://python.langchain.com/docs/integrations/tools/" target="_blank">
+    built-in tools and toolkits</a> not contained in the lab exercises</li>
+<li>Adding custom tools (such as utilizing your RAG application from your previous homework)</li>
+<li>Adding custom architectures (Multi-agent/LangGraph, CrewAI, or Plan-and-Execute agents)</li>
+</ul>
+<p>Finally, your agent should:</p>
+<ul>
+<li>Retain one of either the <code>PythonREPL</code> tool or the <code>Terminal</code> tool within it.</li>
+</ul>
+<p>Your development should be organized and incremental, with frequent commits into your git repository. 
+    Code should also be properly documented via Python 
+    <a href="https://peps.python.org/pep-0257/" target="_blank">docstrings</a>. 
+    Use the <code>uv</code> virtual environment manager to isolate your project dependencies. Use a virtual Python environment
+    as demonstrated in Lab02 Codelabs.
+    In addition, you must also ensure API keys do not show up in your source files, 
+    but rather are passed in via environment variables. Ensure your application code is pushed to your 
+    repository before class. </p>
+
+<h2>Agentic Code Help and Proper Documentation</h2>
+<p>
+For this assignment you must use a coding agent from VSCode (e.g. Claude, Codex). Follow these instructions:
+<ul>
+<li>Download the <a href="https://icardei.github.io/gensec-web/homework-template.docx" target="_blank">Homework Template file</a>.</li>
+<li>Rename it to <i>hw3-<i>FAUID</i>.docx, <i>FAUID</i> being your FAU ID.</li>
+<li>During developement, for every significant task given to the agent you must:
+    <ul>
+    <li>take a screenshot of your VSCode window showing the prompt you gave to the agent and the response it gave you back. </li>
+    <li>take a screenshot of your VSCode window showing at least the top few lines 
+    of code that were generated or modified by the agent.</li>
+    Insert these screenshots into the homework Word document, along with task prompt given to the agent.
+    </ul>
+    </li>
+<li>Add the missing information between &lt; and &gt;.</li>    
+<li>When finished, convert the Word document to PDF and upload it on the Homework Canvas page.</li>
+</ul>
+
+</p>
+
+
+
+    <h3 is-upgraded>Screencast</h3>
+<p>Upon completing your agent, via a narrated screencast of no longer than 5 minutes, you will perform 
+    a demonstration and source code walk-through of the agent. Ensure that the video camera is turned on 
+    initially in your screencast. The screencast should follow the order of the script below.</p>
+<ul>
+<li>Check out the application source code from your course repository with <code>git clone</code>.</li>
+<li>Demonstrate the application running showing both its capabilities as well as its limitations</li>
+<li>Perform a source code walk-through via the git commits on Gitlab to explain how the application has 
+    been incrementally implemented.</li>
+</ul>
+
+
+<h2>Screencast Upload Instructions</h2>    
+<p>Upload your screencast video file to your Youtube account. Ensure that it is unlisted and that the video 
+    URL is accessible without an account. Use your browser in incognito mode to check the video URL. 
+    Add the recording URL to the homework PDF file.
+     Push the changes that include the updated URL to
+     your repository before class.
+</p>
+
+
+<h3 is-upgraded>Rubric</h3>
+
+<p>We will be using your screencast and git repository to evaluate your homework.</p>
+<table>
+<tr><td colspan="1" rowspan="1"><p>Code checkout shown</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Demonstration of the various capabilities of the application, including the use of the <code>Terminal</code> tool</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Demonstration of the various limitations of the application</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Functionality added</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Code quality (clean with no unused code or variables, readable, modular, documented with Docstrings and comments, no hard-coded keys within source code)</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Walkthrough of source code via git commits shown on Gitlab. (Quantity of submitted code explained minus the quantity of submitted code not explained)</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Instructions followed properly including code submission in the specified repository files, sequencing and length of screencast.</p>
+</td></tr>
+</table>
+</google-codelab-step>
+</google-codelab>
+<script src="/gensec-web/scripts/native-shim.js"></script>
+<script src="/gensec-web/scripts/custom-elements.min.js"></script>
+<script src="/gensec-web/scripts/prettify.js"></script>
+<script src="/gensec-web/scripts/codelab-elements.js"></script>
+<script src="https://support.google.com/inapp/api.js"></script>
+</body>
+</html>
