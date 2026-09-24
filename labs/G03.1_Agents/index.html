@@ -30,6 +30,7 @@ uv add -r requirements.txt</pre>
 <google-codelab-step label="ReAct and Tools" duration="10">
 <p>LangChain&#39;s documentation for their ReAct implementation can be found 
     <a href="https://python.langchain.com/docs/modules/agents/agent_types/react/" target="_blank">here</a>. 
+<br/>
 
 The original ReAct paper can be found <a href="https://arxiv.org/abs/2210.03629" target="_blank">here</a>.    
 </p>
@@ -43,13 +44,20 @@ The original ReAct paper can be found <a href="https://arxiv.org/abs/2210.03629"
 
 
 <!--    -->
-<p>Introduction to the LangChain agent program</p>
-<p>This program combines a language model, a Python execution tool, and an agent execution loop. The model decides what Python code to request; LangChain executes the requested tool and returns its result to the model. The model can request another execution or produce an answer. The outer interactive loop accepts questions and displays these events.</p>
-<p>The model</p>
+<h2>The first LangChain agent program with tools</h2>
+<p>This program combines a language model, a Python execution tool, and an agent execution loop. 
+    The model decides what Python code to request; LangChain executes the requested tool 
+    <b>on your computer</b>and returns 
+    its result to the model. The model can request another execution or produce an answer. 
+    The outer interactive loop accepts questions and displays these events.</p>
+
+<h3>The model</h3>
 <pre><code>llm = ChatGoogleGenerativeAI(model=os.getenv("GOOGLE_MODEL"))</code></pre>
 <p>This constructs the chat-model interface. The environment variable selects the Google model. The model generates responses and structured tool-call requests; the Python tool performs the actual computation. The selected model must support tool calling.</p>
-<p>The system prompt</p>
-<p>A system prompt supplies standing instructions for the model's behavior. Here, it assigns a programming role, requires execution before answering, requests debugging after errors, and specifies a fallback:</p>
+
+<h3>The system prompt</h3>
+<p>A system prompt supplies standing instructions for the model's behavior. Here, it assigns a programming 
+    role, requires execution before answering, requests debugging after errors, and specifies a fallback:</p>
 <pre><code>system_prompt = """You are an agent designed to write and execute python code to answer
       questions.  You have access to a python REPL, which you can use to
       execute Python code.  If you get an error, debug your code and try
@@ -58,24 +66,50 @@ The original ReAct paper can be found <a href="https://arxiv.org/abs/2210.03629"
       run the code to get the answer.  If it does not seem like you can
       write code to answer the question, just return I don't know as the
       answer.\n\n"""</code></pre>
-<p>These are natural-language instructions, not programmatic guarantees. Nothing in the surrounding Python code verifies that every answer follows an execution or is supported by its output. The prompt also does not install the tool: the tool must be supplied separately.</p>
-<p>Tools</p>
-<p>A tool is a callable capability exposed to the model through a name, description, and input schema. A tool call is a structured request to execute that capability with particular arguments. LangChain dispatches the request and makes the result available to the model.</p>
+<p>These are natural-language instructions, not programmatic guarantees. 
+    Nothing in the surrounding Python code verifies that every answer follows an execution or is 
+    supported by its output. The prompt also does not install the tool: the tool must be supplied separately.</p>
+
+<h3>Tools</h3>
+<p>A tool is a callable capability exposed to the model through a name, description, and input schema. 
+    A tool call is a structured request to execute that capability with particular arguments. 
+    LangChain dispatches the request and makes the result available to the model.</p>
+    <!--<p>In the case of <code>PythonREPLTool</code> tool, it executes on your computer, so the model can request any Python code to be executed.</p>-->
+
 <pre><code>tools = [PythonREPLTool()]</code></pre>
-<p>This list contains one tool, which executes Python code in a REPL environment. The model supplies code as the tool's input. The tool executes with the application's permissions; its name does not imply isolation.</p>
+<p>This list contains one tool, which executes Python code in a REPL environment on your computer. 
+    The model supplies code as the tool's input. 
+    The tool executes with the application's permissions; its name does not imply isolation.</p>
 <pre><code>for tool in tools:
   print(f'  Tool: {tool.name} = {tool.description}')</code></pre>
 <p>This displays the registered tool's name and usage description. It does not execute the tool.</p>
-<p>Creating the agent</p>
+
+<h3>Creating the agent</h3>
 <pre><code>agent = create_agent(model=llm, tools=tools, system_prompt=system_prompt)</code></pre>
-<p>The function builds an executable agent graph using LangGraph. The model parameter supplies the chat model; the tools parameter supplies the available executable capabilities; and the system_prompt parameter supplies the standing instructions. This call configures the agent but does not yet answer a question.</p>
-<p>The returned agent is a compiled graph, rather than an individual model response. Its control loop calls the model, executes requested tools, and calls the model again with the results. It normally finishes when the model produces a response without tool calls.</p>
-<p>Running the agent and streaming its progress</p>
+<p>The function builds an executable agent graph using LangGraph. The model parameter supplies the 
+    chat model; the tools parameter supplies the available executable capabilities; 
+    and the system_prompt parameter supplies the standing instructions. 
+    This call configures the agent but does not yet answer a question.</p>
+
+<p>The returned agent is a <b>compiled graph</b>, rather than an individual model response. 
+    Its control loop calls the model, executes requested tools, and calls the model again with the results. 
+    It normally finishes when the model produces a response without tool calls.</p>
+
+<h3>Running the agent and streaming its progress</h3>
 <pre><code>for step in agent.stream({"messages": [{"role": "user", "content": line}]}):</code></pre>
-<p>This starts a run using the entered text as a user message. The outer dictionary supplies the agent's message state; the inner dictionary identifies the message's role and content. LangChain accepts this dictionary representation, so the imported HumanMessage class is not needed here.</p>
-<p>The stream method yields updates as execution progresses. With the default updates mode used by this agent, each step is a dictionary mapping a graph node name to that node's state update. This is step-level progress, not character-by-character or token-by-token output.</p>
-<p>For this program, a model entry contains newly produced model messages, while a tools entry contains tool-result messages. The nested messages value is a list of message objects. A step is an update, not necessarily the complete conversation history.</p>
-<p>Detecting model output and tool calls</p>
+<p>This starts a run using the entered text as a user message. The outer dictionary supplies the 
+    agent's message state; the inner dictionary identifies the message's role and content. 
+    LangChain accepts this dictionary representation, so the imported HumanMessage class is not needed here.</p>
+
+<p>The stream method yields updates as execution progresses. With the default updates mode used by 
+    this agent, each step is a dictionary mapping a graph node name to that node's state update. 
+    This is step-level progress, not character-by-character or token-by-token output.</p>
+
+<p>For this program, a model entry contains newly produced model messages, while a tools entry 
+    contains tool-result messages. The nested messages value is a list of message objects. A step is 
+    an update, not necessarily the complete conversation history.</p>
+
+<h3>Detecting model output and tool calls</h3>
 <pre><code>if "model" in step:
     message = step["model"]["messages"][0]
     if message.content:
@@ -83,25 +117,52 @@ The original ReAct paper can be found <a href="https://arxiv.org/abs/2210.03629"
     if message.tool_calls:
         for tool_call in message.tool_calls:
             print(f"🛠️ Tool Call: {tool_call['name']}   Args: {tool_call['args']}")</code></pre>
-<p>The membership test identifies a model update. The next line selects its first message, an AIMessage. Its content contains the model's emitted content, which may be text or structured content blocks depending on the provider.</p>
-<p>The tool_calls attribute is the reliable place to detect structured tool requests. The loop prints each requested tool's name and arguments. For the Python tool, the arguments contain the requested Python code. Printing the request does not execute it; execution is handled by the agent graph.</p>
-<p>A model message can contain both content and tool calls, so printed content is not necessarily the final answer. The two independent tests allow both to be displayed.</p>
-<p>Detecting tool results</p>
+
+<p>The membership test identifies a model update. The next line selects its first message, an AIMessage. 
+    Its content contains the model's emitted content, which may be text or structured content blocks 
+    depending on the provider.</p>
+
+<p>The <code>tool_calls</code> attribute is the reliable place to detect structured tool requests. 
+    The loop prints each requested tool's name and arguments. 
+    For the Python tool, the arguments contain the requested Python code. Printing the request 
+    does not execute it; execution is handled internally by the agent graph.</p>
+
+<p>A model message can contain both content and tool calls, so printed content is not necessarily 
+    the final answer. The two independent tests allow both to be displayed.</p>
+
+<h3>Detecting tool results</h3>
 <pre><code>if "tools" in step:
     message = step["tools"]["messages"][0]
     print(f"✅ Tool Result: {message.content}")
     print("---")</code></pre>
-<p>This branch identifies a tool update and prints the first ToolMessage's content. The result is also supplied to the model automatically. The check-mark symbol is only a display label: a tool result can contain an error rather than a successful computation.</p>
-<p>Both branches select only the first message using index zero. In particular, an update containing several tool-result messages would have only its first result displayed. The tool-call loop does print every request in the selected model message, so the number of printed requests and results may differ.</p>
-<p>Following the example question</p>
+<p>This branch identifies a tool update and prints the first <code>ToolMessage</code>'s content. 
+    The result is also supplied to the model automatically. The check-mark symbol is only a display label: 
+    a tool result can contain an error rather than a successful computation.</p>
+
+<p>Both branches select only the first message using index zero. In particular, an update containing 
+    several tool-result messages would have only its first result displayed. 
+    The tool-call loop does print every request in the selected model message, 
+    so the number of printed requests and results may differ.</p>
+
+<h3>Following the example question</h3>
 <pre>Sort the list 12, 35, 40, 22, 10, 3.   Then see if the third largest number is prime</pre>
-<p>A typical run produces a model update requesting Python execution, a tools update containing the computation result, and another model update answering the question. The model might combine sorting and primality testing into one execution or request multiple executions. The program does not prescribe the number of calls.</p>
-<p>Each input line starts a new run containing only that user message. The program does not pass earlier conversation messages or configure a checkpointer, so reusing the agent object does not provide conversation memory. However, the same PythonREPLTool instance is reused, and its Python namespace may retain variables across executions; tool state and conversation history are separate.</p>
-<p>Documentation used: LangChain Agents (https://docs.langchain.com/oss/python/langchain/agents) and Streaming (https://docs.langchain.com/oss/python/langchain/streaming).</p>
+<p>A typical run produces a model update requesting Python execution, a tools update containing the 
+    computation result, and another model update answering the question. The model might combine 
+    sorting and primality testing into one execution or request multiple executions. 
+    The program does not prescribe the number of calls.</p>
+
+<p>Each input line starts a new run containing only that user message. The program does not pass 
+    earlier conversation messages or configure a checkpointer, so reusing the agent object does 
+    not provide conversation memory. However, the same <code>PythonREPLTool</code> instance is reused, 
+    and its Python namespace may retain variables across executions; tool state and conversation 
+    history are separate.</p>
+
+<p>Documentation used: LangChain Agents (https://docs.langchain.com/oss/python/langchain/agents) 
+    and Streaming (https://docs.langchain.com/oss/python/langchain/streaming).</p>
 
 <!--    -->
 
-
+<h3>Running the Python REPL Agent</h3>
 <p>Run the Python REPL agent in the repository. The code implements an interactive interface for performing tasks that the user enters using Python.</p>
 <pre>uv run 01_tools_python.py</pre>
 <p>Ask the agent the following requests and examine the output traces to see if they are answered correctly via tool calls to the <code>PythonREPLTool</code>.</p>
