@@ -1,0 +1,529 @@
+
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1,user-scalable=yes">
+<meta name="theme-color" content="#4F7DC9">
+<meta charset="UTF-8">
+<title>03.1: Agents</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="/gensec-web/scripts/codelab-elements.css">
+<style>
+.success{color:#1e8e3e}.error{color:red} </style>
+</head>
+<body>
+<google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+<google-codelab codelab-gaid="" id="G03.1_Agents" title="03.1: Agents" environment="web" feedback-link="https://docs.google.com/document/d/1ImnKdvz9YFbNBK_3mMTC31W_vxd6qcDPonuATEJSaqM">
+<google-codelab-step label="Agents" duration="3">
+<p class="image-container"><img style="width:367.6px" src="img/c4426556234f0244.png"></p>
+<p>Agents have the ability to write their own plans, execute its parts, and update the plans during execution, making them extremely powerful tools for automating tasks. LangChain comes with support for building agents. In this lab, we&#39;ll experiment with a number of agents, leverage built-in tools for allowing them to perform tasks, as well as write custom tools for them to utilize. We will leverage the ReAct agent whose description can be found <a href="https://react-lm.github.io/" target="_blank">here</a>. ReAct combines reasoning and action in order to handle a user&#39;s request. </p>
+<p><strong>Setup</strong></p>
+<p>Within the repository, create a virtual environment, activate it, and then install the packages required.</p>
+<pre>cd cs475-src
+git pull
+cd 03*
+uv init --bare
+uv add -r requirements.txt</pre>
+</google-codelab-step>
+
+<google-codelab-step label="ReAct and Tools" duration="10">
+<p>LangChain&#39;s documentation for their ReAct implementation can be found 
+    <a href="https://python.langchain.com/docs/modules/agents/agent_types/react/" target="_blank">here</a>. 
+
+The original ReAct paper can be found <a href="https://arxiv.org/abs/2210.03629" target="_blank">here</a>.    
+</p>
+
+<p>Agents have the ability to plan out and execute sequences of tasks in order to answer user queries. 
+    A simple, albeit dangerous example is shown below that utilizes a Python REPL (Read-Eval-Print Loop) 
+    tool to execute arbitrary Python code. By combining an LLM&#39;s ability to generate code with a tool 
+    to execute it, a user is able to execute programs in English. The code instantiates the tool, then 
+    adds it to the list of tools as its only tool. Then, it initializes a prompt to instruct the agent 
+    to only use the Python REPL to produce a response.</p>
+
+
+<!--    -->
+<p>Introduction to the LangChain agent program</p>
+<p>This program combines a language model, a Python execution tool, and an agent execution loop. The model decides what Python code to request; LangChain executes the requested tool and returns its result to the model. The model can request another execution or produce an answer. The outer interactive loop accepts questions and displays these events.</p>
+<p>The model</p>
+<pre><code>llm = ChatGoogleGenerativeAI(model=os.getenv("GOOGLE_MODEL"))</code></pre>
+<p>This constructs the chat-model interface. The environment variable selects the Google model. The model generates responses and structured tool-call requests; the Python tool performs the actual computation. The selected model must support tool calling.</p>
+<p>The system prompt</p>
+<p>A system prompt supplies standing instructions for the model's behavior. Here, it assigns a programming role, requires execution before answering, requests debugging after errors, and specifies a fallback:</p>
+<pre><code>system_prompt = """You are an agent designed to write and execute python code to answer
+      questions.  You have access to a python REPL, which you can use to
+      execute Python code.  If you get an error, debug your code and try
+      again.  Only use the output of your code to answer the question.  You
+      might know the answer without running any code, but you should still
+      run the code to get the answer.  If it does not seem like you can
+      write code to answer the question, just return I don't know as the
+      answer.\n\n"""</code></pre>
+<p>These are natural-language instructions, not programmatic guarantees. Nothing in the surrounding Python code verifies that every answer follows an execution or is supported by its output. The prompt also does not install the tool: the tool must be supplied separately.</p>
+<p>Tools</p>
+<p>A tool is a callable capability exposed to the model through a name, description, and input schema. A tool call is a structured request to execute that capability with particular arguments. LangChain dispatches the request and makes the result available to the model.</p>
+<pre><code>tools = [PythonREPLTool()]</code></pre>
+<p>This list contains one tool, which executes Python code in a REPL environment. The model supplies code as the tool's input. The tool executes with the application's permissions; its name does not imply isolation.</p>
+<pre><code>for tool in tools:
+  print(f'  Tool: {tool.name} = {tool.description}')</code></pre>
+<p>This displays the registered tool's name and usage description. It does not execute the tool.</p>
+<p>Creating the agent</p>
+<pre><code>agent = create_agent(model=llm, tools=tools, system_prompt=system_prompt)</code></pre>
+<p>The function builds an executable agent graph using LangGraph. The model parameter supplies the chat model; the tools parameter supplies the available executable capabilities; and the system_prompt parameter supplies the standing instructions. This call configures the agent but does not yet answer a question.</p>
+<p>The returned agent is a compiled graph, rather than an individual model response. Its control loop calls the model, executes requested tools, and calls the model again with the results. It normally finishes when the model produces a response without tool calls.</p>
+<p>Running the agent and streaming its progress</p>
+<pre><code>for step in agent.stream({"messages": [{"role": "user", "content": line}]}):</code></pre>
+<p>This starts a run using the entered text as a user message. The outer dictionary supplies the agent's message state; the inner dictionary identifies the message's role and content. LangChain accepts this dictionary representation, so the imported HumanMessage class is not needed here.</p>
+<p>The stream method yields updates as execution progresses. With the default updates mode used by this agent, each step is a dictionary mapping a graph node name to that node's state update. This is step-level progress, not character-by-character or token-by-token output.</p>
+<p>For this program, a model entry contains newly produced model messages, while a tools entry contains tool-result messages. The nested messages value is a list of message objects. A step is an update, not necessarily the complete conversation history.</p>
+<p>Detecting model output and tool calls</p>
+<pre><code>if "model" in step:
+    message = step["model"]["messages"][0]
+    if message.content:
+        print(f"🛠️   Content: {message.content}")
+    if message.tool_calls:
+        for tool_call in message.tool_calls:
+            print(f"🛠️ Tool Call: {tool_call['name']}   Args: {tool_call['args']}")</code></pre>
+<p>The membership test identifies a model update. The next line selects its first message, an AIMessage. Its content contains the model's emitted content, which may be text or structured content blocks depending on the provider.</p>
+<p>The tool_calls attribute is the reliable place to detect structured tool requests. The loop prints each requested tool's name and arguments. For the Python tool, the arguments contain the requested Python code. Printing the request does not execute it; execution is handled by the agent graph.</p>
+<p>A model message can contain both content and tool calls, so printed content is not necessarily the final answer. The two independent tests allow both to be displayed.</p>
+<p>Detecting tool results</p>
+<pre><code>if "tools" in step:
+    message = step["tools"]["messages"][0]
+    print(f"✅ Tool Result: {message.content}")
+    print("---")</code></pre>
+<p>This branch identifies a tool update and prints the first ToolMessage's content. The result is also supplied to the model automatically. The check-mark symbol is only a display label: a tool result can contain an error rather than a successful computation.</p>
+<p>Both branches select only the first message using index zero. In particular, an update containing several tool-result messages would have only its first result displayed. The tool-call loop does print every request in the selected model message, so the number of printed requests and results may differ.</p>
+<p>Following the example question</p>
+<pre>Sort the list 12, 35, 40, 22, 10, 3.   Then see if the third largest number is prime</pre>
+<p>A typical run produces a model update requesting Python execution, a tools update containing the computation result, and another model update answering the question. The model might combine sorting and primality testing into one execution or request multiple executions. The program does not prescribe the number of calls.</p>
+<p>Each input line starts a new run containing only that user message. The program does not pass earlier conversation messages or configure a checkpointer, so reusing the agent object does not provide conversation memory. However, the same PythonREPLTool instance is reused, and its Python namespace may retain variables across executions; tool state and conversation history are separate.</p>
+<p>Documentation used: LangChain Agents (https://docs.langchain.com/oss/python/langchain/agents) and Streaming (https://docs.langchain.com/oss/python/langchain/streaming).</p>
+
+<!--    -->
+
+
+<p>Run the Python REPL agent in the repository. The code implements an interactive interface for performing tasks that the user enters using Python.</p>
+<pre>uv run 01_tools_python.py</pre>
+<p>Ask the agent the following requests and examine the output traces to see if they are answered correctly via tool calls to the <code>PythonREPLTool</code>.</p>
+<ul>
+<li>Create a file named foo in the current directory and list the contents in the directory.</li>
+<li>Sort the list 12, 35, 40, 22, 10, 3. Then see if the third largest number is prime. </li>
+<li>Calculate the 10th Fibonacci number</li>
+</ul>
+<p>If the agent fails to correctly utilize the PythonREPLTool to generate correct results, modify the prompts until correct results are generated via tool calling.</p>
+<ul>
+<li><strong>Take screenshots of your results that includes your FAU ID</strong></li>
+</ul>
+<p>Experiment with prompting the agent with more complex computations such as those you may have been asked to do for programming homeworks.</p>
+<ul>
+<li><strong>Create a table for your lab notebook showing the trace of tool calls used to handle the prompt and the final result</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Built-in tools" duration="3">
+<p>Agents can utilize any collection of tools to perform actions such as retrieving data from the Internet or interacting with the local machine. LangChain comes with an extensive library of tools to choose from. Consider the program snippet below that uses the SerpApi (Google Search Engine results), LLM-Math, Wikipedia, and Terminal (e.g. shell command) tools to construct an agent. Note that, like the Python REPL tool, the Terminal tool is a dangerous one to include in the application, requiring us to explicitly allow its use.</p>
+<pre><code>tools = load_tools([&#34;serpapi&#34;, &#34;llm-math&#34;,&#34;wikipedia&#34;,&#34;terminal&#34;], llm=llm, allow_dangerous_tools=True)
+
+base_prompt = hub.pull(&#34;langchain-ai/react-agent-template&#34;)
+prompt = base_prompt.partial(instructions=&#34;Answer the user&#39;s request utilizing at most 8 tool calls&#34;)
+
+agent = create_react_agent(llm,tools,prompt)
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
+# agent_executor.invoke(
+   {&#34;input&#34;: &#34;What percent of electricity is consumed by data centers in the US?&#34;}
+)</code></pre>
+<p>Run the program.</p>
+<pre>uv run 02_tools_builtin.py</pre>
+<p>Within its interactive loop, ask the agent to perform the following tasks and see which tools it utilizes to answer each prompt.</p>
+<ul>
+<li>Who won the Super Bowl last year?</li>
+<li>How much money do I have if I take 10,000 dollars and compound it annually by 5 percent for 20 years?</li>
+<li>How old is Taylor Swift?</li>
+<li>Create a file named foo in the current directory, then do a directory listing</li>
+</ul>
+<p>Agents can perform reasoning tasks that put multiple tools together to generate a result. Experiment with complex queries that exercise a range of tool calls. Examples might include:</p>
+<ul>
+<li>Find the percentage of electricity consumed by data centers in the US and return the number of days out of the year in total energy consumption that this corresponds to.</li>
+<li>Find a recipe for Boston Creme Pie, then find the costs of its ingredients and then calculate the cost for making one.</li>
+<li>What is the square of the difference in age of the last two presidents?</li>
+</ul>
+<p>For the prompt that contains the most tool calls:</p>
+<ul>
+<li><strong>Create a table for your lab notebook showing the trace of tool calls used to handle the prompt and the final result</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Toolkits (SQL)" duration="3">
+<p>Another useful toolkit is <code>SQLDatabaseToolkit</code> that provides sets of SQL functions to support querying a database using natural language. The code below shows a simple program that takes a SQLite3 database provided as an argument and handles queries against it that are driven by a user&#39;s prompt.</p>
+<pre><code>from langchain.agents import create_sql_agent
+from langchain_community.agent_toolkits import SQLDatabaseToolkit
+from langchain.sql_database import SQLDatabase
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain.agents import AgentExecutor
+import sys
+
+database = sys.argv[1]
+llm = ChatGoogleGenerativeAI(model=&#34;...&#34;,temperature=0)
+db = SQLDatabase.from_uri(f&#34;sqlite:///{database}&#34;)
+toolkit = SQLDatabaseToolkit(db=db, llm=llm)
+agent_executor = create_sql_agent(
+    llm=llm,
+    toolkit=toolkit,
+    verbose=True
+)
+# agent_executor.invoke(&#34;How many users are there in this database?&#34;)</code></pre>
+<p>Using this program, we&#39;ll interact with two databases that reside in the repository: <code>metactf_users.db</code> and <code>roadrecon.db</code> (as provided <a href="https://github.com/OTRF/GenAI-Security-Adventures" target="_blank">here</a>) </p>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<h3 is-upgraded>metactf_users.db</h3>
+<p>The program in the repository provides an interactive shell for querying a database you supply it. Run the program using the <code>metactf_users.db</code> that is given. It shows the tools and the database </p>
+<pre>uv run 03_toolkits_sql.py db_data/metactf_users.db</pre>
+<p>This database is used to store usernames and password hashes for the MetaCTF sites such as <a href="https://cs205.oregonctf.org" target="_blank">cs205.oregonctf.org</a>. Examine the database via the following prompts. Note that you may need to run the query multiple times as the execution of the agent is typically not deterministic.</p>
+<ul>
+<li>List all tables</li>
+<li>How many users are in this database?</li>
+<li>List all usernames that begin with the letter &#39;a&#39;</li>
+<li>Find the admin user in the database and output the password hash.</li>
+<li>What password hash algorithm and number of iterations are being used to store hashes?</li>
+</ul>
+<p>For each prompt</p>
+<ul>
+<li><strong>Take screenshots of your results that includes your FAU ID</strong></li>
+</ul>
+<p>As before, agents can use reasoning to perform complex tasks involving multiple tool calls. Experiment with prompts that utilize a range of tools. For example, the prompt below should utilize multiple tool calls.</p>
+<ul>
+<li>Find the user table and identify the columns that contain a username and password hash. Then, find the password hash for the admin user. Then, find the type of password hash it is. Finally, write a hashcat command to perform a dictionary search on the password </li>
+<li>Find the user table, then find all users that begin with the letter a, then find the name of the password hash column, then find the password hashes for those users. Print users that begin with the letter a and their password hash</li>
+</ul>
+<p>For the prompt that contains the most tool calls:</p>
+<ul>
+<li><strong>Create a table for your lab notebook showing the trace of tool calls used to handle the prompt and the final result</strong></li>
+</ul>
+<h3 is-upgraded>roadrecon.db</h3>
+<p>A more complex database is also included at <code>roadrecon.db</code>. Unless the model being used has a capable reasoning engine, it might be more difficult to use prompts to access the information sought. Run the SQLAgent program using this database as an argument.</p>
+<pre>uv run 03_toolkits_sql.py db_data/roadrecon.db</pre>
+<p>As before, examine the database via the following prompts. </p>
+<ul>
+<li>List all tables.</li>
+<li>How many users are in this database?</li>
+<li>Find the user types in this database.</li>
+</ul>
+<p>For each prompt</p>
+<ul>
+<li><strong>Take screenshots of your results that includes your FAU ID</strong></li>
+</ul>
+<p>Experiment with prompts that utilize a range of tools. For example, the prompts below should utilize multiple tool calls.</p>
+<ul>
+<li>First, find the table with contact information. Then list the first 5 street addresses.</li>
+<li>First, find the table with contact information. Then, list the people who live on &#39;North Service Road&#39;</li>
+<li>First, find the tables containing service principals and role assignments. Then, query the role assignments table to find the names of service principals with AD Roles.</li>
+</ul>
+<p>For the prompt that contains the most tool calls:</p>
+<ul>
+<li><strong>Create a table for your lab notebook showing the trace of tool calls used to handle the prompt and the final result</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Custom tools via @tool" duration="3">
+<p>In the SQLAgent examples, the agent must generate a plan for querying the SQL database starting with no knowledge of the database schema itself. As a result, it can generate any number of strategies to handle a user&#39;s query, updating its plan as queries fail. While being explicit in one&#39;s query can help the SQLAgent avoid calls that fail, augmenting the SQLAgent with knowledge that is known about the database can avoid errors and reduce the number of calls to the database and underlying LLM. Custom tools allow the developer to add their own tools to implement specific functions. There are multiple ways of implementing custom tools. In this exercise, we will begin with the most concise and most limited approach.</p>
+<h2 is-upgraded><code>@tool</code><strong> decorator</strong></h2>
+<p>LangChain provides a decorator for turning a Python function into a tool that an agent can utilize as part of its execution. Key to the definition of the function, is a Python docstring that the agent can utilize to understand when and how to call the function. By annotating each tool with a description of what they are to be used for, the LLM is able to forward calls to the appropriate tool based on what the user&#39;s query is asking to do. To show this approach, we revisit the SQLAgent program by creating custom tools for handling specific queries from the user on the <code>metactf_users.db</code> database. </p>
+<p>The first tool we create, <code>fetch_users</code>, fetches all users in the database using our prior knowledge of the database&#39;s schema. This tool allows the agent to obtain the users without having to query for the column in the schema first, as it typically would need to do otherwise.</p>
+<pre><code>@tool
+def fetch_users():
+   &#34;&#34;&#34;Useful when you want to fetch the users in the database.  Takes no arguments.  Returns a list of usernames in JSON.&#34;&#34;&#34;
+   res = db.run(&#34;SELECT username FROM users;&#34;)
+   result = [el for sub in ast.literal_eval(res) for el in sub]
+   return json.dumps(result)</code></pre>
+<p>The second tool we create, <code>fetch_users_pass</code>, fetches a particular user&#39;s password hash from the database. As before, we use knowledge of the schema to ensure the exact SQL query we require is produced. Note that the code has a security flaw in it.</p>
+<pre><code>@tool
+def fetch_users_pass(username):
+   &#34;&#34;&#34;Useful when you want to fetch a password hash for a particular user.  Takes a username as an argument.  Returns a JSON string&#34;&#34;&#34;
+   res = db.run(f&#34;SELECT passhash FROM users WHERE username = &#39;{username}&#39;;&#34;)
+   result = [el for sub in ast.literal_eval(res) for el in sub]
+   return json.dumps(result)</code></pre>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<p>Given these custom tools, we can define a SQLAgent that defines them as extra tools so that they can be utilized in our queries.</p>
+<pre><code>toolkit = SQLDatabaseToolkit(db=db,llm=llm)
+agent_executor = create_sql_agent(
+    llm=llm,
+    toolkit=toolkit,
+    extra_tools=[fetch_users_tool, fetch_users_pass_tool],
+    verbose=True
+)
+# agent_executor.invoke(&#34;What are the password hashes for admin and demo0?&#34;)</code></pre>
+<p>Run the agent using the <code>metactf_users.db</code> database</p>
+<pre>uv run 04_tools_custom_decorator.py db_data/metactf_users.db</pre>
+<p>Test it with queries that utilize both the custom and built-in tools of the SQLAgent.</p>
+<ul>
+<li>Show me all of the users in the database</li>
+<li>What are the password hashes for demo0 and demo1?</li>
+</ul>
+<p>For each prompt:</p>
+<ul>
+<li><strong>Create a table for your lab notebook showing the trace of tool calls used to handle the prompt and the final result</strong></li>
+</ul>
+<p>One of the common vulnerabilities in SQL databases is an injection attack where syntax of a SQL statement is broken and data sent by the user is interpreted as SQL. Send the agent with the following prompt that contains a SQL injection attack</p>
+<ul>
+<li>Find the password hash for the user &#34;admin&#39; OR &#39;1&#39;=&#39;1&#34;</li>
+</ul>
+<p>Repeat the prompt until the <code>fetch_users_pass</code> tool is invoked and examine the tool trace:</p>
+<ul>
+<li><strong>Create a table for your lab notebook showing the trace of tool calls used to handle the prompt and the result of the injection attempt</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Validating tool input" duration="3">
+<p>The last example intentionally contained a SQL injection vulnerability. As a result of it, when the LLM was prompted to look for the canonical SQL injection user &#34;<code>admin' OR '1'='1</code>&#34;, it simply passed it directly to the vulnerable <code>fetch_users_pass</code> function which then included it into the final SQL query string. One way of eliminating this vulnerability is to perform input validation on the data that the LLM invokes the tool with. This is often done via the Pydantic data validation package. LangChain integrates Pydantic throughout its classes and provides support within the <code>@tool</code> decorator for performing input validation using it. Revisiting the custom tool example, we can modify the <code>fetch_users_pass</code> tool decorator to include a Pydantic class definition that input it is being passed is instantiated with (<code>FetchUsersPassInput</code>). </p>
+<pre><code>from langchain_core.pydantic_v1 import BaseModel, Field, root_validator
+
+class FetchUsersPassInput(BaseModel):
+    username: str = Field(description=&#34;Should be an alphanumeric string&#34;)
+    @root_validator
+    def is_alphanumeric(cls, values: dict[str,any]) -&gt; str:
+        if not values.get(&#34;username&#34;).isalnum():
+            raise ValueError(&#34;Malformed username&#34;)
+        return values
+
+@tool(&#34;fetch_users_pass&#34;, args_schema=FetchUsersInput, return_direct=True)
+def fetch_users_pass(username):
+   &#34;&#34;&#34;Useful when you want to fetch a password hash for a particular user.  Takes a username as an argument.  Returns a JSON string&#34;&#34;&#34;
+   res = db.run(f&#34;SELECT passhash FROM users WHERE username = &#39;{username}&#39;;&#34;)
+   result = [el for sub in ast.literal_eval(res) for el in sub]
+   return json.dumps(result)</code></pre>
+<p>Run the agent using the <code>metactf_users.db</code> database</p>
+<pre>uv run 05_tools_custom_pydantic.py db_data/metactf_users.db</pre>
+<p>Test the version using the SQL injection query:</p>
+<ul>
+<li>Find the password hash for the user &#34;admin&#39; OR &#39;1&#39;=&#39;1&#34;</li>
+</ul>
+<p>With input validation, the injection has now been prevented.</p>
+<ul>
+<li><strong>Take a screenshot of the result that includes your FAU ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="LangGraph introduction" duration="3">
+<p class="image-container"><img style="width:246px" src="img/34a26aaf8b63e166.png"></p>
+<p>LangGraph is a library that allows one to easily build multi-agent applications. By allowing a developer to specify the logic of the application in a graph-based workflow, it can simplify the development process. The code below implements a simple &#34;human-in-the-loop&#34; Linux command execution application using LangGraph. It consists of three nodes:</p>
+<ul>
+<li>A node that produces a Linux command based on a user prompt </li>
+</ul>
+<pre><code>def linux_command_node(user_input):
+    response = llm.invoke(
+        f&#34;&#34;&#34;Given the user&#39;s prompt, you are to generate a Linux command to answer it. Provide no other formatting, just the command. \n\n  User prompt: {user_input}&#34;&#34;&#34;)
+    return(response)</code></pre>
+<ul>
+<li>A check that determines whether the user wants to execute the command generated</li>
+</ul>
+<pre><code>def user_check(linux_command):
+    print(f&#34;Linux command is: {linux_command}&#34;)
+    user_ack = input(&#34;Should I execute this command? &#34;)
+    response = llm.invoke(f&#34;&#34;&#34;The following is the response the user gave to &#39;Should I execute this command?&#39;: {user_ack} \n\n  If the answer given is a negative one, return NO else return YES&#34;&#34;&#34;)
+    if &#39;YES&#39; in response:
+        return(&#39;linux_node&#39;)
+    else:
+        return(END)</code></pre>
+<ul>
+<li>A node that performs the execution and returns the result.</li>
+</ul>
+<pre><code>def linux_node(linux_command):
+    result = os.system(linux_command)
+    return(END)</code></pre>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<p>A graph can be made for the application using LangGraph. The graph defines the two nodes previously created, then specifies an edge from the start of the graph to the <code>linux_command_node</code>. Then, a conditional edge that is followed based on the results of the <code>user_check</code> is defined. The result of <code>user_check</code> sends the control flow either to the <code>linux_node</code> if the user wishes to execute the command or to the end node if the user does not. Finally, after execution by the linux_node, an edge to the end node is defined.</p>
+<pre><code>workflow = Graph()
+workflow.add_node(&#34;linux_command_node&#34;, linux_command_node)
+workflow.add_node(&#34;linux_node&#34;, linux_node)
+
+workflow.add_edge(START, &#34;linux_command_node&#34;)
+workflow.add_conditional_edges(
+    &#39;linux_command_node&#39;, user_check
+)
+workflow.add_edge(&#39;linux_node&#39;,END)
+app = workflow.compile()</code></pre>
+<p>We can invoke code to visualize the graph we just created.</p>
+<pre><code>from IPython.display import Image, display
+display(Image(app.get_graph().draw_mermaid_png()))</code></pre>
+<p class="image-container"><img style="width:202px" src="img/87eecd8a2f49fc37.png"></p>
+<p>Run the application in the repository.</p>
+<pre><code>uv run 06_langgraph_linux.py</code></pre>
+<p>Test out several queries:</p>
+<ul>
+<li>What is the size of the current directory in megabytes?</li>
+<li>What day is it?</li>
+<li>Find all files that begin with the letter a</li>
+<li>Find all files modified in the last day</li>
+</ul>
+<p>Generate a complex query that forces the agent to generate and execute multiple Linux commands in order to answer. For example, the prompt below will result in several commands being executed</p>
+<ul>
+<li>Find all text files in /etc that end with .conf. Then search each file for the string &#34;dir&#34;, then output the line containing the string and the lines before and after it.</li>
+</ul>
+<p>For the command you generated,</p>
+<ul>
+<li><strong>Take a screenshot of the result that includes your FAU ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="LangGraph human-in-the-loop tool calling" duration="3">
+<p>The previous lab provided a simple human-in-the-loop application for generating and executing Linux commands. In this lab, we&#39;ll apply the approach to agents. Because agents have the potential of creating significant harm when given the autonomy to produce plans and invoke tools, providing a mechanism for humans to validate the commands and code being executed is helpful.</p>
+<p>The program in the repository provides a simple human-in-the-loop tool calling application that utilizes LangGraph. As with the prior LangGraph application, execution is interrupted to allow the user to modify the tool call before it is executed. The program first defines two tools that can be called: an <code>execute_command</code> tool for executing shell commands and a <code>python_repl</code> tool for executing Python code. The tools are then bound to the model we instantiate so it is able to invoke them properly.</p>
+<pre><code>tools = [execute_command, python_repl]
+
+llm = Chat...(model=&#34;...&#34;).bind_tools(tools)</code></pre>
+<p>After defining the tools, the nodes are created. The entry point of the application is the <code>call_model</code> node for generating code and commands. It takes in a set of conversation messages that include the user&#39;s query and invokes the model, returning a response.</p>
+<pre><code>def call_model(state: MessagesState):                                           
+    response = llm.invoke(state[&#34;messages&#34;])                                    
+    return {&#34;messages&#34;: [response]}</code></pre>
+<p>The next node in the graph is the <code>human_review_node</code>. It requires no code because the logic for how to route the tool call is done by a function after execution is interrupted. </p>
+<pre><code>def human_review_node(state: MessagesState):
+  return {}</code></pre>
+<p>The last node is the <code>tools_node</code>, which uses a pre-built LangGraph component for invoking the tools that have been defined previously.</p>
+<pre><code>tool_node = ToolNode(tools)</code></pre>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<p>While the nodes themselves are simple, the complexity lies in the conditional edges and the function called after the interrupt. The first conditional edge is <code>route_after_call</code>. This function examines whether to end the execution of the application because we have the results of execution or whether the application has created another tool call to execute that needs to be reviewed by the user. It does so by accessing the most recent message that has been generated in the <code>MessagesState</code>.</p>
+<pre><code>def route_after_call(state: MessagesState) -&gt; Literal[&#34;human_review&#34;, END]:     
+    last = state[&#34;messages&#34;][-1]                                                
+    if isinstance(last, AIMessage) and last.tool_calls:                         
+        return &#34;human_review&#34;                                                   
+    return END</code></pre>
+<p>The next conditional edge is <code>route_after_human</code>.</p>
+<pre><code>def route_after_human(state: MessagesState) -&gt; Literal[&#34;tools&#34;, &#34;call&#34;]:                                                                         
+    last = state[&#34;messages&#34;][-1]                                                
+    if isinstance(last, AIMessage) and last.tool_calls:                         
+        return &#34;tools&#34;                                                          
+    return &#34;call&#34; </code></pre>
+<p>If the user wants to modify the tool call, the chat history is modified so that the message type indicates that flow needs to be routed back to the <code>call</code> node. However, if the user was satisfied with the tool call, then the message remains an <code>AIMessage</code> type and flow continues to the <code>tool_node</code>. </p>
+<p>The human-in-the-loop feedback mechanism is implemented in <code>get_feedback()</code>. In this function, we pull the proposed tool call out of the message state and prompt the user to approve it. If approved, the message state is left untouched and <code>route_after_human</code> will then pass the tool call to the <code>tools_node</code> for execution. However, if the user entered in input other than, ‘<code>y</code>&#39;, then the state is updated, putting a tool message on top of the message history. Flow of execution is then routed back to the <code>call_node</code> when <code>route_after_human</code> is executed. This then allows the <code>call_node</code> to adjust the tool call based on the user&#39;s input. Note that the code is manually crafting the feedback to a tool call, since this is what is required to maintain the correct structure of the Chat completion template.</p>
+<pre><code>def get_feedback(app, thread):                                                  
+    state = app.get_state(thread)                                               
+    last = state.values[&#34;messages&#34;][-1]                                         
+                                                                                
+    tool_call = last.tool_calls[0]                                              
+    tool_call_id = tool_call[&#34;id&#34;]                                              
+    tool_name = tool_call[&#34;name&#34;]                                               
+                                                                                
+    user_response = input(                                                      
+        &#34;\nPress &#39;y&#39; to approve the tool call\n&#34;                                
+        &#34;or describe how it should be changed:\n&gt; &#34;                             
+    )                                                                           
+                                                                                
+    if user_response.strip().lower() == &#34;y&#34;:                                    
+        return                                                                  
+                                                                                
+    feedback = ToolMessage(                                                     
+        content=f&#34;User requested changes: {user_response}&#34;,                     
+        tool_call_id=tool_call_id,                                              
+        name=tool_name,                                                         
+    )                                                                           
+                                                                                
+    app.update_state(                                                           
+        thread,                                                                 
+        {&#34;messages&#34;: [feedback]},                                               
+        as_node=&#34;human_review&#34;,                                                 
+    )</code></pre>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<p>With all of the components of our application defined, we can then instantiate the graph by creating its nodes, setting its entry point, and defining the edges between nodes. Note that, after the execution of the tool_node, we return back to the call_node for the next task.</p>
+<pre><code>workflow = StateGraph(MessagesState)                                            
+                                                                                
+workflow.add_node(&#34;call&#34;, call_model)                                           
+workflow.add_node(&#34;human_review&#34;, human_review_node)                            
+workflow.add_node(&#34;tools&#34;, tool_node)                                           
+                                                                                
+workflow.set_entry_point(&#34;call&#34;)                                                
+                                                                                
+workflow.add_conditional_edges(&#34;call&#34;, route_after_call)                        
+workflow.add_conditional_edges(&#34;human_review&#34;, route_after_human)               
+                                                                                
+workflow.add_edge(&#34;tools&#34;, &#34;call&#34;)</code></pre>
+<p>When the graph is compiled, the interrupt_before option is specified. This will stop the execution flow of the graph to obtain human feedback. The checkpointer is specified to store the graph&#39;s state, including its messages.</p>
+<pre><code>app = workflow.compile(                                                         
+    checkpointer=MemorySaver(),                                                 
+    interrupt_before=[&#34;human_review&#34;],                                          
+)</code></pre>
+<p class="image-container"><img style="width:362px" src="img/2cbc6613e16f9554.png"></p>
+<p>We then invoke the workflow in a loop to allow a user to interactively test the application. Run the code in the repository.</p>
+<pre><code>uv run 07_langgraph_feedback.py</code></pre>
+<p>For your first query,</p>
+<ul>
+<li>Ask the agent to calculate Pi. </li>
+</ul>
+<p>If the agent produces Python code that imports the <code>math</code> package for the constant, give the tool feedback to use native math not the <code>math</code> package. If the agent produces Python code that uses native math, give the tool feedback to use the <code>math</code> package. Then, execute the code produced.</p>
+<ul>
+<li><strong>Take a screenshot of the results that includes your FAU Id</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Multi-agent web assistant" duration="3">
+<p>Prior LangGraph applications operate in a serial fashion. One of the benefits of using LangGraph is the ability to easily implement concurrent execution flows such as what might be needed in a multi-agent application where individual agents execute simultaneously in order to process a user&#39;s query. In this exercise, we&#39;ll examine a simple web assistant application. The application contains 2 agents which concurrently retrieve headlines from a news feed and to produce a one paragraph summary of the news. The code each one executes is shown below.</p>
+<pre><code>async def fetch(url: str) -&gt; str:
+    async with httpx.AsyncClient(timeout=15) as client:
+        r = await client.get(url)
+        return r.text
+
+async def extract_and_summarize(html: str) -&gt; str:
+    prompt = f&#34;&#34;&#34;
+You are given raw HTML from a sports headline feed.
+
+1. Identify the main news article headlines on the page.
+2. Ignore navigation, ads, and footers.
+3. Summarize the current news in ONE concise paragraph.
+4. Return only that paragraph as a string
+
+HTML:
+{html[:12000]}
+&#34;&#34;&#34;
+    resp = await llm.ainvoke(prompt)
+    return resp.content.strip()</code></pre>
+<p>One of the agents performs the operation for NBA headlines while the other performs it for NFL headlines using ESPN&#39;s RSS feed.</p>
+<pre><code>async def nba_agent(state: State):
+    html = await fetch(&#34;https://www.espn.com/espn/rss/nba/news&#34;)
+    summary = await extract_and_summarize(html)
+    return {&#34;nba&#34;: summary}
+
+async def nfl_agent(state: State):
+    html = await fetch(&#34;https://www.espn.com/espn/rss/nfl/news&#34;)
+    summary = await extract_and_summarize(html)
+    return {&#34;nfl&#34;: summary}</code></pre>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<p>Next, we have a request router that takes the user&#39;s input and invokes either the NBA agent, the NFL agent, or both agents based on what the user asks for via LangGraph&#39;s <code>Send</code> message. Because this is done asynchronously, both agents can operate simultaneously and independently.</p>
+<pre><code>async def route(state: State):
+    prompt = f&#34;&#34;&#34;
+User request: {state[&#39;query&#39;]}
+
+Decide which sports news is requested.
+Reply with exactly one word:
+nba
+nfl
+both
+&#34;&#34;&#34;
+    resp = await llm.ainvoke(prompt)
+    decision = resp.content.lower().strip()
+
+    if decision == &#34;nba&#34;:
+        return Send(&#34;nba&#34;, state)
+    if decision == &#34;nfl&#34;:
+        return Send(&#34;nfl&#34;, state)
+    return [Send(&#34;nba&#34;, state), Send(&#34;nfl&#34;, state)]</code></pre>
+<p>Modify the program to print out the graph of the application via ASCII or Mermaid. Then, run the program.</p>
+<pre><code>uv run 08_langgraph_webassist.py</code></pre>
+<ul>
+<li><strong>Take a screenshot of the application graph that includes your FAU Id</strong></li>
+</ul>
+<p>Run the following prompts:</p>
+<ul>
+<li>Show me all of the headlines</li>
+<li>Show me basketball headlines</li>
+</ul>
+<p>The agent should either invoke both agents or just one in handling the queries</p>
+<ul>
+<li><strong>Take a screenshot of the query and output for each that includes your FAU Id</strong></li>
+</ul>
+</google-codelab-step>
+</google-codelab>
+<script src="/gensec-web/scripts/native-shim.js"></script>
+<script src="/gensec-web/scripts/custom-elements.min.js"></script>
+<script src="/gensec-web/scripts/prettify.js"></script>
+<script src="/gensec-web/scripts/codelab-elements.js"></script>
+<script src="https://support.google.com/inapp/api.js"></script>
+</body>
+</html>
