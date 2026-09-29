@@ -21,10 +21,15 @@
 <p><strong>Setup</strong></p>
 <p>Within the repository, create a virtual environment, activate it, and then install the packages required.</p>
 
-<pre>cd gensec-class/G03.1_Agents
+<pre>cd gensec-class/G03_Agents
 git pull
 uv init --bare
 uv add -r requirements.txt</pre>
+<p>
+    Note that command <code>git pull</code> is used to update the repository to the latest files. 
+    If you have made changes to the repository, you may need to stash or commit them before running 
+    <code>git pull</code>.
+</p>
 </google-codelab-step>
 
 <google-codelab-step label="ReAct and Tools" duration="10">
@@ -574,22 +579,27 @@ for tool in tools:
 <google-codelab-step label="Toolkits (SQL)" duration="3">
 <p>Another useful toolkit is <code>SQLDatabaseToolkit</code> that provides sets of SQL functions to support querying a database using natural language. The code below shows a simple program that takes a SQLite3 database provided as an argument and handles queries against it that are driven by a user&#39;s prompt.</p>
 <pre><code>from langchain.agents import create_sql_agent
+from langchain_community.agent_toolkits.sql.base import create_sql_agent
 from langchain_community.agent_toolkits import SQLDatabaseToolkit
-from langchain.sql_database import SQLDatabase
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.agents import AgentExecutor
-import sys
+from langchain_community.utilities import SQLDatabase
+from langchain_google_genai import ChatGoogleGenerativeAI, HarmCategory, HarmBlockThreshold
+
+llm = ChatGoogleGenerativeAI(
+             model=os.getenv("GOOGLE_MODEL"),
+             safety_settings = {
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+             }
+
 
 database = sys.argv[1]
-llm = ChatGoogleGenerativeAI(model=&#34;...&#34;,temperature=0)
-db = SQLDatabase.from_uri(f&#34;sqlite:///{database}&#34;)
-toolkit = SQLDatabaseToolkit(db=db, llm=llm)
-agent_executor = create_sql_agent(
+db = SQLDatabase.from_uri(f"sqlite:///{database}")
+agent = create_sql_agent(
     llm=llm,
-    toolkit=toolkit,
+    db=db,
     verbose=True
 )
-# agent_executor.invoke(&#34;How many users are there in this database?&#34;)</code></pre>
+# ... later:
+agent_executor.invoke(&#34;How many users are there in this database?&#34;)</code></pre>
 <p>Using this program, we&#39;ll interact with two databases that reside in the repository: <code>metactf_users.db</code> and <code>roadrecon.db</code> (as provided <a href="https://github.com/OTRF/GenAI-Security-Adventures" target="_blank">here</a>) </p>
 </google-codelab-step>
 <google-codelab-step label="-" duration="3">
@@ -721,7 +731,21 @@ def fetch_users_pass(username):
 </google-codelab-step>
 <google-codelab-step label="LangGraph introduction" duration="3">
 <p class="image-container"><img style="width:246px" src="img/34a26aaf8b63e166.png"></p>
-<p>LangGraph is a library that allows one to easily build multi-agent applications. By allowing a developer to specify the logic of the application in a graph-based workflow, it can simplify the development process. The code below implements a simple &#34;human-in-the-loop&#34; Linux command execution application using LangGraph. It consists of three nodes:</p>
+<p>LangGraph is a library that allows one to easily build multi-agent applications. 
+    By allowing a developer to specify the logic of the application in a graph-based workflow, 
+    it can simplify the development process. 
+</p>
+
+<p>
+A node is a function that performs a step; an edge determines which step runs next; 
+and state carries data between steps. Nodes can call an LLM, invoke a tool, or 
+run ordinary Python code. LangGraph is useful when an application needs branching, 
+loops, saved state, or a pause for human review.
+</p>
+
+<p>
+    The code below implements a simple &#34;human-in-the-loop&#34; Linux command execution 
+    application using LangGraph. It consists of three nodes:</p>
 <ul>
 <li>A node that produces a Linux command based on a user prompt </li>
 </ul>
@@ -783,7 +807,13 @@ display(Image(app.get_graph().draw_mermaid_png()))</code></pre>
 </google-codelab-step>
 <google-codelab-step label="LangGraph human-in-the-loop tool calling" duration="3">
 <p>The previous lab provided a simple human-in-the-loop application for generating and executing Linux commands. In this lab, we&#39;ll apply the approach to agents. Because agents have the potential of creating significant harm when given the autonomy to produce plans and invoke tools, providing a mechanism for humans to validate the commands and code being executed is helpful.</p>
-<p>The program in the repository provides a simple human-in-the-loop tool calling application that utilizes LangGraph. As with the prior LangGraph application, execution is interrupted to allow the user to modify the tool call before it is executed. The program first defines two tools that can be called: an <code>execute_command</code> tool for executing shell commands and a <code>python_repl</code> tool for executing Python code. The tools are then bound to the model we instantiate so it is able to invoke them properly.</p>
+<p>The program in file <code>07_langgraph_feedback.py</code> from the repository provides a simple 
+    human-in-the-loop tool calling application 
+    that utilizes LangGraph. As with the prior LangGraph application, execution is interrupted 
+    to allow the user to modify the tool call before it is executed. The program first defines 
+    two tools that can be called: an <code>execute_command</code> tool for executing shell 
+    commands and a <code>python_repl</code> tool for executing Python code. The tools are then 
+    bound to the model we instantiate so it is able to invoke them properly.</p>
 <pre><code>tools = [execute_command, python_repl]
 
 llm = Chat...(model=&#34;...&#34;).bind_tools(tools)</code></pre>
@@ -812,32 +842,39 @@ llm = Chat...(model=&#34;...&#34;).bind_tools(tools)</code></pre>
     return &#34;call&#34; </code></pre>
 <p>If the user wants to modify the tool call, the chat history is modified so that the message type indicates that flow needs to be routed back to the <code>call</code> node. However, if the user was satisfied with the tool call, then the message remains an <code>AIMessage</code> type and flow continues to the <code>tool_node</code>. </p>
 <p>The human-in-the-loop feedback mechanism is implemented in <code>get_feedback()</code>. In this function, we pull the proposed tool call out of the message state and prompt the user to approve it. If approved, the message state is left untouched and <code>route_after_human</code> will then pass the tool call to the <code>tools_node</code> for execution. However, if the user entered in input other than, ‘<code>y</code>&#39;, then the state is updated, putting a tool message on top of the message history. Flow of execution is then routed back to the <code>call_node</code> when <code>route_after_human</code> is executed. This then allows the <code>call_node</code> to adjust the tool call based on the user&#39;s input. Note that the code is manually crafting the feedback to a tool call, since this is what is required to maintain the correct structure of the Chat completion template.</p>
-<pre><code>def get_feedback(app, thread):                                                  
-    state = app.get_state(thread)                                               
-    last = state.values[&#34;messages&#34;][-1]                                         
-                                                                                
-    tool_call = last.tool_calls[0]                                              
-    tool_call_id = tool_call[&#34;id&#34;]                                              
-    tool_name = tool_call[&#34;name&#34;]                                               
-                                                                                
-    user_response = input(                                                      
-        &#34;\nPress &#39;y&#39; to approve the tool call\n&#34;                                
-        &#34;or describe how it should be changed:\n&gt; &#34;                             
-    )                                                                           
-                                                                                
-    if user_response.strip().lower() == &#34;y&#34;:                                    
-        return                                                                  
-                                                                                
-    feedback = ToolMessage(                                                     
-        content=f&#34;User requested changes: {user_response}&#34;,                     
-        tool_call_id=tool_call_id,                                              
-        name=tool_name,                                                         
-    )                                                                           
-                                                                                
-    app.update_state(                                                           
-        thread,                                                                 
-        {&#34;messages&#34;: [feedback]},                                               
-        as_node=&#34;human_review&#34;,                                                 
+<pre><code>def get_feedback(app, thread):
+    state = app.get_state(thread)
+    last = state.values["messages"][-1]
+
+    # This demo reviews one proposed tool call at a time; LangChain models can
+    # emit multiple tool calls, but the first one is enough to illustrate the
+    # human-in-the-loop control pattern.
+    tool_call = last.tool_calls[0]
+    tool_call_id = tool_call["id"]
+    tool_name = tool_call["name"]
+
+    user_response = input(
+        "\nPress 'y' to approve the tool call\n"
+        "or describe how it should be changed:\n> "
+    )
+
+    if user_response.strip().lower() == "y":
+        return
+
+    feedback = ToolMessage(
+        # Reusing the original tool_call_id tells the model that this feedback
+        # is about the pending tool invocation, not a new user request.
+        content=f"User requested changes: {user_response}",
+        tool_call_id=tool_call_id,
+        name=tool_name,
+    )
+
+    app.update_state(
+        thread,
+        {"messages": [feedback]},
+        # Attribute the injected feedback to the paused review node so the graph
+        # resumes along the same edges it would have used after human_review.
+        as_node="human_review",
     )</code></pre>
 </google-codelab-step>
 <google-codelab-step label="-" duration="3">
@@ -872,14 +909,23 @@ workflow.add_edge(&#34;tools&#34;, &#34;call&#34;)</code></pre>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="Multi-agent web assistant" duration="3">
-<p>Prior LangGraph applications operate in a serial fashion. One of the benefits of using LangGraph is the ability to easily implement concurrent execution flows such as what might be needed in a multi-agent application where individual agents execute simultaneously in order to process a user&#39;s query. In this exercise, we&#39;ll examine a simple web assistant application. The application contains 2 agents which concurrently retrieve headlines from a news feed and to produce a one paragraph summary of the news. The code each one executes is shown below.</p>
-<pre><code>async def fetch(url: str) -&gt; str:
+<p>Prior LangGraph applications operate in a serial fashion. One of the benefits of using LangGraph is 
+    the ability to easily implement concurrent execution flows such as what might be needed in a 
+    multi-agent application where individual agents execute simultaneously in order to process a 
+    user&#39;s query. In this exercise, we&#39;ll examine a simple web assistant application. The 
+    application contains 2 agents which concurrently retrieve headlines from a news feed and to 
+    produce a one paragraph summary of the news. The code each one executes (from file <code>08_langgraph_webassist.py</code>) is shown below.</p>
+<pre><code>async def fetch(url: str) -> str:
+    # httpx.AsyncClient releases the event loop while waiting on the network,
+    # which lets LangGraph run independent async branches without blocking.
     async with httpx.AsyncClient(timeout=15) as client:
         r = await client.get(url)
         return r.text
 
-async def extract_and_summarize(html: str) -&gt; str:
-    prompt = f&#34;&#34;&#34;
+async def extract_and_summarize(html: str) -> str:
+    # The model call is also awaited: fetching and summarizing are both I/O-bound
+    # steps, so async functions keep the graph responsive while those calls wait.
+    prompt = f"""
 You are given raw HTML from a sports headline feed.
 
 1. Identify the main news article headlines on the page.
@@ -889,40 +935,52 @@ You are given raw HTML from a sports headline feed.
 
 HTML:
 {html[:12000]}
-&#34;&#34;&#34;
+"""
     resp = await llm.ainvoke(prompt)
-    return resp.content.strip()</code></pre>
+    return resp.content[0]['text'].strip()</code></pre>
 <p>One of the agents performs the operation for NBA headlines while the other performs it for NFL headlines using ESPN&#39;s RSS feed.</p>
 <pre><code>async def nba_agent(state: State):
-    html = await fetch(&#34;https://www.espn.com/espn/rss/nba/news&#34;)
+    # This node receives the full state, including the original query, but only
+    # returns the key it owns.  LangGraph carries the other state keys forward.
+    html = await fetch("https://www.espn.com/espn/rss/nba/news")
     summary = await extract_and_summarize(html)
-    return {&#34;nba&#34;: summary}
+    return {"nba": summary}
 
 async def nfl_agent(state: State):
-    html = await fetch(&#34;https://www.espn.com/espn/rss/nfl/news&#34;)
+    # Returning only {"nfl": summary} makes this branch composable with the NBA
+    # branch; when both run, their non-overlapping updates merge into one result.
+    html = await fetch("https://www.espn.com/espn/rss/nfl/news")
     summary = await extract_and_summarize(html)
-    return {&#34;nfl&#34;: summary}</code></pre>
+    return {"nfl": summary}
+</code></pre>
 </google-codelab-step>
 <google-codelab-step label="-" duration="3">
 <p>Next, we have a request router that takes the user&#39;s input and invokes either the NBA agent, the NFL agent, or both agents based on what the user asks for via LangGraph&#39;s <code>Send</code> message. Because this is done asynchronously, both agents can operate simultaneously and independently.</p>
 <pre><code>async def route(state: State):
-    prompt = f&#34;&#34;&#34;
-User request: {state[&#39;query&#39;]}
+    # Conditional routing functions inspect the current state and choose the next
+    # node or nodes.  Because this router asks the LLM, it is async as well.
+    prompt = f"""
+User request: {state['query']}
 
 Decide which sports news is requested.
 Reply with exactly one word:
 nba
 nfl
 both
-&#34;&#34;&#34;
+"""
     resp = await llm.ainvoke(prompt)
-    decision = resp.content.lower().strip()
+    decision = resp.content[0]['text'].lower().strip()
 
-    if decision == &#34;nba&#34;:
-        return Send(&#34;nba&#34;, state)
-    if decision == &#34;nfl&#34;:
-        return Send(&#34;nfl&#34;, state)
-    return [Send(&#34;nba&#34;, state), Send(&#34;nfl&#34;, state)]</code></pre>
+    if decision == "nba":
+        # Send passes an explicit state payload to the destination node.  Here it
+        # forwards the same accumulated state that the coordinator received.
+        return Send("nba", state)
+    if decision == "nfl":
+        return Send("nfl", state)
+    # Returning multiple Send objects fans the same state out to both branches;
+    # their returned partial updates are merged back into the final graph state.
+    return [Send("nba", state), Send("nfl", state)]
+</code></pre>
 <p>Modify the program to print out the graph of the application via ASCII or Mermaid. Then, run the program.</p>
 <pre><code>uv run 08_langgraph_webassist.py</code></pre>
 <ul>
