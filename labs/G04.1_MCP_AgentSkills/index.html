@@ -1,0 +1,502 @@
+
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1,user-scalable=yes">
+<meta name="theme-color" content="#4F7DC9">
+<meta charset="UTF-8">
+<title>04.1: MCP, Agent Skills</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+<style>
+.success{color:#1e8e3e}.error{color:red} </style>
+</head>
+<body>
+<google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+<google-codelab codelab-gaid="" id="G04.1_MCP_AgentSkills" title="04.1: MCP, Agent Skills" environment="web" feedback-link="https://docs.google.com/document/d/1tjt3iGfH0E-xNutXMyYfiVVlAIqO7Ri371OoevCIh9I/edit">
+<google-codelab-step label="Model Context Protocol (MCP)" duration="3">
+<p>Prior labs show examples where agents leverage built-in tools or custom-built tools provided by the application writer. As shown below, each LLM application would then execute its own code for accessing services.</p>
+<p class="image-container"><img style="width:317px" src="img/c6a5540509fd559a.png"></p>
+<p>The Model Context Protocol or MCP is a standard protocol for LLMs to retrieve invoke both local and remote tools to access services. Thus, rather than having every LLM agent implement all of the tools it needs to execute, the agent can instead invoke tools implemented by MCP servers that are running either locally or remotely. In this lab, you will experiment with agents that utilize MCP servers to handle tasks.</p>
+<p class="image-container"><img style="width:333.03px" src="img/e398c09dec225754.png"></p>
+<h2 is-upgraded><strong>Course VM setup</strong></h2>
+<p>Within the repository on the course VM, change into the exercise directory and update the code.</p>
+<pre>cd cs475-src/04*
+git pull</pre>
+</google-codelab-step>
+<google-codelab-step label="Vulnerable SQLite STDIO MCP Server" duration="3">
+<h2 is-upgraded><strong>Course VM</strong></h2>
+<p>Within the repository on the course VM, change into the exercise directory, then create a virtual environment and install the required packages.</p>
+<pre>cd 01_sqlite
+uv init --bare
+uv add -r requirements.txt</pre>
+<p>There are two main ways of running an MCP server. One way is to run the MCP server locally and communicate with it over standard input/output (STDIO) while another is to run the MCP server remotely and communicate with it over HTTP.</p>
+<h3 is-upgraded>MCP server</h3>
+<p>The code below implements the SQLite server. It utilizes the FastMCP package to create the server and instantiates one tool within it called <code>query(</code>). The tool handles queries to a local SQLite database by taking a query string and executing it against a specified database, returning the results. By taking a raw query string, the tool is vulnerable to SQL injection attacks. Note that the description of the tool is provided within the comments of the tool declaration. This description is utilized by the server to instruct clients on how to access the tool. An LLM agent is better equipped to call MCP tools if these descriptions are detailed, specific, and accurate.</p>
+<h3 is-upgraded>vulnerable_sqlite_mcp_server.py</h3>
+<pre><code>from fastmcp import FastMCP
+import sqlite3
+import sys
+
+mcp = FastMCP(&#34;sqlite&#34;)
+con = sqlite3.connect(&#39;db_data/metactf_users.db&#39;)
+
+@mcp.tool()
+async def query(query: str) -&gt; list:
+    &#34;&#34;&#34;Query a specified Sqlite3 database. Takes a query string as an input parameter and returns the result of the query.&#34;&#34;&#34;
+    cur = con.cursor()
+    res = cur.execute(query)
+    con.commit()
+    return res.fetchall()
+
+if __name__ == &#34;__main__&#34;:
+    if sys.argv[1] == &#39;stdio&#39;:
+        mcp.run(transport=&#34;stdio&#34;)
+    else:
+        mcp.run(transport=&#34;http&#34;, host=&#34;0.0.0.0&#34;, port=8080)</code></pre>
+</google-codelab-step>
+<google-codelab-step label="-" duration="2">
+<h3 is-upgraded>MCP client</h3>
+<p>To leverage the tool that the server now supports, we can adapt our prior agent code to be an MCP client, leveraging LangChain&#39;s MCP adapter support to invoke the tool on the server. As the code shows, we first define the server we wish to bring up. In this instance, the path in the repository to the prior server code is specified. Then, in the agent loop, we create a connection to the MCP server and load the MCP server&#39;s tool into our agent, before querying it. In doing so, the agent will package an MCP call over STDIO via the session&#39;s connection and retrieve the results.</p>
+<pre><code>from langchain_mcp_adapters.tools import load_mcp_tools
+from mcp import ClientSession
+from mcp.client.stdio import StdioServerParameters, stdio_client
+import asyncio
+
+database = &#34;db_data/metactf_users.db&#34;
+
+server = StdioServerParameters(
+    command=&#34;python&#34;,
+    args=[&#34;vulnerable_sqlite_mcp_server_stdio.py&#34;,&#34;stdio&#34;]
+)
+
+prompt = f&#34;You are a Sqlite3 database look up tool. Perform queries on the database at {database} given the user&#39;s input.  Utilize the user input verbatim when sending the query to the database and print the query that was sent to the database&#34;
+
+async def run_agent():
+    async with stdio_client(server) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+
+            tools = await load_mcp_tools(session)
+            agent = create_react_agent(model=llm, tools=tools, prompt=prompt)
+            query = &#34;Who are the users in the database?&#34;
+            result = await agent.ainvoke({&#34;messages&#34;: [(&#34;user&#34;, query)]})
+            print(f&#34;Agent response: {result}&#34;)
+
+if __name__ == &#34;__main__&#34;:
+    result = asyncio.run(run_agent())</code></pre>
+<p>Before we use the agent to answer queries about the database, we&#39;ll want to establish &#39;ground-truth&#39; to ensure the agent is working correctly and not hallucinating incorrect results. Within the repository, load the database using the <code>sqlite3</code> CLI.</p>
+<pre>cd db_data
+sqlite3 metactf_users.db</pre>
+<p>Using the CLI, query the database to determine &#34;ground-truth&#34; measurements. </p>
+<p>The following queries return the column names of the users table, the number of users in the users table, the usernames that start with the letter &#39;<code>a</code>&#39;, and the admin&#39;s password hash that includes the number of iterations the hash was generated with.</p>
+<pre>PRAGMA table_info(users);
+SELECT COUNT(*) from users;
+SELECT username FROM users WHERE username LIKE &#39;a%&#39;;
+SELECT passhash FROM users WHERE username = &#39;admin&#39;;</pre>
+<ul>
+<li><strong>Take a screenshot showing the results that include your OdinID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="-" duration="2">
+<p>Once you&#39;ve obtained ground truth, go back to the program directory and run the program</p>
+<pre>uv run 01_stdio_mcp_client.py</pre>
+<p>Now, attempt to interact with the database using the agent with natural language queries asking for similar information. </p>
+<ul>
+<li>What are the column names for the users table?</li>
+<li>How many users are there in the database?</li>
+<li>Find all usernames that begin with the letter &#39;a&#39;</li>
+<li>Find the admin user in the database and output the password hash.</li>
+</ul>
+<p>While the first two queries are often easy for an LLM to produce the SQL for, it may find other open-ended queries difficult unless prompted for a more specific set of steps. For the queries that fail, attempt to modify the query to ask the LLM to &#39;think step-by-step&#39; (e.g. chain-of-thought prompting) or specifically break down the steps that it would need to perform to answer the query.</p>
+<ul>
+<li><strong>Take a screenshot showing the correct results being produced by the agent that includes your OdinID</strong></li>
+</ul>
+<p>Finally, try a complex query with step-by-step instructions such as the one below which returns a <code>hashcat</code> command that performs a dictionary search on the admin&#39;s password hash.</p>
+<ul>
+<li>Find the user table and identify the columns that contain a username and password hash. Then, find the password hash for the admin user. Then, find the type of password hash it is and the number of iterations are being used to generate them. Finally, write a hashcat command to perform a dictionary search on the password.</li>
+</ul>
+<p>Modify the query or the model until the agent is able to return a correct answer to the query.</p>
+<ul>
+<li><strong>Take a screenshot showing the correct results being produced by the agent that includes your OdinID</strong></li>
+</ul>
+<p>It is quite dangerous to expose an MCP server like this without proper access control. It is also quite dangerous to simply allow agents to have an MCP server accept arbitrary SQL queries from an agent. Using the agent, show whether the server is vulnerable to attack using the queries below.</p>
+<ul>
+<li>List the passhash of <code>foo or 1=1--</code></li>
+<li>Drop the users table</li>
+</ul>
+<p>For each query</p>
+<ul>
+<li><strong>Take a screenshot of the results that includes your OdinID</strong></li>
+</ul>
+<p>Exit out of the agent with a blank line. Note, if the agent is able to delete the table, restore it from the command line via:</p>
+<pre>git checkout db_data/metactf_users.db</pre>
+</google-codelab-step>
+<google-codelab-step label="Secure SQLite STDIO MCP Server" duration="10">
+<p>The vulnerable SQLite MCP server allowed arbitrary SQL queries to be executed, giving it excessive agency and making it extremely vulnerable to attack. One can improve the security of the MCP server by limiting the functionality of its tools to just the ones necessary. A more secure version is shown below:</p>
+<h3 is-upgraded>secure_sqlite_mcp_server.py</h3>
+<pre><code>@mcp.tool()
+async def fetch_users() -&gt; list:
+    &#34;&#34;&#34;Fetch the users in the database.  Takes no arguments and returns a list of users.&#34;&#34;&#34;
+    cur = con.cursor()
+    res = cur.execute(&#39;SELECT username from USERS&#39;)
+    return res.fetchall()
+
+@mcp.tool()
+async def fetch_users_pass(username: str) -&gt; str:
+   &#34;&#34;&#34;Useful when you want to fetch a password hash for a particular user.  Takes a username as a string argument.  Returns a JSON string&#34;&#34;&#34;
+   cur = con.cursor()
+   res = cur.execute(f&#34;SELECT passhash FROM users WHERE username = ?;&#34;,(username,))</code></pre>
+<p>As the code shows, the MCP server only allows one to fetch a list of all of the users and to retrieve the password hash for a given user. To leverage this server, modify the MCP client to utilize the secure server.</p>
+<pre><code>server = StdioServerParameters(
+    command=&#34;python&#34;,
+    args=[&#34;secure_sqlite_mcp_server.py&#34;,&#34;stdio&#34;]
+)</code></pre>
+<p>Run the program again and repeat the destructive queries:</p>
+<ul>
+<li>List the passhash of <code>foo or 1=1--</code></li>
+<li>Drop the users table</li>
+</ul>
+<p>For each query</p>
+<ul>
+<li><strong>Take a screenshot of the results that includes your OdinID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Secure SQLite HTTP MCP Server" duration="10">
+<p>One can also run an MCP server remotely over the network, thus allowing MCP clients to invoke the tools that the server implements over the network using HTTP. In this step, we&#39;ll first deploy the SQLite MCP server as a serverless container running on Google&#39;s Cloud Run, then configure our client agent to invoke it using HTTP. </p>
+<h2 is-upgraded><strong>MCP server</strong></h2>
+<p>Bring up Cloud Shell on your project. We will first need to enable all of the APIs required for launching a container on Cloud Run. We will run them in batches to avoid rate-limiting. If a command fails, repeat it.</p>
+<pre><code>gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com
+gcloud services enable iamcredentials.googleapis.com serviceusage.googleapis.com
+gcloud services enable logging.googleapis.com monitoring.googleapis.com </code></pre>
+<p>Visit the course repository on GitHub and navigate to the directory containing the <a href="https://github.com/wu4f/cs475-src/tree/main/04_MCP/01_sqlite" target="_blank">SQLite MCP code</a>. Examine the Dockerfile in the directory. </p>
+<h3 is-upgraded>Dockerfile</h3>
+<pre>FROM python:3.10
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+RUN mkdir -p db_data
+
+COPY secure_sqlite_mcp_server.py .
+
+COPY ./db_data/metactf_users.db ./db_data/metactf_users.db
+
+EXPOSE 8080
+
+CMD [&#34;python&#34;, &#34;vulnerable_sqlite_mcp_server.py&#34;, &#34;http&#34;]</pre>
+<p>The Dockerfile specifies a container image that implements our MCP server. The container installs the Python packages required to run the server, then copies the server code and database file over, before running the server. Note that the container exposes only port 8080. By default, CloudRun routes all incoming requests to port 80 and 443 to port 8080 when a container is deployed unless specifically requested to do otherwise.</p>
+</google-codelab-step>
+<google-codelab-step label="-" duration="2">
+<p>Deploy the container onto Cloud Run. While one could go through the mechanics of building the container and deploying it via the CLI, for convenience, you can visit the course&#39;s repository on Github, navigate to the directory with the Dockerfile, and then click on the &#34;Run on Google Cloud&#34; button. </p>
+<p class="image-container"><img style="width:306.99px" src="img/2b9938b9927a4150.png"></p>
+<p>This will launch the process within Cloud Shell to build the container from the Dockerfile in the repository and to deploy it onto Cloud Run. As part of this process, you&#39;ll need to.</p>
+<ul>
+<li>Authorize access to Cloud Shell when prompted</li>
+<li>Confirm that you trust the repository to allow it to be opened within Cloud Shell</li>
+<li>Select your course&#39;s Google Cloud Platform project to deploy the container onto</li>
+<li>Then select the region you want to deploy the container in (e.g. <code>us-central1</code>)</li>
+</ul>
+<p>The container will then be built and pushed to Google&#39;s Artifact Registry and then deployed onto Cloud Run. When deployed, a URL will be returned. Make a note of it.</p>
+<p class="image-container"><img style="width:624px" src="img/5ab4361b52604385.png"></p>
+<p>If the build fails, you may try to run the commands manually in Cloud Shell</p>
+<pre><code>git clone https://github.com/wu4f/cs475-src
+cd cs475-src/04_MCP/01_sqlite
+gcloud artifacts repositories create cloud-run-source-deploy \
+    --repository-format=docker \
+    --location=us-west1 \
+    --description=&#34;Docker repository for Cloud Run&#34;
+
+gcloud builds submit --tag us-west1-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT}/cloud-run-source-deploy/svc-01-sqlite .
+
+gcloud run deploy svc-01-sqlite --project=${GOOGLE_CLOUD_PROJECT} \
+  --platform=managed --region=us-west1 --allow-authenticated \
+  --image us-west1-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT}/cloud-run-source-deploy/svc-01-sqlite </code></pre>
+<p>Visit the Cloud Run interface via the web console.</p>
+<ul>
+<li><strong>Take a screenshot of the deployed service that includes your OdinID</strong></li>
+</ul>
+<p class="image-container"><img style="width:582px" src="img/9eb5648b924557d5.png"></p>
+</google-codelab-step>
+<google-codelab-step label="-" duration="2">
+<h2 is-upgraded><strong>MCP client</strong></h2>
+<p>We&#39;ll now run the MCP client on the course VM and allow it to utilize the MCP server running in Cloud Run. To begin with, on the course VM, set the <code>MCP_URL</code> environment variable to the URL that is returned by Cloud Run.</p>
+<pre>export MCP_URL=&#34;https:// ...a.run.app&#34;</pre>
+<p>To adapt the MCP client to utilize the remote MCP server, we simply tweak the client to utilize the Streamable HTTP interface to the MCP server&#39;s endpoint URL as shown in the snippet below, keeping the rest of the client the same.</p>
+<pre><code>async def run_agent():
+        async with streamablehttp_client(f&#34;{os.getenv(&#39;MCP_URL&#39;)}/mcp/&#34;) as (read, write, _):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+
+            tools = await load_mcp_tools(session)
+...</code></pre>
+<p>Run the agent and interact with the MCP server on Cloud Run.</p>
+<pre>uv run 02_http_mcp_client.py</pre>
+<p>Repeat the destructive queries again:</p>
+<ul>
+<li>List the passhash of <code>foo or 1=1--</code></li>
+<li>Drop the users table</li>
+</ul>
+<p>Then, run the initial queries to show the attacks did not impact the server.</p>
+<ul>
+<li>List all tables</li>
+<li>How many users are in this database?</li>
+<li>List all usernames that begin with the letter &#39;a&#39;</li>
+</ul>
+<p>Back in the web interface for Cloud Run, click on the deployed service and then navigate to the logs. Find the requests associated with your queries.</p>
+<ul>
+<li><strong>Take a screenshot of the request including the HTTP method and User-Agent used by the MCP client to access the MCP server</strong></li>
+</ul>
+<h2 is-upgraded><strong>Clean up</strong></h2>
+<p>In Cloud Shell, list the SQLite MCP Cloud Run service that was deployed, then delete it.</p>
+<pre>gcloud run services list
+gcloud run services delete &lt;SERVICE_NAME&gt; --region=&lt;REGION&gt;</pre>
+</google-codelab-step>
+<google-codelab-step label="Native MCP agents" duration="3">
+<p>While we can utilize LangChain&#39;s MCP adapter support to invoke tools provided using MCP, another agent implementation that can be used is <a href="https://fast-agent.ai/" target="_blank">FastAgent</a>. FastAgent is designed specifically for MCP tool calls and their results. The agent is simple to set up and can be easily integrated with MCP servers being spun up locally or over the network. To begin with, FastAgent needs to be configured with the name and functionality of the MCP servers it is allowed to access. The configuration for utilizing the prior SQLite STDIO MCP server is shown below. A FastAgent client will automatically load this configuration to initialize its tools.</p>
+<h3 is-upgraded>fastagent.config.yaml</h3>
+<pre><code>mcp:
+  servers:
+   sqlite_stdio:
+    command: &#34;python&#34;
+    args: [&#34;secure_sqlite_mcp_server.py&#34;,&#34;stdio&#34;]</code></pre>
+<p>A simple FastAgent program is shown below that utilizes this MCP server to answer queries.</p>
+<pre><code>import asyncio
+from fast_agent.core.fastagent import FastAgent
+
+# Create the application
+fast = FastAgent(&#34;SQLite Agent&#34;)
+
+@fast.agent(
+    instruction=f&#34;You are a Sqlite3 database look up tool. Perform queries on the database given the user&#39;s input.  Utilize the user input verbatim when sending the query to the database and print the query that was sent to the database&#34;,
+    model=&#34;...&#34;, # See https://fast-agent.ai/models/llm_providers
+    servers=[&#34;sqlite_stdio&#34;],
+    use_history=True,
+)
+async def main():
+    async with fast.run() as agent:
+        await agent.interactive()</code></pre>
+<p>Run the agent and interact with the interactive interface implemented by the FastAgent package.</p>
+<pre>uv run 03_fastagent_mcp_client.py</pre>
+<p>After the FastAgent interface loads, list the MCP servers and the tools that have been loaded.</p>
+<pre>/mcp
+/tools</pre>
+<ul>
+<li><strong>Take a screenshot showing the secure tools are being used includes your OdinID</strong></li>
+</ul>
+<p>Run the query below:</p>
+<ul>
+<li>List all tables in the database</li>
+</ul>
+<p>As before, the agent should send a query string to the MCP server that returns the name of the table in the database. After the answer is returned, view the agent history.</p>
+<pre>/history</pre>
+<ul>
+<li><strong>Take a screenshot of the chat history showing the query the agent generated that includes your OdinID</strong></li>
+</ul>
+<p>View the number of input and output tokens consumed in the agent&#39;s execution.</p>
+<pre>/usage</pre>
+<ul>
+<li><strong>Take a screenshot of the number of input and output tokens consumed from executing your queries that includes your OdinID</strong></li>
+</ul>
+<p>Being mindful of your token consumption when building an agent will help reduce overall costs.</p>
+</google-codelab-step>
+<google-codelab-step label="Google Drive MCP Server" duration="10">
+<p>Now you will interact with a Google Drive agent that uses an MCP server to interact with your Google Drive. The code for the Google Drive MCP server is similar to the prior SQLite one with specific tools implementing individual operations within a user&#39;s Google Drive. Code snippets for listing files (<code>list_files</code>) and retrieving a particular file (<code>get_file</code>) are shown below.</p>
+<pre><code>from fastmcp import FastMCP
+
+mcp = FastMCP(&#34;Google Drive&#34;)
+
+@mcp.tool(&#34;list_files&#34;)
+async def list_files():
+    &#34;&#34;&#34;
+    List files in Google Drive.
+    &#34;&#34;&#34;
+    service = get_drive_service()
+    results = service.files().list(pageSize=10, fields=&#34;nextPageToken, files(id, name)&#34;).execute()
+    items = results.get(&#39;files&#39;, [])    
+    file_list = [f&#34;{item[&#39;name&#39;]} (ID: {item[&#39;id&#39;]})&#34; for item in items]
+    return &#34;\n&#34;.join(file_list)
+
+@mcp.tool(&#34;get_file&#34;)
+async def get_file(file_id: str):
+    &#34;&#34;&#34;
+    Get a file from Google Drive by its ID.
+    &#34;&#34;&#34;
+    service = get_drive_service()
+    file = service.files().get(fileId=file_id, fields=&#39;id, name&#39;).execute()
+    return f&#34;File found: {file[&#39;name&#39;]} (ID: {file[&#39;id&#39;]})&#34;</code></pre>
+<p>As both tools show, the service is instantiated and then specific APIs are invoked on it utilizing the parameters given by the client.</p>
+<ul>
+<li><strong>List the names of all of the tools supported by the Google Drive MCP server</strong></li>
+</ul>
+<p><strong>Cloud shell </strong></p>
+<p>We&#39;ll now set up our project to run the server. Begin by enabling the Google Drive API on your cloud project. Within Cloud Shell, this can be done with the following:</p>
+<pre>gcloud services enable drive.googleapis.com</pre>
+<p>We&#39;ll be running the MCP server on our course VM and connecting to it from an MCP client running on Cloud Shell. To allow the server to run on the course VM, we&#39;ll need to open up the firewall to allow incoming traffic to the server from our client. Within Cloud Shell, create the firewall rule with tag <code>mcp</code> and add it to the course VM.</p>
+<pre>gcloud compute firewall-rules create allow-mcp \
+  --allow=tcp:8080 --target-tags=mcp
+gcloud compute instances add-tags &lt;NameOfVM&gt; \
+  --tags=mcp</pre>
+</google-codelab-step>
+<google-codelab-step label="-" duration="5">
+<p><strong>OAuth Setup</strong></p>
+<p>Google Drive utilizes the OAuth2 protocol to authenticate and authorize access. To enable the MCP server to do so, we must configure an OAuth application on our Google Cloud project. To do so, navigate to the OAuth consent section of the &#34;APIs &amp; Services&#34; <a href="https://console.cloud.google.com/apis/credentials/consent" target="_blank">here</a>. </p>
+<p class="image-container"><img style="width:468px" src="img/a6a1259ed53640ab.png"></p>
+<p>If this is the first time OAuth is being configured, you will be asked to specify application information. Name the application &#34;Google Drive MCP&#34; and utilize your <a href="http://pdx.edu" target="_blank">pdx.edu</a> address. </p>
+<p class="image-container"><img style="width:491.5px" src="img/158a573106ecaf7a.png"></p>
+<p>Configure the Audience to &#34;Internal&#34; and set the contact information to your <a href="http://pdx.edu" target="_blank">pdx.edu</a> address. Agree to the user data policy and create the project configuration. Navigate to the &#34;Data Access&#34; portion of the console shown below and click on &#34;Add or remove scopes&#34;</p>
+<p class="image-container"><img style="width:624px" src="img/963619dcc31a40b4.png"></p>
+</google-codelab-step>
+<google-codelab-step label="-" duration="5">
+<p>Select the permissions to allow full access to your Google Drive files and click on &#34;Update&#34;.</p>
+<p class="image-container"><img style="width:624px" src="img/4e46f857d2cd82a4.png"></p>
+<p>Next, navigate to the Clients tab and create a client. Configure it as a &#34;Desktop application&#34; and name it &#34;MCP client&#34;. When the client has been created, download its associated JSON file that will include its Client ID and secret. </p>
+<p class="image-container"><img style="width:488px" src="img/f201a9f575ed3209.png"></p>
+<p>Upload the JSON file to Cloud Shell. </p>
+<p class="image-container"><img style="width:624px" src="img/ff1d07710ae71874.png"></p>
+<p>Then, upload it from Cloud Shell to your course VM with the following command.</p>
+<pre>gcloud compute scp client_secret_*.json course-vm:/home/${USER}/cs475-src/04_MCP/02_google_drive/credentials.json</pre>
+</google-codelab-step>
+<google-codelab-step label="-" duration="5">
+<h2 is-upgraded>Course VM (MCP server)</h2>
+<p>The course VM will be used to run the MCP server. For this step, we need to get Google Drive credentials for your user account onto the VM in order to allow the MCP server to interact with files in your Google Drive folders. Connect to your course VM using RDP (e.g. Remote Desktop Connection or Remmina). Change into the exercise&#39;s directory and then set up the Python environment for the server.</p>
+<pre>cd 02_google_drive 
+uv init --bare
+uv add -r requirements.txt</pre>
+<p>Run the authentication script in the directory to obtain credentials for your Google account that the MCP server will then utilize when accessing Google Drive on your behalf.</p>
+<pre>uv run auth.py</pre>
+<p>Click the URL that it prints out to launch a web browser that will allow you to authenticate and authorize Google Drive permissions via OAuth. If everything worked then you should see a list of some of your Google Drive files in the output of the authentication script. </p>
+<p>Examine the Google Drive MCP server code in <code>gdrive_mcp_server.py</code> and make a note of each tool that it provides to clients. Then, launch the Google Drive MCP server and keep it running.</p>
+<pre>uv run gdrive_mcp_server.py</pre>
+</google-codelab-step>
+<google-codelab-step label="-" duration="5">
+<h2 is-upgraded><strong>Cloud shell (MCP client)</strong></h2>
+<p>Launch Google Cloud shell. Clone the course repository, then change into the exercise directory and set up a Python virtual environment.</p>
+<pre>git clone https://github.com/wu4f/cs475-src
+cd cs475-src/04*/02_google_drive
+uv init --bare
+uv add -r requirements.txt</pre>
+<p>Now copy the external IP address of your course VM and set the MCP_URL environment variable as done previously, replacing &#34;<code>CourseVM_External_IP</code>&#34; with your course VM&#39;s external IP address. Then run the agent and it will connect to the MCP server. </p>
+<pre>export MCP_URL=http://&lt;CourseVM_External_IP&gt;:8080
+uv run gdrive_mcp_client.py</pre>
+<p>Select 2 different tools that the Google Drive MCP server implements and prompt the client to perform an operation that invokes it.</p>
+<ul>
+<li><strong>Take a screenshot of each successful execution that includes your OdinID</strong></li>
+</ul>
+<h2 is-upgraded><strong>Cleanup (Cloud Shell)</strong></h2>
+<p>Exit the client and remove your environment. </p>
+<pre>rm -rf .venv</pre>
+<h2 is-upgraded><strong>Cleanup (Course VM)</strong></h2>
+<p><code>Ctrl+c</code> to exit the server and remove your environment.</p>
+<pre>rm -rf .venv</pre>
+</google-codelab-step>
+<google-codelab-step label="Git MCP Server" duration="5">
+<p>Change into the exercise directory.</p>
+<pre>cd 03_git
+uv init --bare
+uv add -r requirements.txt</pre>
+<p>The Git MCP server (<code>mcp-server-git</code>) is a Python package that supplies an off the shelf MCP server provided by Anthropic that allows you to query <code>git</code> repositories. After including it in our packages and installing it in our Python environment, we can specify the server in the FastAgent configuration as shown below:</p>
+<h3 is-upgraded>requirements.txt</h3>
+<pre><code>mcp-server-git</code></pre>
+<h3 is-upgraded>fastagent.config.yaml</h3>
+<pre><code>mcp:
+  servers:
+   git:
+    command: &#34;python&#34;
+    args: [&#34;-m&#34;, &#34;mcp_server_git&#34;]</code></pre>
+<p>Install the packages</p>
+<pre>uv init --bare
+uv add -r requirements.txt</pre>
+<p>Then, run the program.</p>
+<pre>uv run git_mcp_client.py</pre>
+<p>Prompt the agent to find the hash of the last commit and to list the developers responsible for the last 20 commits. </p>
+<ul>
+<li><strong>Take a screenshot of the results that includes your OdinID </strong></li>
+</ul>
+<h2 is-upgraded><strong>Cleanup</strong></h2>
+<p>Exit the client and remove the environment.</p>
+<pre>rm -rf .venv</pre>
+</google-codelab-step>
+<google-codelab-step label="Agent Skills" duration="3">
+<p>While MCP gives agents access to powerful tools and services, tool access alone does not capture the expertise required to solve complex tasks consistently and effectively. Agent Skills address this gap by defining *how* an agent performs a task. A skill packages reusable expertise—including prompts, workflows, reasoning strategies, validation rules, and domain-specific best practices—into a modular capability that can be invoked whenever needed. Rather than simply exposing functionality, skills encode proven methods for accomplishing objectives such as code review, curriculum generation, security analysis, or software design. Together, MCP provides the capabilities an agent can invoke, while Agent Skills determine how those capabilities are orchestrated to produce reliable, repeatable results.</p>
+<p class="image-container"><img style="width:624px" src="img/ee1fc0859d32cfeb.png"></p>
+<p>In this exercise, we will examine a simple agent skill that allows an agent to answer questions about Portland State&#39;s Department of Computer Science. Begin by changing into the exercise directory.</p>
+<pre>cd 04_pdx_cs_curl_skill</pre>
+<p>To configure the skill, we specify its name, description, and workflow in a skill file as shown below: </p>
+<h3 is-upgraded>skills/pdx-cs-curl/SKILL.md</h3>
+<pre><code>---
+name: pdx-cs-curl
+description: Use to answer questions about Portland State University CS department.
+---
+
+# PDX CS Curl
+Use this skill for questions about the Portland State University computer science department when the answer should come from `https://web.cs.pdx.edu`.
+
+## Local Script
+Run this command from the directory that contains `skills/`:
+```bash
+python skills/pdx-cs-curl/scripts/pdx_cs_curl.py [relative-path]
+```
+- Omit `relative-path` to fetch the homepage.
+- Pass a path relative to `https://web.cs.pdx.edu`, such as `faculty/` or `courses/`.
+
+## Workflow
+1. Identify the most relevant PSU CS page path.
+2. Fetch that page with the script.
+3. If the page links to a better source, fetch that page too.
+4. Answer only from the retrieved PSU CS content.
+5. If the site content does not contain the answer, say so clearly.
+
+## Report Back
+- The requested fact or summary.
+- The page path used as evidence.
+- Any relevant caveats if the site content is incomplete or ambiguous.</code></pre>
+</google-codelab-step>
+<google-codelab-step label="-" duration="5">
+<p>The skill executes a local script that retrieves content from the department&#39;s website. It&#39;s important that the script that is executed does not contain vulnerable code and can resist prompt injection attacks. To do so, the script implements input validation to ensure that all accesses are to the server indicated via the base URL of <a href="https://web.cs.pdx.edu" target="_blank">https://web.cs.pdx.edu</a> as shown in the script source below:</p>
+<h3 is-upgraded>skills/pdx-cs-curl/scripts/pdx_cs_curl.py</h3>
+<pre><code>BASE_URL = &#34;https://web.cs.pdx.edu/&#34;
+
+parsed = urlparse(relative_path)
+if parsed.scheme or parsed.netloc:
+    print(&#34;relative-path must not be an absolute URL&#34;, file=sys.stderr)
+    return 2
+
+relative_path = parsed.path.lstrip(&#34;/&#34;)
+if any(part == &#34;..&#34; for part in relative_path.split(&#34;/&#34;)):
+    print(&#34;relative-path must not contain &#39;..&#39; segments&#34;, file=sys.stderr)
+    return 2
+
+url = urljoin(BASE_URL, relative_path)
+
+result = subprocess.run(
+    [&#34;curl&#34;, &#34;--silent&#34;, &#34;--show-error&#34;, &#34;--fail&#34;, &#34;--location&#34;, url],
+    capture_output=True,
+    text=True,
+)</code></pre>
+<p>To test the skill, create a Python environment and install the packages.</p>
+<pre>uv init --bare
+uv add -r requirements.txt</pre>
+<p>Finally, run the program.</p>
+<pre>uv run pdx_cs_curl_client.py</pre>
+<p>Prompt the agent for information about the Cybersecurity certificate</p>
+<ul>
+<li><strong>How many tool calls are made?</strong></li>
+<li><strong>Take a screenshot of the results that includes your OdinID</strong></li>
+</ul>
+<h2 is-upgraded><strong>Cleanup</strong></h2>
+<p>Exit the client and remove the environment.</p>
+<pre>rm -rf .venv</pre>
+</google-codelab-step>
+</google-codelab>
+<script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+<script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+<script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+<script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+<script src="https://support.google.com/inapp/api.js"></script>
+</body>
+</html>
