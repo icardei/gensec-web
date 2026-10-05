@@ -96,7 +96,7 @@ SELECT COUNT(*) from users;
 SELECT username FROM users WHERE username LIKE &#39;a%&#39;;
 SELECT passhash FROM users WHERE username = &#39;admin&#39;;</pre>
 <ul>
-<li><strong>Take a screenshot showing the results that include your OdinID</strong></li>
+<li><strong>Take a screenshot showing the results that include your FAU ID</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="-" duration="2">
@@ -111,7 +111,7 @@ SELECT passhash FROM users WHERE username = &#39;admin&#39;;</pre>
 </ul>
 <p>While the first two queries are often easy for an LLM to produce the SQL for, it may find other open-ended queries difficult unless prompted for a more specific set of steps. For the queries that fail, attempt to modify the query to ask the LLM to &#39;think step-by-step&#39; (e.g. chain-of-thought prompting) or specifically break down the steps that it would need to perform to answer the query.</p>
 <ul>
-<li><strong>Take a screenshot showing the correct results being produced by the agent that includes your OdinID</strong></li>
+<li><strong>Take a screenshot showing the correct results being produced by the agent that includes your FAU ID</strong></li>
 </ul>
 <p>Finally, try a complex query with step-by-step instructions such as the one below which returns a <code>hashcat</code> command that performs a dictionary search on the admin&#39;s password hash.</p>
 <ul>
@@ -119,7 +119,7 @@ SELECT passhash FROM users WHERE username = &#39;admin&#39;;</pre>
 </ul>
 <p>Modify the query or the model until the agent is able to return a correct answer to the query.</p>
 <ul>
-<li><strong>Take a screenshot showing the correct results being produced by the agent that includes your OdinID</strong></li>
+<li><strong>Take a screenshot showing the correct results being produced by the agent that includes your FAU ID</strong></li>
 </ul>
 <p>It is quite dangerous to expose an MCP server like this without proper access control. It is also quite dangerous to simply allow agents to have an MCP server accept arbitrary SQL queries from an agent. Using the agent, show whether the server is vulnerable to attack using the queries below.</p>
 <ul>
@@ -128,7 +128,7 @@ SELECT passhash FROM users WHERE username = &#39;admin&#39;;</pre>
 </ul>
 <p>For each query</p>
 <ul>
-<li><strong>Take a screenshot of the results that includes your OdinID</strong></li>
+<li><strong>Take a screenshot of the results that includes your FAU ID</strong></li>
 </ul>
 <p>Exit out of the agent with a blank line. Note, if the agent is able to delete the table, restore it from the command line via:</p>
 <pre>git checkout db_data/metactf_users.db</pre>
@@ -160,7 +160,7 @@ async def fetch_users_pass(username: str) -&gt; str:
 </ul>
 <p>For each query</p>
 <ul>
-<li><strong>Take a screenshot of the results that includes your OdinID</strong></li>
+<li><strong>Take a screenshot of the results that includes your FAU ID</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="Secure SQLite HTTP MCP Server" duration="10">
@@ -218,7 +218,7 @@ gcloud run deploy svc-01-sqlite --project=${GOOGLE_CLOUD_PROJECT} \
   --image us-west1-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT}/cloud-run-source-deploy/svc-01-sqlite </code></pre>
 <p>Visit the Cloud Run interface via the web console.</p>
 <ul>
-<li><strong>Take a screenshot of the deployed service that includes your OdinID</strong></li>
+<li><strong>Take a screenshot of the deployed service that includes your FAU ID</strong></li>
 </ul>
 <p class="image-container"><img style="width:582px" src="img/9eb5648b924557d5.png"></p>
 </google-codelab-step>
@@ -286,7 +286,7 @@ async def main():
 <pre>/mcp
 /tools</pre>
 <ul>
-<li><strong>Take a screenshot showing the secure tools are being used includes your OdinID</strong></li>
+<li><strong>Take a screenshot showing the secure tools are being used includes your FAU ID</strong></li>
 </ul>
 <p>Run the query below:</p>
 <ul>
@@ -295,12 +295,12 @@ async def main():
 <p>As before, the agent should send a query string to the MCP server that returns the name of the table in the database. After the answer is returned, view the agent history.</p>
 <pre>/history</pre>
 <ul>
-<li><strong>Take a screenshot of the chat history showing the query the agent generated that includes your OdinID</strong></li>
+<li><strong>Take a screenshot of the chat history showing the query the agent generated that includes your FAU ID</strong></li>
 </ul>
 <p>View the number of input and output tokens consumed in the agent&#39;s execution.</p>
 <pre>/usage</pre>
 <ul>
-<li><strong>Take a screenshot of the number of input and output tokens consumed from executing your queries that includes your OdinID</strong></li>
+<li><strong>Take a screenshot of the number of input and output tokens consumed from executing your queries that includes your FAU ID</strong></li>
 </ul>
 <p>Being mindful of your token consumption when building an agent will help reduce overall costs.</p>
 </google-codelab-step>
@@ -385,7 +385,7 @@ uv add -r requirements.txt</pre>
 uv run gdrive_mcp_client.py</pre>
 <p>Select 2 different tools that the Google Drive MCP server implements and prompt the client to perform an operation that invokes it.</p>
 <ul>
-<li><strong>Take a screenshot of each successful execution that includes your OdinID</strong></li>
+<li><strong>Take a screenshot of each successful execution that includes your FAU ID</strong></li>
 </ul>
 <h2 is-upgraded><strong>Cleanup (Cloud Shell)</strong></h2>
 <p>Exit the client and remove your environment. </p>
@@ -415,7 +415,7 @@ uv add -r requirements.txt</pre>
 <pre>uv run git_mcp_client.py</pre>
 <p>Prompt the agent to find the hash of the last commit and to list the developers responsible for the last 20 commits. </p>
 <ul>
-<li><strong>Take a screenshot of the results that includes your OdinID </strong></li>
+<li><strong>Take a screenshot of the results that includes your FAU ID </strong></li>
 </ul>
 <h2 is-upgraded><strong>Cleanup</strong></h2>
 <p>Exit the client and remove the environment.</p>
@@ -486,7 +486,7 @@ uv add -r requirements.txt</pre>
 <p>Prompt the agent for information about the Cybersecurity certificate</p>
 <ul>
 <li><strong>How many tool calls are made?</strong></li>
-<li><strong>Take a screenshot of the results that includes your OdinID</strong></li>
+<li><strong>Take a screenshot of the results that includes your FAU ID</strong></li>
 </ul>
 <h2 is-upgraded><strong>Cleanup</strong></h2>
 <p>Exit the client and remove the environment.</p>
