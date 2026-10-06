@@ -22,7 +22,7 @@
 <p class="image-container"><img style="width:333.03px" src="img/e398c09dec225754.png"></p>
 <h2 is-upgraded><strong>Course VM setup</strong></h2>
 <p>Within the repository on the course Kali VM, change into the exercise directory and update the code.</p>
-<pre>cd gensec-class/04*
+<pre>cd gensec-class/04_MCP
 git pull</pre>
 </google-codelab-step>
 <google-codelab-step label="Vulnerable SQLite STDIO MCP Server" duration="3">
@@ -354,7 +354,8 @@ gcloud compute instances add-tags &lt;NameOfVM&gt; \
 <google-codelab-step label="-" duration="5">
 <p>Select the permissions to allow full access to your Google Drive files and click on &#34;Update&#34;.</p>
 <p class="image-container"><img style="width:624px" src="img/4e46f857d2cd82a4.png"></p>
-<p>Next, navigate to the Clients tab and create a client. Configure it as a &#34;Desktop application&#34; and name it &#34;MCP client&#34;. When the client has been created, download its associated JSON file that will include its Client ID and secret. </p>
+<p>Next, navigate to the Clients tab and create a client. <br/>
+    Configure it as a <b>&#34;Desktop application&#34;</b> and name it &#34;MCP client&#34;. When the client has been created, download its associated JSON file that will include its Client ID and secret. </p>
 <p class="image-container"><img style="width:488px" src="img/f201a9f575ed3209.png"></p>
 
 <p>Upload the JSON file to Cloud Shell. </p>
@@ -362,11 +363,11 @@ gcloud compute instances add-tags &lt;NameOfVM&gt; \
 <p class="image-container"><img style="width:624px" src="img/ff1d07710ae71874.png"></p>
 <p>Then, upload it from Cloud Shell to your course Kali VM with the following command that also renames it to
     <code>credentials.json</code>.</p>
-<pre>gcloud compute scp client_secret_*.json course-vm:/home/${USER}/cs475-src/04_MCP/02_google_drive/credentials.json</pre>
+<pre>gcloud compute scp client_secret_*.json kali-vm:/home/${USER}/gensec-code/04_MCP/02_google_drive/credentials.json</pre>
 </google-codelab-step>
 <google-codelab-step label="-" duration="5">
 <h2 is-upgraded>Course VM (MCP server)</h2>
-<p>The course VM will be used to run the MCP server. For this step, we need to get Google Drive credentials for your user account onto the VM in order to allow the MCP server to interact with files in your Google Drive folders. Connect to your course VM using RDP (e.g. Remote Desktop Connection or Remmina). Change into the exercise&#39;s directory and then set up the Python environment for the server.</p>
+<p>The course VM (<i>kali-vm</i>)will be used to run the MCP server. For this step, we need to get Google Drive credentials for your user account onto the VM in order to allow the MCP server to interact with files in your Google Drive folders. Connect to your course VM using RDP (e.g. Remote Desktop Connection or Remmina). Change into the exercise&#39;s directory and then set up the Python environment for the server.</p>
 <pre>cd 02_google_drive 
 uv init --bare
 uv add -r requirements.txt</pre>
@@ -380,11 +381,11 @@ uv add -r requirements.txt</pre>
 <h2 is-upgraded><strong>Cloud shell (MCP client)</strong></h2>
 <p>Launch Google Cloud shell. Clone the course repository, then change into the exercise directory and set up a Python virtual environment.</p>
 <pre>git clone https://github.com/icardei/gensec-code
-cd gensec-class/04*/02_google_drive
+cd gensec-class/04_MCP/02_google_drive
 uv init --bare
 uv add -r requirements.txt</pre>
 <p>Now copy the external IP address of your course VM and set the MCP_URL environment variable as done previously, replacing &#34;<code>CourseVM_External_IP</code>&#34; with your course VM&#39;s external IP address. Then run the agent and it will connect to the MCP server. </p>
-<pre>export MCP_URL=http://&lt;CourseVM_External_IP&gt;:8080
+<pre>export MCP_URL="http://&lt;CourseVM_External_IP&gt;:8080"
 uv run gdrive_mcp_client.py</pre>
 <p>Select 2 different tools that the Google Drive MCP server implements and prompt the client to perform an operation that invokes it.</p>
 <ul>
@@ -403,8 +404,15 @@ uv run gdrive_mcp_client.py</pre>
 uv init --bare
 uv add -r requirements.txt</pre>
 <p>The Git MCP server (<code>mcp-server-git</code>) is a Python package that supplies an off the shelf MCP server provided by Anthropic that allows you to query <code>git</code> repositories. After including it in our packages and installing it in our Python environment, we can specify the server in the FastAgent configuration as shown below:</p>
+
 <h3 is-upgraded>requirements.txt</h3>
-<pre><code>mcp-server-git</code></pre>
+<p>This file looks like this (with some specific version constraints):
+<pre><code>fastmcp
+requests
+mcp-server-git
+fast-agent-mcp
+mcp</code></pre></p>
+
 <h3 is-upgraded>fastagent.config.yaml</h3>
 <pre><code>mcp:
   servers:
@@ -414,7 +422,9 @@ uv add -r requirements.txt</pre>
 <p>Install the packages</p>
 <pre>uv init --bare
 uv add -r requirements.txt</pre>
-<p>Then, run the program. This command includes specific version constraints because of library dependencies.</p>
+<p>Then, run the program. This command includes specific version constraints because of library dependencies.
+    If this command fails, try running it without the version constraints.
+</p>
 <pre>uv run --isolated --no-project   --with "fast-agent-mcp==0.9.30"   --with "mcp==1.28.1"   \
         python git_mcp_client.py -v
 </pre>
