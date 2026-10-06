@@ -21,8 +21,8 @@
 <p>The Model Context Protocol or MCP is a standard protocol for LLMs to retrieve invoke both local and remote tools to access services. Thus, rather than having every LLM agent implement all of the tools it needs to execute, the agent can instead invoke tools implemented by MCP servers that are running either locally or remotely. In this lab, you will experiment with agents that utilize MCP servers to handle tasks.</p>
 <p class="image-container"><img style="width:333.03px" src="img/e398c09dec225754.png"></p>
 <h2 is-upgraded><strong>Course VM setup</strong></h2>
-<p>Within the repository on the course VM, change into the exercise directory and update the code.</p>
-<pre>cd cs475-src/04*
+<p>Within the repository on the course Kali VM, change into the exercise directory and update the code.</p>
+<pre>cd gensec-class/04*
 git pull</pre>
 </google-codelab-step>
 <google-codelab-step label="Vulnerable SQLite STDIO MCP Server" duration="3">
@@ -170,7 +170,7 @@ async def fetch_users_pass(username: str) -&gt; str:
 <pre><code>gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com
 gcloud services enable iamcredentials.googleapis.com serviceusage.googleapis.com
 gcloud services enable logging.googleapis.com monitoring.googleapis.com </code></pre>
-<p>Visit the course repository on GitHub and navigate to the directory containing the <a href="https://github.com/wu4f/cs475-src/tree/main/04_MCP/01_sqlite" target="_blank">SQLite MCP code</a>. Examine the Dockerfile in the directory. </p>
+<p>Visit the course repository on GitHub and navigate to the directory containing the <a href="https://github.com/icardei/gensec-code/tree/main/04_MCP/01_sqlite" target="_blank">SQLite MCP code</a>. Examine the Dockerfile in the directory. </p>
 <h3 is-upgraded>Dockerfile</h3>
 <pre>FROM python:3.10
 
@@ -204,8 +204,8 @@ CMD [&#34;python&#34;, &#34;vulnerable_sqlite_mcp_server.py&#34;, &#34;http&#34;
 <p>The container will then be built and pushed to Google&#39;s Artifact Registry and then deployed onto Cloud Run. When deployed, a URL will be returned. Make a note of it.</p>
 <p class="image-container"><img style="width:624px" src="img/5ab4361b52604385.png"></p>
 <p>If the build fails, you may try to run the commands manually in Cloud Shell</p>
-<pre><code>git clone https://github.com/wu4f/cs475-src
-cd cs475-src/04_MCP/01_sqlite
+<pre><code>git clone https://github.com/icardei/gensec-code
+cd gensec-class/04_MCP/01_sqlite
 gcloud artifacts repositories create cloud-run-source-deploy \
     --repository-format=docker \
     --location=us-west1 \
@@ -346,9 +346,9 @@ gcloud compute instances add-tags &lt;NameOfVM&gt; \
 <p><strong>OAuth Setup</strong></p>
 <p>Google Drive utilizes the OAuth2 protocol to authenticate and authorize access. To enable the MCP server to do so, we must configure an OAuth application on our Google Cloud project. To do so, navigate to the OAuth consent section of the &#34;APIs &amp; Services&#34; <a href="https://console.cloud.google.com/apis/credentials/consent" target="_blank">here</a>. </p>
 <p class="image-container"><img style="width:468px" src="img/a6a1259ed53640ab.png"></p>
-<p>If this is the first time OAuth is being configured, you will be asked to specify application information. Name the application &#34;Google Drive MCP&#34; and utilize your <a href="http://pdx.edu" target="_blank">pdx.edu</a> address. </p>
+<p>If this is the first time OAuth is being configured, you will be asked to specify application information. Name the application &#34;Google Drive MCP&#34; and utilize your <a href="http://fau.edu" target="_blank">fau.edu</a> address. </p>
 <p class="image-container"><img style="width:491.5px" src="img/158a573106ecaf7a.png"></p>
-<p>Configure the Audience to &#34;Internal&#34; and set the contact information to your <a href="http://pdx.edu" target="_blank">pdx.edu</a> address. Agree to the user data policy and create the project configuration. Navigate to the &#34;Data Access&#34; portion of the console shown below and click on &#34;Add or remove scopes&#34;</p>
+<p>Configure the Audience to &#34;Internal&#34; and set the contact information to your <a href="http://fau.edu" target="_blank">fau.edu</a> address. Agree to the user data policy and create the project configuration. Navigate to the &#34;Data Access&#34; portion of the console shown below and click on &#34;Add or remove scopes&#34;</p>
 <p class="image-container"><img style="width:624px" src="img/963619dcc31a40b4.png"></p>
 </google-codelab-step>
 <google-codelab-step label="-" duration="5">
@@ -356,9 +356,12 @@ gcloud compute instances add-tags &lt;NameOfVM&gt; \
 <p class="image-container"><img style="width:624px" src="img/4e46f857d2cd82a4.png"></p>
 <p>Next, navigate to the Clients tab and create a client. Configure it as a &#34;Desktop application&#34; and name it &#34;MCP client&#34;. When the client has been created, download its associated JSON file that will include its Client ID and secret. </p>
 <p class="image-container"><img style="width:488px" src="img/f201a9f575ed3209.png"></p>
+
 <p>Upload the JSON file to Cloud Shell. </p>
+
 <p class="image-container"><img style="width:624px" src="img/ff1d07710ae71874.png"></p>
-<p>Then, upload it from Cloud Shell to your course VM with the following command.</p>
+<p>Then, upload it from Cloud Shell to your course Kali VM with the following command that also renames it to
+    <code>credentials.json</code>.</p>
 <pre>gcloud compute scp client_secret_*.json course-vm:/home/${USER}/cs475-src/04_MCP/02_google_drive/credentials.json</pre>
 </google-codelab-step>
 <google-codelab-step label="-" duration="5">
@@ -376,8 +379,8 @@ uv add -r requirements.txt</pre>
 <google-codelab-step label="-" duration="5">
 <h2 is-upgraded><strong>Cloud shell (MCP client)</strong></h2>
 <p>Launch Google Cloud shell. Clone the course repository, then change into the exercise directory and set up a Python virtual environment.</p>
-<pre>git clone https://github.com/wu4f/cs475-src
-cd cs475-src/04*/02_google_drive
+<pre>git clone https://github.com/icardei/gensec-code
+cd gensec-class/04*/02_google_drive
 uv init --bare
 uv add -r requirements.txt</pre>
 <p>Now copy the external IP address of your course VM and set the MCP_URL environment variable as done previously, replacing &#34;<code>CourseVM_External_IP</code>&#34; with your course VM&#39;s external IP address. Then run the agent and it will connect to the MCP server. </p>
@@ -406,13 +409,16 @@ uv add -r requirements.txt</pre>
 <pre><code>mcp:
   servers:
    git:
-    command: &#34;python&#34;
-    args: [&#34;-m&#34;, &#34;mcp_server_git&#34;]</code></pre>
+    command: "uv"
+    args: ["run", "python3","-m", "mcp_server_git"]</code></pre>
 <p>Install the packages</p>
 <pre>uv init --bare
 uv add -r requirements.txt</pre>
-<p>Then, run the program.</p>
-<pre>uv run git_mcp_client.py</pre>
+<p>Then, run the program. This command includes specific version constraints because of library dependencies.</p>
+<pre>uv run --isolated --no-project   --with "fast-agent-mcp==0.9.30"   --with "mcp==1.28.1"   \
+        python git_mcp_client.py -v
+</pre>
+
 <p>Prompt the agent to find the hash of the last commit and to list the developers responsible for the last 20 commits. </p>
 <ul>
 <li><strong>Take a screenshot of the results that includes your FAU ID </strong></li>
