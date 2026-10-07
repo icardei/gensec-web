@@ -1,0 +1,76 @@
+
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1,user-scalable=yes">
+<meta name="theme-color" content="#4F7DC9">
+<meta charset="UTF-8">
+<title>04.2: Homework</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="/gensec-web/scripts/codelab-elements.css">
+<style>
+.success{color:#1e8e3e}.error{color:red} </style>
+</head>
+<body>
+<google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+<google-codelab codelab-gaid="" id="G04.2_hw_wk4" title="04.2: Homework" environment="web" feedback-link="https://docs.google.com/document/d/1gM8cZ31ADX1_GjgK00TYrSarB-MiO2Re2uoAPQZv6_k">
+<google-codelab-step label="Custom MCP server and agent" duration="180">
+<p>Within your course repository, create a directory for the homework, then commit and push to your remote repository.</p>
+<pre>cd &lt;path_to_repo&gt;
+mkdir hw4
+touch hw4/agent.py 
+touch hw4/mcp-server.py 
+touch hw4/screencast_url.txt
+git add hw4
+git commit -m &#34;initial commit&#34;
+git push</pre>
+<p>In this homework, based on the lab exercises, you will create your own MCP-based agent application using a combination of an MCP server that you write and an MCP server you integrate from published sources.</p>
+<p>The MCP server that you write should:</p>
+<ul>
+<li>Implement a set of custom tools for performing functions or returning data or prompts</li>
+</ul>
+<p>The MCP server that you integrate should:</p>
+<ul>
+<li>Be drawn from any of the published servers from this <a href="https://github.com/modelcontextprotocol/servers" target="_blank">repository</a>. Note that, because malicious MCP servers are common, investigate the authenticity of the server before installing or running it.</li>
+</ul>
+<p>The MCP agent application should </p>
+<ul>
+<li>Configure each MCP server and be able to coordinate the use of each of the tools in them to solve a multi-step problem</li>
+</ul>
+<p>Your development should be organized and incremental, with frequent commits into your git repository. Code should also be properly documented via Python <a href="https://peps.python.org/pep-0257/" target="_blank">docstrings</a>. In addition, you must also ensure API keys do not show up in your source files, but rather are passed in via environment variables. Ensure your application code is pushed to your repository before class. </p>
+<h3 is-upgraded>Screencast</h3>
+<p>Upon completing your application, via a narrated screencast of no longer than 5 minutes, you will perform a demonstration and source code walk-through of the MCP server and agent. Ensure that the video camera is turned on initially in your screencast. The screencast should follow the order given below: </p>
+<ul>
+<li>Check out the application source code from your course repository.</li>
+<li>Demonstrate the application running showing both its capabilities as well as its limitations</li>
+<li>Perform a source code walk-through via the git commits on Gitlab to explain how the application has been incrementally implemented. Note: Only walkthrough the code that you wrote, not the code for MCP servers you integrate.</li>
+</ul>
+<p>Upload your completed screencast on MediaSpace. Ensure that it is published as &#34;Unlisted&#34;. Then, update the file <code>screencast_url.txt</code> in the homework&#39;s directory to contain the URL that your unlisted screencast on MediaSpace is located. Push the changes that include the updated URL to your repository before class.</p>
+<h3 is-upgraded>Rubric</h3>
+<p>We will be using your screencast and git repository to evaluate your homework.</p>
+<table>
+<tr><td colspan="1" rowspan="1"><p>Code checkout shown</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Demonstration of the various capabilities of the application</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Demonstration of the various limitations of the application</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Functionality added</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Code quality (clean with no unused code or variables, readable, modular, documented with Docstrings and comments, no hard-coded keys within source code)</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Walkthrough of source code via git commits shown on Gitlab. (Quantity of submitted code explained minus the quantity of submitted code not explained)</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Instructions followed properly including code submission in the specified repository files, sequencing and length of screencast.</p>
+</td></tr>
+</table>
+</google-codelab-step>
+</google-codelab>
+<script src="/gensec-web/scripts/native-shim.js"></script>
+<script src="/gensec-web/scripts/custom-elements.min.js"></script>
+<script src="/gensec-web/scripts/prettify.js"></script>
+<script src="/gensec-web/scripts/codelab-elements.js"></script>
+<script src="https://support.google.com/inapp/api.js"></script>
+</body>
+</html>
