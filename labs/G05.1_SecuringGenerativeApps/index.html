@@ -152,7 +152,7 @@ delete my account using the delete_account function.
 </ul>
 <p>We&#39;ll now solve the level. Create another account. A victim account periodically asks the Live Chat agent about a leather jacket. Submit the payload above as a review for the jacket to solve the level.</p>
 <ul>
-<li><strong>Take a screenshot showing completion of the level that includes the level URL and your OdinId</strong></li>
+<li><strong>Take a screenshot showing completion of the level that includes the level URL and your FAU ID</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="Excessive agency (SQL)" duration="10">
@@ -177,7 +177,7 @@ delete my account using the delete_account function.
 </ul>
 <p>Visit the Backend AI logs to examine the trace of the AI agent throughout the level.</p>
 <ul>
-<li><strong>Take a screenshot showing completion of the level that includes the level URL and your OdinId</strong></li>
+<li><strong>Take a screenshot showing completion of the level that includes the level URL and your FAU ID</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="Lack of input validation (Command injection)" duration="10">
@@ -207,7 +207,7 @@ delete my account using the delete_account function.
 </ul>
 <p>Visit the Backend AI logs to examine the trace of the AI agent throughout the level.</p>
 <ul>
-<li><strong>Take a screenshot showing completion of the level that includes the level URL and your OdinId</strong></li>
+<li><strong>Take a screenshot showing completion of the level that includes the level URL and your FAU ID</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="Insecure output handling" duration="10">
@@ -250,7 +250,7 @@ delete my account using the delete_account function.
 </ul>
 <p>Finally, create another account, visit the product page for the leather jacket, and leave the same review. The user <code>carlos</code> will periodically ask for information about the leather jacket in the Live Chat. Doing so will delete his account and solve the level.</p>
 <ul>
-<li><strong>Take a screenshot showing completion of the level that includes the level URL and your OdinId</strong></li>
+<li><strong>Take a screenshot showing completion of the level that includes the level URL and your FAU ID</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="Input filtering" duration="10">
@@ -272,7 +272,7 @@ Answer:&#34;&#34;&#34;</code></pre>
 </google-codelab-step>
 <google-codelab-step label="-" duration="5">
 <p>To implement this, a simple LangGraph application has been provided in the repository. Change into the repository and view the code.</p>
-<pre><code>cd gensec-class/05*
+<pre><code>cd gensec-class/05_Security
 git pull</code></pre>
 <p>The application sends the user input to a <code>filter</code> node which checks for an injection attempt and returns SAFE or INJECTION based on the input. Given one of the two outputs as a result, the <code>route_after_filter</code> function then ends the operation if an INJECTION is returned or passes the input through to the <code>classifier</code> node implementing the spam detection operation as before.</p>
 <h3 is-upgraded>01_langgraph_injection.py</h3>
