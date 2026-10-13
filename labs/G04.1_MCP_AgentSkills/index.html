@@ -192,7 +192,13 @@ CMD [&#34;python&#34;, &#34;vulnerable_sqlite_mcp_server.py&#34;, &#34;http&#34;
 <p>The Dockerfile specifies a container image that implements our MCP server. The container installs the Python packages required to run the server, then copies the server code and database file over, before running the server. Note that the container exposes only port 8080. By default, CloudRun routes all incoming requests to port 80 and 443 to port 8080 when a container is deployed unless specifically requested to do otherwise.</p>
 </google-codelab-step>
 <google-codelab-step label="-" duration="2">
-<p>Deploy the container onto Cloud Run. While one could go through the mechanics of building the container and deploying it via the CLI, for convenience, you can visit the course&#39;s repository on Github, navigate to the directory with the Dockerfile, and then click on the &#34;Run on Google Cloud&#34; button. </p>
+
+
+<h3>Deploy the container onto Cloud Run. </h3>
+<p>While one could go through the mechanics of building the container and deploying it via the CLI, for convenience, you can visit the course&#39;s repository on Github, 
+    navigate to the <a href="https://github.com/icardei/gensec-code/tree/main/04_MCP/01_sqlite" target="_blank">directory with the Dockerfile</a>, 
+    and then click on the &#34;Run on Google Cloud&#34; button listed in the README.md file. </p>
+
 <p class="image-container"><img style="width:306.99px" src="img/2b9938b9927a4150.png"></p>
 <p>This will launch the process within Cloud Shell to build the container from the Dockerfile in the repository and to deploy it onto Cloud Run. As part of this process, you&#39;ll need to.</p>
 <ul>
@@ -219,9 +225,11 @@ gcloud run deploy svc-01-sqlite --project=${GOOGLE_CLOUD_PROJECT} \
 <p>Visit the Cloud Run interface via the web console.</p>
 <ul>
 <li><strong>Take a screenshot of the deployed service that includes your FAU ID</strong></li>
+<li>Don't forget to stop any running gcloud VM instances when done to avoid depleting your account balance.</li>
 </ul>
 <p class="image-container"><img style="width:582px" src="img/9eb5648b924557d5.png"></p>
 </google-codelab-step>
+
 <google-codelab-step label="-" duration="2">
 <h2 is-upgraded><strong>MCP client</strong></h2>
 <p>We&#39;ll now run the MCP client on the course VM and allow it to utilize the MCP server running in Cloud Run. To begin with, on the course VM, set the <code>MCP_URL</code> environment variable to the URL that is returned by Cloud Run.</p>
@@ -428,7 +436,7 @@ uv add -r requirements.txt</pre>
 <pre>uv run --isolated --no-project   --with "fast-agent-mcp==0.9.30"   --with "mcp==1.28.1"   \
         python git_mcp_client.py -v
 </pre>
-
+ 
 <p>Prompt the agent to find the hash of the last commit and to list the developers responsible for the last 20 commits. </p>
 <ul>
 <li><strong>Take a screenshot of the results that includes your FAU ID </strong></li>
