@@ -8,7 +8,7 @@
 <title>05.2: Homework</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-<link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+<link rel="stylesheet" href="/gensec-web/scripts/codelab-elements.css">
 <style>
 .success{color:#1e8e3e}.error{color:red} </style>
 </head>
@@ -23,10 +23,67 @@ touch hw5/screencast_url.txt
 git add hw5
 git commit -m &#34;initial commit&#34;
 git push</pre>
-<p>In this homework, you will perform a penetration test on the security of any of the applications you have worked with in the lab exercises or developed so far in homework assignments including your LangChain RAG application, your LangChain agents, and your MCP agents.</p>
-<p>Using the techniques enumerated in the Adversarial Prompt Engineering classification at <a href="https://ape.hiddenlayer.com/" target="_blank">https://ape.hiddenlayer.com/</a>, show how the execution of your applications can be compromised in ways you initially did not intend or expect. </p>
-<h3 is-upgraded>Screencast</h3>
-<p>Upon completing your analysis, via a narrated screencast of no longer than 5 minutes, go through your findings and demonstrate the problematic executions of your applications. Ensure that the video camera is turned on initially in your screencast and that the screencast is published as &#34;Unlisted&#34;. Then, update the file <code>screencast_url.txt</code> in the homework&#39;s directory to contain the URL that your unlisted screencast on MediaSpace is located. Push the changes that include the updated URL to your repository before class.</p>
+<p>In this homework, you will perform a penetration test on the security of any one of the applications you have 
+    worked with in the lab exercises or developed so far in <b>Homework</b> assignments (not the Labs) including your LangChain 
+    RAG application, your LangChain agents, and your MCP agents.</p>
+<p>Using the techniques enumerated in the Adversarial Prompt Engineering classification at 
+    <a href="https://ape.hiddenlayer.com/" target="_blank">https://ape.hiddenlayer.com/</a>, 
+    show how the execution of your applications can be compromised in ways you initially 
+    did not intend or expect. Find one or two different types of attacks that can be used to compromise 
+    the execution of your selected application.
+</p>
+
+<google-codelab-step label="Homework Solution PDF File" duration="60">
+<p>
+    For each successful attack, you must provide the following information in your homework PDF file:
+    <ol>
+        <li>A proper heading.</li>
+        <li>Attack type (name from APE website).</li>
+        <li>URL of the attack description from the Adversarial Prompt Engineering website.</li>
+        <li>The messages exchanged between you (as attacker) and the application/agent: the sequence of:</li>
+        <ul>    
+            <li>prompt used to compromise the execution of your application,</li>
+            <li>response from the application/agent</li>
+            <li>observations from tools executed, if applicable.</li>
+        </ul>   
+        <li>Impact of the attack.</li>
+        <li>Screenshots documenting the attack. 
+             <div style="background-color:yellow;">Ensure the font size is readable 
+                and that the screenshots are clear and legible to get any credit.</div>
+        </li>
+    </ol>
+</p>
+</google-codelab-step>
+
+<google-codelab-step label="Screencast" duration="5">
+<p>Upon completing your analysis, via a narrated screencast of no longer than 5 minutes, go through your 
+    findings and demonstrate the problematic executions of your applications. Ensure that the video 
+    camera is turned on initially in your screencast.
+
+    Push the changes that include the updated URL to 
+     your repository before class.</p>
+
+<h3>Screencast Upload Instructions</h3>    
+<p>Upload your screencast video file to your Youtube account. Ensure that it is unlisted and that the video 
+    URL is accessible without an account. Use your browser in incognito mode to check the video URL. 
+    Add the recording URL to the homework PDF file.
+</p>
+</google-codelab-step>
+
+<google-codelab-step label="Submission" duration="5">
+
+<p>Follow these instructions to submit your homework:
+<ol>
+    <li>Ensure the latest homework code is pushed to your course repository on Github.</li>
+    <li>Enter your <b>repository URL</b> on the provided field in the homework Word document.</li>
+    <li>Enter the <b>screencast URL</b> on the provided field in the homework Word document.</li>
+    <li>Convert the Word document to PDF.</li>
+    <li>Upload the PDF to the Homework Canvas page before the deadline.</li>
+</ol>
+</p>
+</google-codelab-step>
+
+
 <h3 is-upgraded>Rubric</h3>
 <p>We will be using your screencast to evaluate your homework.</p>
 <table>
@@ -41,10 +98,10 @@ git push</pre>
 </table>
 </google-codelab-step>
 </google-codelab>
-<script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
-<script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
-<script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
-<script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+<script src="/gensec-web/scripts/native-shim.js"></script>
+<script src="/gensec-web/scripts/custom-elements.min.js"></script>
+<script src="/gensec-web/scripts/prettify.js"></script>
+<script src="/gensec-web/scripts/codelab-elements.js"></script>
 <script src="https://support.google.com/inapp/api.js"></script>
 </body>
 </html>
