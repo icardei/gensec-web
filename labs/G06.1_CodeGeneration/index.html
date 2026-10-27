@@ -1,0 +1,269 @@
+
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1,user-scalable=yes">
+<meta name="theme-color" content="#4F7DC9">
+<meta charset="UTF-8">
+<title>06.1: Code Generation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+<style>
+.success{color:#1e8e3e}.error{color:red} </style>
+</head>
+<body>
+<google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+<google-codelab codelab-gaid="" id="G06.1_CodeGeneration" title="06.1: Code Generation" environment="web" feedback-link="https://docs.google.com/document/d/1JwfNJvVMhNegVx-7fj71L9r5v24GA-HjbZ46cji-CfM">
+<google-codelab-step label="Code generation" duration="3">
+<p>Code generation is one of the more useful tasks a model can do. It&#39;s difficult to trust the code it produces without having an idea of what a correct version of the code looks like. In this exercise, a simple Python class that implements a username-password authentication function using a SQLite3 database is shown. Within the class:</p>
+<ul>
+<li>A connection is created to a SQLite3 database stored in the file &#39;<code>users.db</code>&#39; within the class constructor.</li>
+<li>If the database does not exist or doesn&#39;t contain a users table, a call to the <code>initilizeUsers()</code> method of the class is performed which creates the users table with text fields: username and password. It then calls the <code>addUser()</code> method to add the <code>admin</code> username with the password of &#39;<code>password123</code>&#39;</li>
+<li>An <code>addUser()</code> method is implemented that takes a username and a password and inserts them into the database if the username does not exist in the database.</li>
+<li>A <code>checkUser()</code> method is implemented that takes a username and password, retrieves the password for the username from the database, then checks it against the given password. The method returns <code>True</code> if they match, <code>False</code> otherwise.</li>
+</ul>
+<pre><code>import sqlite3
+
+DB_FILE = &#39;users.db&#39;    # file for our Database
+
+class Users():
+    def __init__(self):
+        self.connection = sqlite3.connect(DB_FILE)
+        cursor = self.connection.cursor()
+        try:
+            cursor.execute(&#34;select count(rowid) from users&#34;)
+        except sqlite3.OperationalError:
+            self.initializeUsers()
+
+    def initializeUsers(self):
+        cursor = self.connection.cursor()
+        cursor.execute(&#34;create table users (username text, password text)&#34;)
+        self.addUser(&#39;admin&#39;,&#39;password123&#39;)
+
+    def addUser(self, username, password):
+        cursor = self.connection.cursor()
+        params = {&#39;username&#39;:username}
+        cursor.execute(&#34;SELECT username FROM users WHERE username=(:username)&#34;, params)
+        res = cursor.fetchall()
+        if len(res) == 0:
+            params = {&#39;username&#39;:username, &#39;password&#39;:password}
+            cursor.execute(&#34;insert into users (username, password) VALUES (:username, :password)&#34;, params)
+            self.connection.commit()
+            return True
+        else:
+            return False
+
+    def checkUser(self, username, password):
+        params = {&#39;username&#39;:username}
+        cursor = self.connection.cursor()
+        cursor.execute(&#34;select password from users WHERE username=(:username)&#34;, params)
+        res = cursor.fetchall()
+        if len(res) != 0:
+            password_from_db = res.pop()[0]
+            if password == password_from_db:
+                return True
+        return False</code></pre>
+<p>The goal of the exercise is to generate a prompt that allows an LLM to produce the code above. </p>
+<ul>
+<li>Prompt an LLM to generate a prompt that can produce the code above</li>
+<li>Then, in a new chat session, take the generated prompt and ask the LLM to produce the code</li>
+<li>Analyze the differences between the code snippets and modify the prompt as needed to produce code as close to the original as possible</li>
+</ul>
+<p>For the prompt that produces the original code most closely</p>
+<ul>
+<li><strong>Take a screenshot of the prompt and resulting code that includes your OdinId</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Unit test generation" duration="3">
+<p>Unit tests that are built into a program allow one to catch code changes that may break the functionality of the application. For example, consider the code below that implements a square root.</p>
+<pre><code>import math
+
+def square_root(n):
+    if isinstance(n, int) and n &gt;= 0:
+        return math.sqrt(n)
+    else:
+        raise ValueError(&#34;Input must be a positive integer.&#34;)</code></pre>
+<p>To add unit tests to this code, one could utilize the <code>unittest</code> package in Python and add assertions that should hold on a variety of test cases. An example is shown below</p>
+<pre><code>class TestSquareRoot(unittest.TestCase):
+    def test_zero(self):
+        self.assertEqual(square_root(0), 0.0)
+
+    def test_non_integer(self):
+        with self.assertRaises(ValueError):
+            square_root(4.5)
+        with self.assertRaises(ValueError):
+            square_root(&#34;string&#34;)
+        with self.assertRaises(ValueError):
+            square_root([4])
+
+    def test_negative_integer(self):
+        with self.assertRaises(ValueError):
+            square_root(-1)
+
+if __name__ == &#34;__main__&#34;:
+    unittest.main()</code></pre>
+<p>For our password authentication example, we wish to test the expected behavior of the code across a variety of tests to ensure correctness. For example, the code should:</p>
+<ul>
+<li>Ensure the default admin user is created with the password &#39;<code>password123</code>&#39;</li>
+<li>Ensures an account that already exists can not be created again</li>
+<li>Ensures that one can properly add a new username and password and that they are properly returned from the database when subsequently queried.</li>
+<li>Ensures that a username and password pair that is given, is properly checked when given combinations of correct and incorrect values.</li>
+</ul>
+<p>While one could generate these tests manually, we will utilize an LLM to do so instead. Perform the following:</p>
+<ul>
+<li>Prompt an LLM to instrument the password program with unit tests that can be run to ensure the code&#39;s correctness that include the above tests</li>
+<li>Ensure the unit tests provide sufficient coverage for the cases described</li>
+</ul>
+<p>Then, run the generated password program with the unit tests implemented.</p>
+<ul>
+<li><strong>Take a screenshot of the code for the unit tests and the results produced when running them that includes your OdinId</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Type annotation" duration="3">
+<p>Python versions beyond 3.5 support type annotations in order to give the developer the ability to reason about data types within their programs. Adding type annotations to code written prior to this version is something that can be potentially automated by an LLM. Consider the code below that fetches a URL using the <code>requests</code> package, parses the page using <code>BeautifulSoup</code>, and then returns the page&#39;s <code>&lt;title&gt;</code> tag if it exists.</p>
+<pre><code>import requests
+from bs4 import BeautifulSoup
+
+def getUrlTitle(url):
+    resp = requests.get(url)
+    title_tag = BeautifulSoup(resp.text, &#39;html.parser&#39;).find(&#39;title&#39;)
+    if title_tag and title_tag.text:
+        return title_tag.text.strip()
+    else:
+        return None</code></pre>
+<p>A fully annotated version is shown below with each parameter and return value assigned a type, along with any variable that has been utilized. In addition, the <code>Optional</code> type is used when the return type can be either the given type (e.g. <code>str</code>) or <code>None</code>.</p>
+<pre><code>import requests
+from bs4 import BeautifulSoup
+from typing import Optional 
+
+def getUrlTitle(url: str) -&gt; Optional[str]:  
+    resp: requests.Response = requests.get(url)    
+    resp.raise_for_status()
+    soup: BeautifulSoup = BeautifulSoup(resp.text, &#39;html.parser&#39;)  
+
+    title_tag: Optional[BeautifulSoup.Tag] = soup.find(&#39;title&#39;)  
+    if title_tag and title_tag.text:
+        return title_tag.text.strip()
+    else:
+        return None</code></pre>
+<p>With the code generated previously for the password authentication program with the unit tests included:</p>
+<ul>
+<li>Prompt an LLM to generate a fully type-annotated version of the program</li>
+</ul>
+<p>Examine the code for correctness and ensure it executes correctly.</p>
+<ul>
+<li><strong>Take a screenshot of the successful execution of the generated code as well as the annotated code produced for one of the functions that includes your OdinId</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Code modification" duration="3">
+<p>The prior password program utilizes cleartext passwords in its implementation instead of a password hash of it. Unfortunately, if the system were compromised, cleartext passwords for every user would be exposed, allowing an adversary to perform credential stuffing. Given the code from the previous step:</p>
+<ul>
+<li>Prompt an LLM to convert the program to into one that uses PBKDF2 with SHA-256 using 100,000 iterations to store hashes into the database rather than cleartext passwords</li>
+<li>After generating the version, have the LLM produce a unit test that validates the implementation using a username of admin and password of your choice.</li>
+</ul>
+<p>Test the implementation.</p>
+<ul>
+<li><strong>Take a screenshot of the successful execution of the modified password storage and testing code as well as the results of successful program execution that includes your OdinId</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Code styling" duration="3">
+<p>Standards for coding such as PEP8 and static analysis checks such as those done by pylint are often useful in the development process. Automatic these checks via an LLM can reduce the labor required to enforce development rules such techniques specify. Consider a snippet of the web server code that is included in this week&#39;s lab:</p>
+<h3 is-upgraded>simple_http_server.py</h3>
+<pre><code>from flask import Flask, request, jsonify
+import os
+from werkzeug.utils import secure_filename
+
+app = Flask(__name__)
+
+# Ensure there&#39;s a folder to save the uploaded files
+UPLOAD_FOLDER = &#39;uploads&#39;
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+app.config[&#39;UPLOAD_FOLDER&#39;] = UPLOAD_FOLDER
+
+@app.route(&#39;/upload&#39;, methods=[&#39;POST&#39;])
+def upload_file():
+    if &#39;file&#39; not in request.files:
+        return jsonify({&#39;error&#39;: &#39;No file part in the request&#39;}), 400
+...</code></pre>
+<p>It does not adhere to the PEP8 standard. Rather than manually read the rules for PEP8, instead, go to the repository and copy the program and include it in a prompt to an LLM asking it to make it compliant to PEP8. </p>
+<ul>
+<li><strong>Take a screenshot of the modifications made to the code that bring it into compliance that includes your OdinId</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Code translation" duration="3">
+<p>LLMs have been successfully used to translate text from one language to another. Since programming languages are just another type of language, one potential use for LLMs is to automatically translate a program to another programming language.</p>
+<h2 is-upgraded><strong>Javascript</strong></h2>
+<p>In this exercise, we&#39;ll translate our original password code written in Python into Javascript. We&#39;ll begin by asking an LLM to create a Javascript equivalent for the password program. As part of the prompt, give the LLM some additional instructions to guide its translation such as:</p>
+<ul>
+<li>Utilize the <code>sqlite3</code> module</li>
+<li>Add test cases to validate correctness and ensure they run serially</li>
+<li>Log all calls to the console and include the calling parameters</li>
+</ul>
+<p>Using the above as a guide,</p>
+<ul>
+<li>Prompt an LLM to convert the password program from Python to Javascript</li>
+<li>Check that the program is correct </li>
+</ul>
+<p>Attempt to run the code by bringing up the course VM and installing the latest Node.js version.</p>
+<pre><code>sudo apt update -y
+sudo apt install nodejs npm -y
+sudo npm install -g n
+sudo n stable
+hash -r</code></pre>
+<p>Create a directory to run the application from, and install the Javascript packages that are required.</p>
+<pre><code>mkdir js
+cd js
+npm install sqlite3</code></pre>
+<p>Copy the code the LLM produced into the file <code>users.js</code>. Then, run the code.</p>
+<pre><code>node users.js</code></pre>
+<ul>
+<li><strong>Take a screenshot of the successful execution of the program that includes your OdinId</strong></li>
+</ul>
+<h2 is-upgraded><strong>Typescript</strong></h2>
+<p>We&#39;ll attempt to repeat the exercise using Typescript instead.</p>
+<ul>
+<li>Ask an LLM to convert the password program from Python to Typescript</li>
+</ul>
+<p>Install the Typescript package</p>
+<pre><code>npm install ts-node</code></pre>
+<p>Copy the code the LLM produced into the file <code>users.ts</code>. Then, run the <code>npx</code> command to transpile the code to Javascript and execute it.</p>
+<pre><code>npx ts-node users.js</code></pre>
+<ul>
+<li><strong>Take a screenshot of the successful execution of the program that includes your OdinId</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Regular expressions" duration="3">
+<p>Regular expressions are commonly used for string matching in security applications. One of the problems in generating effective expressions, however, is being able to correctly specify what is needed. LLMs that are not specifically prompted requirements will often generate incomplete or insecure code. In this exercise, you will prompt an LLM to generate a regular expression to match the &#34;<code>localhost</code>&#34; or loopback address. This particular address is often used to set up services that are only available for internal access.</p>
+<p>Use an LLM to generate a regular expression to match the <code>localhost</code> address.</p>
+<pre>Give me a regular expression that matches the localhost address</pre>
+<p>At a minimum, the result should match <code>127.0.0.1</code>, the most common form of the address. </p>
+<ul>
+<li><strong>Take a screenshot of the generated expression that includes your OdinId</strong></li>
+</ul>
+<p>As it turns out, the entire block of <code>127.0.0.0/8</code> should match the loopback. For example, <code>127.0.0.53</code> is commonly used by the systemd-resolved service as a local DNS stub resolver. Prompt the LLM to generate a regular expression to match all <code>localhost</code> addresses.</p>
+<pre>Give me a regular expression that matches all localhost addresses</pre>
+<ul>
+<li><strong>Take a screenshot of the generated expression that includes your OdinId</strong></li>
+</ul>
+<p>One problem with LLMs is that they may not understand obscure encodings. On your Kali VM, perform the following:</p>
+<pre>ping 0177.0.0.1</pre>
+<p>Prompt the LLM to generate a regular expression to match all encodings of all <code>localhost</code> addresses.</p>
+<pre>Give me a regular expression that matches all encodings of all localhost addresses</pre>
+<ul>
+<li><strong>Take a screenshot of the generated expression that includes your OdinId and list the encodings and the IP address versions that are covered by it.</strong></li>
+</ul>
+<p>Examine this blog <a href="https://isc.sans.edu/diary/30348" target="_blank">post</a> to see if the regular expression addresses each representation. Then, prompt an LLM with the &#34;right&#34; way to validate the <code>localhost</code> address in Python that includes unit tests for all of the different encodings and versions above.</p>
+<ul>
+<li><strong>Take a screenshot of the prompt utilized and the Python code that is produced.</strong></li>
+</ul>
+</google-codelab-step>
+</google-codelab>
+<script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+<script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+<script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+<script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+<script src="https://support.google.com/inapp/api.js"></script>
+</body>
+</html>
