@@ -4,4 +4,5 @@ for indexhtml in $(find . -name index.html); do
     sed -i 's|OdinID|FAU email ID|g' $indexhtml
     sed -i 's|OdinId|FAU email ID|g' $indexhtml
     sed -i 's|cs475-src/|gensec-class/|g' $indexhtml
+    sed -i 's|cs475-src|gensec-class|g' $indexhtml
 done
