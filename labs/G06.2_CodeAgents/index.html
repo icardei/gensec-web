@@ -1,0 +1,385 @@
+
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1,user-scalable=yes">
+<meta name="theme-color" content="#4F7DC9">
+<meta charset="UTF-8">
+<title>06.2: Coding Agents</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="/gensec-web/scripts/codelab-elements.css">
+<style>
+.success{color:#1e8e3e}.error{color:red} </style>
+</head>
+<body>
+<google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+<google-codelab codelab-gaid="" id="G06.2_CodeAgents" title="06.2: Coding Agents" environment="web" feedback-link="https://docs.google.com/document/d/1ByAisDf5pIpm6cDwE4NMUZywQFLnQqXrSujoP7XQOPs">
+<google-codelab-step label="Exercise #1: Aider (Architect mode)" duration="3">
+<p class="image-container"><img style="width:225px" src="img/bc2183fb993fb7a8.png"></p>
+<p>Because of the ability of modern LLMs to produce code, there are many tools that help integrate their use in the development process. For example, Github Copilot is often utilized within VSCode in order to provide in-line code generation within a developer&#39;s coding environment. One such tool for producing code is Aider: a software engineering assistant that provides a pair programming experience with an LLM. Developers interact with Aider via a command line interface. Two of Aider&#39;s features that make it useful are its modification of local git repositories for better control over code modifications as well as the use of Tree Sitter, a program that parses code and builds concrete syntax trees. In this exercise, we will create a guestbook web application on our course VM using Python Flask. </p>
+<h2 is-upgraded><strong>Cloud Shell</strong></h2>
+<p>The web application we&#39;ll be using will run on Python Flask&#39;s default port of 5000. In order to access this port on our course&#39;s Linux VM, we will need to create a firewall rule that allows traffic to the port, then apply it to the VM. Bring up a session on Cloud Shell and create the rule, specifying a tag name of <code>flask-server</code>.</p>
+<pre><code>gcloud compute firewall-rules create default-allow-flask \
+  --allow=tcp:5000 --target-tags=flask-server</code></pre>
+<p>Then, apply the tag to the course VM.</p>
+<pre><code>gcloud compute instances add-tags course-vm --tags=flask-server</code></pre>
+<h2 is-upgraded><strong>Course Linux VM</strong></h2>
+<p>The application has a home page that allows ‘guests&#39; to post comments that are then rendered on the page with the guests name, email, message, and a timestamp. The first step will be to create a folder for our new Aider project.</p>
+<pre><code>mkdir -p ~/Aider/guestbook
+cd ~/Aider/guestbook
+
+uv python pin 3.12
+uv init --bare
+uv add aider-chat </code></pre>
+<p>Set up an environment variable named <code>GEMINI_API_KEY</code> that contains the same value as the <code>GOOGLE_API_KEY</code> you have set previously. Note that Aider offers usage with OpenAI and Anthropic, as well as other providers.</p>
+<pre><code>export GEMINI_API_KEY=$GOOGLE_API_KEY</code></pre>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<p>Visit the Aider LLMLeaderBoard to see what models perform the best: <a href="https://aider.chat/docs/leaderboards/" target="_blank">https://aider.chat/docs/leaderboards/</a>. Aider can be used with any of the models listed and you can launch Aider with a particular model using the command below</p>
+<pre>uv run aider --model &lt;MODEL_NAME&gt;</pre>
+<p>For example, to use Gemini 2.5 Pro, you would run.</p>
+<pre>uv run aider --model gemini/gemini-2.5-pro</pre>
+<p>Agree to make a git repository when the program starts. Note that, If you want to change the model you are using from within Aider, the tool provides a convenient interface. The <code>/models</code> command shows the available models and can also be used to search for models not present on the leaderboard by name.</p>
+<pre>/models &lt;QUERY&gt;</pre>
+<p>The <code>/model</code> command allows you to switch to a different model.</p>
+<pre>/model &lt;MODEL_NAME&gt;</pre>
+<p>Aider has a &#39;help&#39; mode that we can invoke using the <code>/help</code>. Run the command. </p>
+<pre>/help</pre>
+<p>We&#39;ll be using a subset of these commands in our initial labs. Using <code>/help</code>, we can then ask a question about Aider&#39;s different chat modes:</p>
+<pre>/help What are Aider&#39;s different chat modes?</pre>
+<p>This command will ask to install added dependencies which will load a vector database of all Aider&#39;s docs and then use RAG to provide context for specific Aider documentation when the user uses the <code>/help</code> command. We now have a personal Aider assistant! </p>
+<ul>
+<li><strong>List Aider&#39;s different chat modes for your lab notebook</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<p>Next we will explore how other chat modes can be used. This Guestbook application will use the model-view-controller (MVC) architecture. Instead of describing to you what the MVC architecture is, use the Aider&#39;s &#39;ask&#39; mode via <code>/ask</code> to get an explanation.</p>
+<pre>/ask What is the Model-View-Controller design architecture?</pre>
+<p>Now that we have a rough overview of what the design architecture we will be using, we can begin to implement the application. For this exercise, we will define the structure of the code in one large step and try to debug the code if any issues arise.</p>
+<p>Here are the steps:</p>
+<ol type="1" start="1">
+<li>Define a high level overview of the application and have Aider create the project structure</li>
+<li>Ask Aider to install the necessary dependencies</li>
+<li>Use the <code>/help</code> command along with <code>/architect</code> and <code>/ask</code> to fix any issues there might be</li>
+<li>Try running the application (if it is not clear how to do so ask Aider)</li>
+</ol>
+<p>First let&#39;s ask Aider the best chat mode to use for the first step:</p>
+<pre>/help What chat mode should be used to create the file structure of a web application?</pre>
+<p>Now let&#39;s test out the power of Aider and current chat models using the &#39;architect&#39; mode (it is recommended to use one of the models on the top of the AiderLLM leaderboard for this step). Consider the prompt below:</p>
+<pre>I want to create a Python application named app.py that uses only the Flask \
+package. It should utilize the model-view-controller architecture to separate \
+the concerns.  It should utilize Jinja2 templates for the view and a python \
+dictionary for the model. The application should be a single page guestbook \
+application that listens for connections on all network interfaces. It should \
+display the previous guestbook entries and allow the user to add their own \
+messages. The user should be able to add a message with the fields: name, \
+email, and message. Each message should include the time it was posted</pre>
+<p>The prompt is intentionally detailed and explicit in order to give the LLM exactly what it needs to produce the expected code. Within Aider, use architect mode to handle this prompt.</p>
+<pre>/architect I want to ...</pre>
+<p>Aider should show you the file structure and ask you if you would like to implement it. Select <code>Yes</code>. Then agree to add the files to the chat and to create the files. Note that Aider may attempt to reimplement the application using a persistent backend such as SQLite3. If so, decline the request. If it has been added, you can &#39;undo&#39; the commit via:</p>
+<pre>/undo</pre>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<p>In the next step, we will ask Aider to install the dependencies that are needed. First, check that the files that were just created are in the chat:</p>
+<pre>/ls</pre>
+<p>This will display the files in chat. If your applications files are not in the chat add them using the command</p>
+<pre>/add &lt;APPLICATION FILES&gt;</pre>
+<p>Now that the files are added to the chat we will use the architect chat-mode to ask for Aider to create a <code>requirements.txt</code> file that installs the necessary dependencies.</p>
+<pre>/architect Please create a requirements.txt file in the application \
+folder that includes all of the necessary dependencies.</pre>
+<p>Now ask Aider how to install the dependencies if it has not already done so. It will prompt you to run the commands within the shell to set the environment up.</p>
+<pre>Please install the dependencies in the requirements.txt file in the \
+repository within a python virtual environment</pre>
+<p>See troubleshooting tips if it gets caught in a loop or cannot find the file. Now ask Aider to run the application:</p>
+<pre>Please run the application</pre>
+<p>If there are errors anywhere in this series of steps, you can exit the application with <code>Ctrl+c,</code> add the error output to the chat, then ask Aider to fix the error. Other troubleshooting tips can be found in the troubleshooting section at the end of the lab.</p>
+<pre>Fix the error</pre>
+<p>Once the app is successfully created, open your application in a web browser. To do so, find the &#39;External IP address&#39; of the course VM. Then, in a browser window, enter the URL</p>
+<pre>http://&lt;External_IP_Address&gt;:5000/</pre>
+<p>Enter a message. If the User interface is not updated with the message or there is an error please use the troubleshooting tips in the next section. </p>
+<ul>
+<li><strong>Take a screenshot of the deployed application that includes your FAU email ID</strong></li>
+</ul>
+<p>Once you successfully have an application running on the local host exit by hitting <code>Ctrl+c</code>. Use the ask command to inquire about the security of the application:</p>
+<pre>/ask Is this code ready for production? What security concerns are there?</pre>
+<ul>
+<li><strong>List the problems identified</strong></li>
+</ul>
+<p>Prompt the agent to fix one of the issues identified.</p>
+<ul>
+<li><strong>Take a screenshot of the diff that fixes the code that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<h2 is-upgraded><strong>Troubleshooting tips</strong></h2>
+<p>First and foremost, always read what the model is telling you after creating code or advising you on a command. In addition, try using the model with the highest leaderboard position.</p>
+<p><strong>Using Aider</strong></p>
+<p>Ask Aider directly how to do something</p>
+<pre>/help &lt;Your Question about Aider&gt;</pre>
+<p>Inquire about a certain aspect of your project</p>
+<pre>/ask &lt;Question about code&gt;</pre>
+<p><strong>Files don&#39;t exist or Aider enters a loop</strong></p>
+<p>Look at what Aider is trying to do. Look at the project structure. Use the run command to manually enter in the commands that Aider may be struggling with:</p>
+<pre>/run &lt;Your command here&gt;</pre>
+<p><strong>Running the Application</strong></p>
+<p>Even though the default chat-mode of Aider is <code>/code</code>, it should still be able to respond to your question and even give you a command to run. First make sure that the files of the project are in the chat.</p>
+<pre>/ls</pre>
+<p>If the project files are not in the chat enter:</p>
+<pre>/add &lt;Your project files&gt;</pre>
+<p>Now simply ask the default chat-mode(code) how to run the application</p>
+<pre>How do I run the application?</pre>
+<p>It should ask you if you want to execute the presented command. If it fails use:</p>
+<pre>/ask How do I run the application?</pre>
+<p>Then run the command by entering it into Aider:</p>
+<pre>/run &lt;Command here&gt;</pre>
+<p><strong>Dependency conflicts</strong></p>
+<p>Ask Aider to install the dependencies in the <code>requirements.txt</code> file. If there is an error, when Aider asks if you want to add the output to the chat select Yes. Then ask:</p>
+<pre>/architect Please update the requirements.txt file so that there are no dependency conflicts</pre>
+<p>If using a powerful model, it should be able to resolve the conflicts for you.</p>
+<p><strong>Starting Over</strong></p>
+<p>You can exit Aider via</p>
+<pre>/exit</pre>
+<p>Next remove all of the project files from the repo</p>
+<pre>rm &lt;Your Files Here&gt;</pre>
+<p>After this re-enter aider and type</p>
+<pre>/commit</pre>
+<p>After deleting the files and updating it via <code>git</code>. Now you can reset the repo map using:</p>
+<pre>/map-refresh</pre>
+<p>Next use the rest command to drop all files and clear the chat (just in case):</p>
+<pre>/reset</pre>
+<p>Now double check that the repository is empty</p>
+<pre>/map</pre>
+<p><strong>Model Cannot Follow correct Formatting</strong></p>
+<p>The first step that you can try is changing the model to see if it fairs any better. Check the leaderboard and use a model with a higher score on using the correct formatting. Then switch to the model:</p>
+<pre>/model &lt;model name&gt;</pre>
+<p>If that doesn&#39;t work try removing unnecessary files from the chat using</p>
+<pre>/drop &lt;file name&gt;</pre>
+<p>You could also clear the chat history using:</p>
+<pre>/clear</pre>
+<p>The reason why these steps could be helpful is that it declutters the chat, allowing the model to better adhere to the formatting. If you want to try getting rid of everything in the chat including all the files use</p>
+<pre>/reset</pre>
+</google-codelab-step>
+<google-codelab-step label="Exercise #2: Aider (Code mode)" duration="3">
+<p>In this exercise Aider will be used to assist in the incremental development of a ransomware program that performs data exfiltration. The program will carry out the following steps:</p>
+<ul>
+<li>Scan the file system for PDFs and Microsoft Word Documents</li>
+<li>Save the documents it finds in a zip file</li>
+<li>Upload the zip file to a web server</li>
+<li>Encrypt the zip file using a key</li>
+<li>Delete the original files.</li>
+</ul>
+<h2 is-upgraded><strong>Course Linux VM</strong></h2>
+<p>Use the web console to bring up an <code>ssh</code> session on your virtual machine. We&#39;ll be needing multiple <code>ssh</code> sessions on our VM to perform the lab. To support multiple sessions in a single terminal, we can utilize <code>tmux</code>: a terminal multiplexer. <code>tmux</code> utilizes keyboard shortcuts that are triggered after hitting <code>Ctrl+b</code> to navigate multiple terminals within a single window. To start a <code>tmux</code> session, run it in the terminal.</p>
+<pre><code>tmux </code></pre>
+<p>To create a new terminal the command is:</p>
+<ul>
+<li><code>Ctrl+b</code> followed by <code>c</code> </li>
+</ul>
+<p>As can be seen by the lower tabs on the screen, there are now two multiplexed terminals active. You can now switch between them by using the command:</p>
+<ul>
+<li><code>Ctrl+b</code> followed by the terminal number you want to switch to (e.g. <code>0</code> or <code>1</code>)</li>
+</ul>
+<h3 is-upgraded>Web server application <code>tmux </code>session</h3>
+<p>Use the web console to bring up an <code>ssh</code> session on your virtual machine. Change into the source directory containing the examples, create a virtual environment, activate it, and install the packages.</p>
+<pre>cd gensec-class/06*
+git pull
+uv init --bare
+uv add -r requirements.txt</pre>
+<p>Then, run the web application in the directory. This application runs a simple upload server that your generated program will upload files to.</p>
+<pre>uv run simple_http_server.py</pre>
+<p>Iconify the <code>ssh</code> window as you complete the rest of the exercise.</p>
+<h3 is-upgraded>Aider <code>tmux </code>session</h3>
+<p>Create a new <code>tmux</code> window if you have not already, <code>Ctrl+b</code> followed by <code>c.</code> Switch to this window. Now, using the instructions below, create a directory for your application then create a virtual environment with Aider installed in it.</p>
+<pre>mkdir -p ~/Aider/malware
+cd ~/Aider/malware
+
+uv python pin 3.12
+uv init --bare
+uv add aider-chat</pre>
+<p>Set up an environment variable named <code>GEMINI_API_KEY</code> that contains the same value as the <code>GOOGLE_API_KEY</code> you have set previously. Note that Aider offers usage with OpenAI and Anthropic, as well as other providers.</p>
+<pre>export GEMINI_API_KEY=$GOOGLE_API_KEY</pre>
+<p>Finally, launch Aider:</p>
+<pre>aider --model &lt;MODEL_NAME&gt;</pre>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<h2 is-upgraded>Stage 1: Find PDFs on the system</h2>
+<p>Now it is time to have Aider make the first <code>git</code> commit. Prompt Aider with:</p>
+<pre>Create a Python file that implements a function called find_pdfs that \
+takes a directory as an argument and searches for PDFs in the local file \
+system</pre>
+<p>Check file that was created by running a shell command to dump its contents:</p>
+<pre>/run cat find_pdfs.py</pre>
+<p>Now that it has been verified that Aider made a local commit, it would be nice to have a way to test the function that Aider created.</p>
+<pre>Add a section in the find_pdfs.py file that runs the find_pdfs function \
+and prints the files it finds. It should take a command line argument \
+for the directory.</pre>
+<p>Note that, if the LLM doesn&#39;t comply with Aider&#39;s editing format, use the <code>/drop</code> command to remove the file from the context and retry the same prompt above. Run the command below in Aider to examine the changes.</p>
+<pre>/diff</pre>
+<p>Aider allows developers to run shell commands within an Aider session. This example will use this feature to test the script that was written. First find the path to your course directory, <code>cs475-src</code>, using the <code>/run</code> command and <code>ls</code>. Add to your home directory path until you find the directory. Then run the script using the path to your course directory.</p>
+<pre>/run python find_pdfs.py &lt;COURSE_DIRECTORY_PATH&gt;</pre>
+<ul>
+<li><strong>Take a screenshot showing the output of the program that includes your FAU email ID and the two files that it finds that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<h2 is-upgraded><strong>Stage 2: Create a zip file from the PDFs</strong></h2>
+<p>To efficiently load the files off the system, it is necessary to compress them. To implement compression, prompt Aider with the following:</p>
+<pre>Create a function called create_pdf_zip that creates a zip file of all \
+the pdf files returned by find_pdfs and save it to /tmp/foo.zip. The \
+function should be called when executing the Python script</pre>
+<p>Then, examine the changes.</p>
+<pre>/diff</pre>
+<p>Now to test that the file is being created in the correct location Aider can be used to make unit tests by giving it the prompt:</p>
+<pre>In the same directory as the find_pdfs file, make a new file that \
+contains unit tests for both the create_pdf_zip and find_pdfs function.</pre>
+<p>Then, examine the changes.</p>
+<pre>/diff</pre>
+<p>Prompt Aider to run the test and then run them using the suggested command</p>
+<ul>
+<li><strong>Take a screenshot showing the output of the unit tests that includes your FAU email ID</strong></li>
+</ul>
+<h2 is-upgraded><strong>Stage 3: Load file to HTTP endpoint</strong></h2>
+<p>The next step for a data ransomware campaign might be to exfiltrate the files from the target system to a server that the adversary controls. Modify the current project using Aider to add this functionality via a prompt:</p>
+<pre>Create a Python function that will take the zip file created by the \
+create_pdf_zip function and upload it to http://127.0.0.1:5000/upload using an \
+HTTP POST request. The endpoint accepts file objects. Use the Python requests \
+package.</pre>
+<p>Note: Don&#39;t add the URL to the chat. This is for PlayWright, an automated web browsing feature. Then, examine the changes.</p>
+<pre>/diff</pre>
+<p>Now test the script that Aider wrote by using the <code>/test</code> command. This will add the output to the chat:</p>
+<pre>/test python find_pdfs.py &lt;course home directory&gt;</pre>
+<p>Examine the output of the test and allow Aider to assist in debugging if it is unable to deliver correct functionality. </p>
+<ul>
+<li><strong>Take a screenshot showing the output that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<h2 is-upgraded><strong>Stage 4: Encrypt the PDF files</strong></h2>
+<p>A ransomware payload would want to make the exfiltrated files unusable to the target so that the target administrators are forced to pay a ransom in order to decrypt their files. This could be done using either asymmetric or symmetric encryption. This exercise will use symmetric encryption so that the encryption key and decryption key are the same. Prompt Aider with the following: </p>
+<pre>Modify the create_pdf_zip  function so that it will use the Python cryptography \
+package to encrypt the contents of the zip file and save it as /tmp/foo.zip.enc.\
+Send the encrypted file as a post request to http://127.0.0.1:5000/upload . \
+Then send the encryption key as a post request to http://127.0.0.1:5000/upload \
+as a file called key.</pre>
+<p>Then, examine the changes.</p>
+<pre>/diff</pre>
+<p>After the previous modification is successfully made, run the prompt to update the requirements.</p>
+<pre>Create a requirements.txt file that contains the necessary Python packages to run the script</pre>
+<p>Install the dependencies (if Aider has not prompted you to do so already), and run the script:</p>
+<pre>/run pip install -r requirements.txt
+/test python find_pdfs.py &lt;COURSE_DIRECTORY&gt;</pre>
+<p>Check the server&#39;s status code. If the status was 200, switch over to the web server application window. Perform a directory listing of the uploads directory. There should be both a <code>foo.zip</code> file and a key file in the uploads directory</p>
+<ul>
+<li><strong>Take a screenshot showing that </strong><strong><code>foo.zip.enc</code></strong><strong> and </strong><code>key</code><strong> have been uploaded on the server that includes your FAU email ID</strong></li>
+</ul>
+<p>You have now simulated the exfiltration of sensitive PDF files and then encrypting them to ensure the owner of the files cannot regain access to the data. In an actual pentest engagement you would have exfiltrated the files to a server you own.</p>
+<h2 is-upgraded><strong>Stage 5: Polymorphic Code generation</strong></h2>
+<p>To make the ransomware harder to detect it can be useful to create variants of the code that have identical functionality. Run the prompt to update the requirements.</p>
+<pre>Obfuscate the code in find_pdfs so that the function call strings are encoded \
+using base64 and the code is still identical in functionality.</pre>
+<p>Then, examine the changes.</p>
+<pre>/diff</pre>
+<ul>
+<li><strong>Take a screenshot of the changes that includes your FAU email ID</strong></li>
+</ul>
+<p>Test the code again to ensure it still works:</p>
+<pre>/test python find_pdfs.py &lt;COURSE_DIRECTORY&gt;</pre>
+<p>Exit Aider</p>
+<pre>/quit</pre>
+<p>Then to exit out of <code>tmux</code> type <code>exit</code> for each <code>tmux</code> window and you will be returned to the base terminal.</p>
+</google-codelab-step>
+<google-codelab-step label="Exercise #3: OpenCode" duration="3">
+<p class="image-container"><img style="width:539px" src="img/ef9ada20b806e8ca.png"></p>
+<p>Another popular coding agent is OpenCode. In this exercise, you will develop the same polymorphic malware using it. Based on your preference, you may perform this exercise using either of the options below. Visit the <a href="https://opencode.ai/" target="_blank">OpenCode</a> site and install the tool.</p>
+<p>In this exercise, we will have the coding agent assist in the incremental development of a ransomware program that performs data exfiltration. The program will carry out the following steps:</p>
+<ul>
+<li>Scan the file system for PDFs </li>
+<li>Save the documents it finds in a zip file</li>
+<li>Upload the zip file to a web server</li>
+<li>Encrypt the zip file using a key</li>
+<li>Delete the original files.</li>
+</ul>
+<h2 is-upgraded><strong>Course repository</strong></h2>
+<p>Within the IDE, clone the course repository. Once you have the course repository open, navigate to <code>gensec-class/06*.</code></p>
+<h2 is-upgraded><strong>Python environment and server startup</strong></h2>
+<p>Bring up the agent and send it an initial prompt to set up the application environment.</p>
+<pre>Create a virtual environment called env in the 06_CodeGeneration \
+directory. Then activate the environment. Once the environment is \
+activated, install the dependencies in requirements.txt</pre>
+<p>The agent will give you the steps to complete your task. Check the steps for correctness, and reprompt the agent if there are any issues. Next, have the agent start the Python server that has been provided:</p>
+<pre>Start the simple server</pre>
+<p>You may need to pop-out the terminal utilized to start the server in order to continue with the interactions with the agent. The running server will be used to receive files from the program we are about to create.</p>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<p>We will now utilize the coding agent to develop the application incrementally. </p>
+<h2 is-upgraded><strong>Step 1: Find PDFs on the system</strong></h2>
+<p>Use the following prompt to have the agent write a program that will find all of the PDFs that exist in a particular directory.</p>
+<pre>Create a Python file that implements a function called find_pdfs that \
+takes a directory as an argument and searches for PDFs in the local file \
+system</pre>
+<h2 is-upgraded><strong>Step 2: Test program</strong></h2>
+<p>Coding agents can run, test, debug, and patch code. To do so, prompt the agent with the following:</p>
+<pre>Run the script with the project directory as an argument</pre>
+<p>Verify that running the script produces the two files in the repository.</p>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<h2 is-upgraded><strong>Step 4: Create a zip file from the PDFs</strong></h2>
+<p>Next, we&#39;ll modify the program to create a zip file containing all of the PDFs found so that they can be exfiltrated off the system. Enter the prompt below:</p>
+<pre>Create a function called create_pdf_zip that creates a zip file of all \
+the pdf files returned by find_pdfs and save it to /tmp/foo.zip. The \
+function should be called when executing the Python script</pre>
+<p>To test that the program being created, have the agent make unit tests with the following prompt:</p>
+<pre>In the same directory as the find_pdfs file, make a new file that \
+contains unit tests for both the create_pdf_zip and find_pdfs function.</pre>
+<p>Select the file to see what changes were made and prompt the agent to run the unit tests. Ensure that the tests pass.</p>
+<h2 is-upgraded><strong>Step 5: Load file to HTTP endpoint</strong></h2>
+<p>The next step is to add the ability to exfiltrate the files from the target system to a server that the adversary controls. Prompt the agent to add this functionality, utilizing the HTTP server set up initially.</p>
+<pre>Create a Python function that will take the zip file created by the \
+create_pdf_zip function and upload it to http://127.0.0.1:5000/upload \
+using an HTTP POST request. The endpoint accepts file objects. Use the \
+Python requests package.</pre>
+<p>Verify the unit tests still pass. Switch over to the terminal running the HTTP server.</p>
+<ul>
+<li><strong>Take a screenshot of the log entry from the POST request that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<h2 is-upgraded><strong>Step 6: Encrypt the PDF files</strong></h2>
+<p>A ransomware payload would want to make the exfiltrated files unusable to the target so that the target administrators are forced to pay a ransom in order to decrypt their files. This could be done using either asymmetric or symmetric encryption. This exercise will use symmetric encryption so that the encryption key and decryption key are the same. Prompt the agent to make the modification:</p>
+<pre>Modify the create_pdf_zip  function so that it will use the Python \
+cryptography package to encrypt the contents of the zip file and save it \
+as /tmp/foo.zip.enc. Send the encrypted file as a post request to \
+http://127.0.0.1:5000/upload . Then send the encryption key as a post \
+request to http://127.0.0.1:5000/upload as a file called /tmp/foo.zip.key</pre>
+<p>Prompt the agent to test the changes:</p>
+<pre>Test the script with the cs475-src directory as an argument</pre>
+<p>You have now simulated the encryption and exfiltration of PDF files, typical of what might happen in a ransomware attack.</p>
+<h2 is-upgraded><strong>Step 7: Polymorphic Code generation</strong></h2>
+<p>Malware often utilizes obfuscation in order to make it harder to detect by creating innumerable variants of the code that have identical functionality. LLMs have the ability to automate this process. To see this, prompt the agent with the following:</p>
+<pre>Obfuscate the code in find_pdfs so that the function call strings are \
+encoded using base64 and the code is still identical in functionality.</pre>
+<p>The obfuscation may hide the calls, but the names of the functions in the program may not be. Attempt an additional step to obfuscate the code with the following:</p>
+<pre>Change the function names to gibberish</pre>
+<ul>
+<li><strong>Take a screenshot of a snippet of the resulting program showing the obfuscation that includes your FAU email ID</strong></li>
+</ul>
+<p>Attempt an additional step to obfuscate the code with the following:</p>
+<pre>Make it as hard as possible for an expert software engineer to determine \
+what the functions do while keeping the same functionality.</pre>
+<p>Prompt the agent to test the changes to ensure it still works.</p>
+<pre>Test the script with the cs475-src directory as an argument</pre>
+<p>Examine the code:</p>
+<ul>
+<li><strong>Take a screenshot of a snippet of the resulting program that includes your FAU email ID</strong></li>
+<li><strong>List the techniques the agent used to further obfusticate the code in this step</strong></li>
+</ul>
+</google-codelab-step>
+</google-codelab>
+<script src="/gensec-web/scripts/native-shim.js"></script>
+<script src="/gensec-web/scripts/custom-elements.min.js"></script>
+<script src="/gensec-web/scripts/prettify.js"></script>
+<script src="/gensec-web/scripts/codelab-elements.js"></script>
+<script src="https://support.google.com/inapp/api.js"></script>
+</body>
+</html>

@@ -1,5 +1,3 @@
-
-<!doctype html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1,user-scalable=yes">
@@ -8,7 +6,7 @@
 <title>06.1: Code Generation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-<link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+<link rel="stylesheet" href="/gensec-web/scripts/codelab-elements.css">
 <style>
 .success{color:#1e8e3e}.error{color:red} </style>
 </head>
@@ -72,7 +70,7 @@ class Users():
 </ul>
 <p>For the prompt that produces the original code most closely</p>
 <ul>
-<li><strong>Take a screenshot of the prompt and resulting code that includes your OdinId</strong></li>
+<li><strong>Take a screenshot of the prompt and resulting code that includes your FAU email ID</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="Unit test generation" duration="3">
@@ -117,7 +115,7 @@ if __name__ == &#34;__main__&#34;:
 </ul>
 <p>Then, run the generated password program with the unit tests implemented.</p>
 <ul>
-<li><strong>Take a screenshot of the code for the unit tests and the results produced when running them that includes your OdinId</strong></li>
+<li><strong>Take a screenshot of the code for the unit tests and the results produced when running them that includes your FAU email ID</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="Type annotation" duration="3">
@@ -153,7 +151,7 @@ def getUrlTitle(url: str) -&gt; Optional[str]:
 </ul>
 <p>Examine the code for correctness and ensure it executes correctly.</p>
 <ul>
-<li><strong>Take a screenshot of the successful execution of the generated code as well as the annotated code produced for one of the functions that includes your OdinId</strong></li>
+<li><strong>Take a screenshot of the successful execution of the generated code as well as the annotated code produced for one of the functions that includes your FAU email ID</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="Code modification" duration="3">
@@ -164,7 +162,7 @@ def getUrlTitle(url: str) -&gt; Optional[str]:
 </ul>
 <p>Test the implementation.</p>
 <ul>
-<li><strong>Take a screenshot of the successful execution of the modified password storage and testing code as well as the results of successful program execution that includes your OdinId</strong></li>
+<li><strong>Take a screenshot of the successful execution of the modified password storage and testing code as well as the results of successful program execution that includes your FAU email ID</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="Code styling" duration="3">
@@ -189,7 +187,7 @@ def upload_file():
 ...</code></pre>
 <p>It does not adhere to the PEP8 standard. Rather than manually read the rules for PEP8, instead, go to the repository and copy the program and include it in a prompt to an LLM asking it to make it compliant to PEP8. </p>
 <ul>
-<li><strong>Take a screenshot of the modifications made to the code that bring it into compliance that includes your OdinId</strong></li>
+<li><strong>Take a screenshot of the modifications made to the code that bring it into compliance that includes your FAU email ID</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="Code translation" duration="3">
@@ -219,7 +217,7 @@ npm install sqlite3</code></pre>
 <p>Copy the code the LLM produced into the file <code>users.js</code>. Then, run the code.</p>
 <pre><code>node users.js</code></pre>
 <ul>
-<li><strong>Take a screenshot of the successful execution of the program that includes your OdinId</strong></li>
+<li><strong>Take a screenshot of the successful execution of the program that includes your FAU email ID</strong></li>
 </ul>
 <h2 is-upgraded><strong>Typescript</strong></h2>
 <p>We&#39;ll attempt to repeat the exercise using Typescript instead.</p>
@@ -231,7 +229,7 @@ npm install sqlite3</code></pre>
 <p>Copy the code the LLM produced into the file <code>users.ts</code>. Then, run the <code>npx</code> command to transpile the code to Javascript and execute it.</p>
 <pre><code>npx ts-node users.js</code></pre>
 <ul>
-<li><strong>Take a screenshot of the successful execution of the program that includes your OdinId</strong></li>
+<li><strong>Take a screenshot of the successful execution of the program that includes your FAU email ID</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="Regular expressions" duration="3">
@@ -240,19 +238,19 @@ npm install sqlite3</code></pre>
 <pre>Give me a regular expression that matches the localhost address</pre>
 <p>At a minimum, the result should match <code>127.0.0.1</code>, the most common form of the address. </p>
 <ul>
-<li><strong>Take a screenshot of the generated expression that includes your OdinId</strong></li>
+<li><strong>Take a screenshot of the generated expression that includes your FAU email ID</strong></li>
 </ul>
 <p>As it turns out, the entire block of <code>127.0.0.0/8</code> should match the loopback. For example, <code>127.0.0.53</code> is commonly used by the systemd-resolved service as a local DNS stub resolver. Prompt the LLM to generate a regular expression to match all <code>localhost</code> addresses.</p>
 <pre>Give me a regular expression that matches all localhost addresses</pre>
 <ul>
-<li><strong>Take a screenshot of the generated expression that includes your OdinId</strong></li>
+<li><strong>Take a screenshot of the generated expression that includes your FAU email ID</strong></li>
 </ul>
 <p>One problem with LLMs is that they may not understand obscure encodings. On your Kali VM, perform the following:</p>
 <pre>ping 0177.0.0.1</pre>
 <p>Prompt the LLM to generate a regular expression to match all encodings of all <code>localhost</code> addresses.</p>
 <pre>Give me a regular expression that matches all encodings of all localhost addresses</pre>
 <ul>
-<li><strong>Take a screenshot of the generated expression that includes your OdinId and list the encodings and the IP address versions that are covered by it.</strong></li>
+<li><strong>Take a screenshot of the generated expression that includes your FAU email ID and list the encodings and the IP address versions that are covered by it.</strong></li>
 </ul>
 <p>Examine this blog <a href="https://isc.sans.edu/diary/30348" target="_blank">post</a> to see if the regular expression addresses each representation. Then, prompt an LLM with the &#34;right&#34; way to validate the <code>localhost</code> address in Python that includes unit tests for all of the different encodings and versions above.</p>
 <ul>
@@ -260,10 +258,10 @@ npm install sqlite3</code></pre>
 </ul>
 </google-codelab-step>
 </google-codelab>
-<script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
-<script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
-<script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
-<script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+<script src="/gensec-web/scripts/native-shim.js"></script>
+<script src="/gensec-web/scripts/custom-elements.min.js"></script>
+<script src="/gensec-web/scripts/prettify.js"></script>
+<script src="/gensec-web/scripts/codelab-elements.js"></script>
 <script src="https://support.google.com/inapp/api.js"></script>
 </body>
 </html>
