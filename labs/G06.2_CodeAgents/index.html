@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html>
 <head>
@@ -23,7 +22,7 @@
 <pre><code>gcloud compute firewall-rules create default-allow-flask \
   --allow=tcp:5000 --target-tags=flask-server</code></pre>
 <p>Then, apply the tag to the course VM.</p>
-<pre><code>gcloud compute instances add-tags course-vm --tags=flask-server</code></pre>
+<pre><code>gcloud compute instances add-tags kali-vm --tags=flask-server</code></pre>
 <h2 is-upgraded><strong>Course Linux VM</strong></h2>
 <p>The application has a home page that allows ‘guests&#39; to post comments that are then rendered on the page with the guests name, email, message, and a timestamp. The first step will be to create a folder for our new Aider project.</p>
 <pre><code>mkdir -p ~/Aider/guestbook
@@ -216,7 +215,7 @@ and prints the files it finds. It should take a command line argument \
 for the directory.</pre>
 <p>Note that, if the LLM doesn&#39;t comply with Aider&#39;s editing format, use the <code>/drop</code> command to remove the file from the context and retry the same prompt above. Run the command below in Aider to examine the changes.</p>
 <pre>/diff</pre>
-<p>Aider allows developers to run shell commands within an Aider session. This example will use this feature to test the script that was written. First find the path to your course directory, <code>cs475-src</code>, using the <code>/run</code> command and <code>ls</code>. Add to your home directory path until you find the directory. Then run the script using the path to your course directory.</p>
+<p>Aider allows developers to run shell commands within an Aider session. This example will use this feature to test the script that was written. First find the path to your course directory, <code>gensec-class</code>, using the <code>/run</code> command and <code>ls</code>. Add to your home directory path until you find the directory. Then run the script using the path to your course directory.</p>
 <pre>/run python find_pdfs.py &lt;COURSE_DIRECTORY_PATH&gt;</pre>
 <ul>
 <li><strong>Take a screenshot showing the output of the program that includes your FAU email ID and the two files that it finds that includes your FAU email ID</strong></li>
@@ -353,7 +352,7 @@ as /tmp/foo.zip.enc. Send the encrypted file as a post request to \
 http://127.0.0.1:5000/upload . Then send the encryption key as a post \
 request to http://127.0.0.1:5000/upload as a file called /tmp/foo.zip.key</pre>
 <p>Prompt the agent to test the changes:</p>
-<pre>Test the script with the cs475-src directory as an argument</pre>
+<pre>Test the script with the gensec-class directory as an argument</pre>
 <p>You have now simulated the encryption and exfiltration of PDF files, typical of what might happen in a ransomware attack.</p>
 <h2 is-upgraded><strong>Step 7: Polymorphic Code generation</strong></h2>
 <p>Malware often utilizes obfuscation in order to make it harder to detect by creating innumerable variants of the code that have identical functionality. LLMs have the ability to automate this process. To see this, prompt the agent with the following:</p>
@@ -368,7 +367,7 @@ encoded using base64 and the code is still identical in functionality.</pre>
 <pre>Make it as hard as possible for an expert software engineer to determine \
 what the functions do while keeping the same functionality.</pre>
 <p>Prompt the agent to test the changes to ensure it still works.</p>
-<pre>Test the script with the cs475-src directory as an argument</pre>
+<pre>Test the script with the gensec-class directory as an argument</pre>
 <p>Examine the code:</p>
 <ul>
 <li><strong>Take a screenshot of a snippet of the resulting program that includes your FAU email ID</strong></li>
