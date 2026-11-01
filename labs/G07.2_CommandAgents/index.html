@@ -1,0 +1,233 @@
+
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1,user-scalable=yes">
+<meta name="theme-color" content="#4F7DC9">
+<meta charset="UTF-8">
+<title>07.2: Command agents</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="/gensec-web/scripts/codelab-elements.css">
+<style>
+.success{color:#1e8e3e}.error{color:red} </style>
+</head>
+<body>
+<google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+<google-codelab codelab-gaid="" id="G07.2_CommandAgents" title="07.2: Command agents" environment="web" feedback-link="https://docs.google.com/document/d/1VAo-ju34RiQCmsuugChCwKhLUfXs6EmhSDJFZJPf-ic">
+<google-codelab-step label="Linux processes" duration="3">
+<h2 is-upgraded>Course VM setup</h2>
+<p>We&#39;ll be utilizing an agent on the course VM to issue commonly used Linux commands. <code>ssh</code> into your VM and install the packages we&#39;ll be using for the lab if they are not yet installed.</p>
+<pre><code>sudo apt update -y
+sudo apt install wordlists tcpdump -y
+sudo gunzip /usr/share/wordlists/rockyou.txt.gz</code></pre>
+<p>Within the repository on the course VM, change into the exercise directory and update the code.</p>
+<pre>cd gensec-class/07*
+git pull</pre>
+<h2 is-upgraded><strong>Command agent</strong></h2>
+<p>Linux ships with a large library of commands that users invoke from the command line. While one typically memorizes the commands and its flags in order to learn how to use them, language models and generative AI can allow a user to focus on the function that is being asked rather than the syntax of a particular command. </p>
+<p>In this exercise, we will examine a simple command agent skill that allows an agent to generate and execute Linux commands on the machine. Begin by changing into the exercise directory.</p>
+<pre>cd 01_command</pre>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<p>The command skill instructs the agent how to execute commands when it is invoked.</p>
+<h3 is-upgraded>skills/command/SKILL.md</h3>
+<pre><code>---
+name: command
+description: Runs an arbitrary command and returns its output
+---
+
+# Command
+
+Use this skill to execute a shell command and capture its output.
+
+## Local Script
+
+Run this exact command from `07_CommandConfigGeneration/01_command/`:
+
+```bash
+python skills/command/scripts/command.py &lt;command&gt; [args...]
+```
+
+The script prints stdout, stderr, and the return code.
+
+## Deterministic Workflow
+
+1. Split the requested command into program and arguments.
+2. Run `python skills/command/scripts/command.py &lt;program&gt; [args...]`.
+3. Report stdout, stderr, and return code to the user.</code></pre>
+<p>The skill includes a simple Python script to execute commands that are produced:</p>
+<h3 is-upgraded>skills/command/scripts/command.py</h3>
+<pre><code>import subprocess
+import sys
+
+result = subprocess.run(sys.argv[1:], capture_output=True, text=True)
+print(f&#34;stdout: {result.stdout}\nstderr: {result.stderr}\nreturncode: {result.returncode}&#34;)</code></pre>
+<p>One can create a simple agent that can leverage the skill given by the user.</p>
+<h3 is-upgraded>command_client.py</h3>
+<pre><code>user_instructions = sys.argv[1]
+
+fast = FastAgent(&#34;Command Agent&#34;, skills_directory=&#34;skills&#34;)
+
+@fast.agent(
+    instruction = user_instructions + &#34;\n\n&#123;&#123;agentSkills}}&#34;,
+    model = &#34;gemini3flash&#34;,
+    use_history = True
+)</code></pre>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<p>Install the packages.</p>
+<pre>uv init --bare
+uv add -r requirements.txt</pre>
+<p>Then, run the agent, asking it to execute specific commands associated with processes in Linux when prompted by the user.</p>
+<pre>uv run command_client.py \
+&#34;Answer the user&#39;s request by running Linux commands ps, sudo, lsof, or ls via this skill.&#34;</pre>
+<p>Then, test the agent with prompts for performing process forensic analysis in order to evaluate the model&#39;s effectiveness.</p>
+<ul>
+<li>Using <code>sudo</code>, find the names of all processes with open network connections using <code>lsof</code></li>
+<li>Show the path of the executable file used to launch <code>sshd</code></li>
+<li>Show all processes whose original binaries have been deleted</li>
+<li>Show the current working directory of the Python process</li>
+<li>Find the PID of the python processes, then use <code>/proc</code> to show its environment</li>
+<li>Show all processes which have the current working directory of <code>/tmp</code></li>
+<li>Show all scheduled tasks</li>
+</ul>
+<p>For each task, examine the command tool call generated.</p>
+<ul>
+<li><strong>Include a table of successful commands generated for each task for your notebook</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Linux files and regular expressions (grep)" duration="3">
+<p>When searching files for particular content in them, regular expressions are often used to express advanced string matching operations. As the language itself can be difficult to learn, one use for LLMs is to obviate the need for learning regular expression syntax. Linux&#39;s <code>egrep</code> (global regular expression print) command is often used in Linux to perform a regular expression search on an input. To demonstrate this, we&#39;ll be using the <a href="https://en.wikipedia.org/wiki/RockYou" target="_blank">RockYou</a> dataset of compromised passwords for this exercise.</p>
+<p>Run the agent with instructions that ask it to utilize a set of tools for performing searches on the file via regular expressions.</p>
+<pre>uv run command_client.py \
+&#34;Answer the user&#39;s request by running Linux commands egrep or wc on the password file at /usr/share/wordlists/rockyou.txt via this skill.&#34;</pre>
+<p>Then, query the agent to execute commands using Linux&#39;s <code>egrep</code> that searches words in the <code>rockyou.txt</code> file. Run each command multiple times to validate the regular expressions generated for correctness.</p>
+<ul>
+<li>How many passwords begin with the letter <code>a</code></li>
+<li>How many passwords begin with the number 1</li>
+<li>How many passwords consist of only alphabetic characters</li>
+<li>How many passwords are made up of exactly 6 numbers</li>
+<li>List all passwords in <code>rockyou.txt</code> that begin <code>abcde</code> and end with the number 9</li>
+</ul>
+<p>For each task, examine the command tool call generated.</p>
+<ul>
+<li><strong>Include a table of successful commands generated for each task for your notebook</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Linux file searching (find)" duration="3">
+<p>Searching files in Linux via the command-line is often done with the <code>find</code> command and its many flags. While in the past, administrators would have to memorize the flags or read the man pages to craft the appropriate command, an LLM may obviate the need to do so now.</p>
+<p>Run the agent with a prompt that asks it to utilize a set of tools that allow it to find particular files in the file system.</p>
+<pre>uv run command_client.py \
+&#34;Answer the user&#39;s request by running Linux commands find and sudo via this skill.&#34;</pre>
+<p>Then, query the agent to execute commands using Linux&#39;s <code>find</code> that searches for particular files in the file system. </p>
+<ul>
+<li>Find all <code>setuid</code> and <code>setgid</code> programs in <code>/bin</code></li>
+<li>Find all ELF executables in <code>/bin</code></li>
+<li>Find all files modified in the last day in <code>/etc</code></li>
+<li>Find all files created in the last day in <code>/etc</code></li>
+</ul>
+<p>For each task, examine the command tool call generated.</p>
+<ul>
+<li><strong>Include a table of successful commands generated for each task for your notebook</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Linux firewall" duration="3">
+<p>Firewalls and filtering allow one to restrict traffic to and from a machine to reduce the attack surface of a machine as well as limit the impact that a compromise might have on the rest of the network. On Linux, <code>iptables</code> provides a mechanism for specifying rules that can be applied to traffic. For this exercise, because an incorrect command that is executed might cause us to lose connectivity to the VM, we&#39;ll only ask for the <code>iptables</code> commands to run.</p>
+<p>Run the agent with a prompt that asks it to produce commands that allow it to implement a firewall policy the user requests.</p>
+<pre>uv run command_client.py \
+&#34;Answer the user&#39;s prompt by specifying iptables commands that implement what is asked.&#34;</pre>
+<p>Then, query the agent to generate commands that implement a variety of rules using <code>iptables</code>.</p>
+<ul>
+<li>What command allows ssh traffic from 131.252.220.0/24?</li>
+<li>What command allows incoming connections to ports 80 and 443 from 131.252.0.0/16?</li>
+<li>What command allows outgoing connections to a MySQL database server at 10.0.0.10?</li>
+<li>What command denies all traffic from 1.1.1.1</li>
+</ul>
+<p>For each task, examine the command tool call generated. </p>
+<ul>
+<li><strong>Include a table of successful commands generated for each task for your notebook</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Linux audit logs" duration="3">
+<p>It is helpful for Linux administrators to be able to examine the log files on a system to see what actions have occurred on them. Towards this end, we&#39;ll utilize an agent to compose a set of Linux commands for analyzing activity on a system from its audit logs.</p>
+<p>Run the agent with a prompt that asks it to utilize a set of commands that allow it to extract information from audit logs on the system.</p>
+<pre>uv run command_client.py \
+&#34;Answer the user&#39;s prompt by using sudo to run Linux commands who, last, lastb, lastlog, egrep, head, or tail via this skill.&#34;</pre>
+<p>Then, query the agent to execute Linux commands that perform forensic queries below:</p>
+<ul>
+<li>Find all currently logged in users</li>
+<li>Find the last 5 successful logins</li>
+<li>Find the last 5 unsuccessful logins and the IP addresses they came from</li>
+</ul>
+<p>For each task, examine the command tool call generated.</p>
+<ul>
+<li><strong>Include a table of successful commands generated for each task for your notebook</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="tcpdump" duration="3">
+<p>Another useful function for an administrator is to analyze network traffic going to and from the machine. In this exercise, we&#39;ll utilize the agent to perform packet captures using <code>tcpdump</code> in order to answer queries from the user. Run the agent with a prompt that asks it to utilize <code>tcpdump</code> to answer questions about network connections on the machine.</p>
+<pre>uv run command_client.py \
+&#34;You are a tcpdump agent.  Use tcpdump to print the next 20 packets in order to answer the user&#39;s question&#34;</pre>
+<p>Create a second terminal session on the course VM to execute network commands. For each of the queries and commands below, issue the query to the agent then run the network command on the second terminal. Show the results.</p>
+<table>
+<tr><td colspan="1" rowspan="1"><p><strong>Agent query</strong></p>
+</td><td colspan="1" rowspan="1"><p><strong>Network command</strong></p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>What destination ports are being accessed currently? </p>
+</td><td colspan="1" rowspan="1"><p><code>dig www.pdx.edu</code></p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>What was the destination of the last web request?</p>
+</td><td colspan="1" rowspan="1"><p><code>curl https://oregonctf.org</code></p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>What addresses are communicating over ssh?</p>
+</td><td colspan="1" rowspan="1"><p><code>ssh linux.cs.pdx.edu</code></p>
+</td></tr>
+</table>
+<ul>
+<li><strong>Take a screenshot showing the results for each that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Linux package vulnerabilities" duration="3">
+<p>Linux administrators might be interested in whether or not packages and services they are running are vulnerable to attack. In this exercise, we&#39;ll examine the utility of two ways of performing this task. The first is to use our prior approach to allow an agent to compose a set of Linux commands for doing so. Run the agent with a prompt that asks it to utilize a set of commands that allow it to determine whether a system is vulnerable.</p>
+<pre>uv run command_client.py \
+&#34;Answer the user&#39;s prompt by using sudo to run Linux commands systemctl, dpkg-query, and apt via this skill.&#34;</pre>
+<p>Then, query the agent to see what commands it generates and the results it produces when given the following prompts: </p>
+<ul>
+<li>What is the ssh server being run on this machine?</li>
+<li>Does the current ssh server being run have any vulnerabilities associated with it?</li>
+</ul>
+<p>For each task, examine the command tool call generated.</p>
+<ul>
+<li><strong>Include a table of successful commands generated for each task for your notebook</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<p>We can instead try to customize the behavior of an agent by creating custom tools that utilize these commands and only allow the LLM to call them in order to answer the prompts. An example is provided in the repository. Change into the exercise directory and install the packages.</p>
+<pre>cd ../02_package
+uv init --bare
+uv add -r requirements.txt</pre>
+<p>For each skill that has been implemented for the agent, include in your notebook:</p>
+<ul>
+<li><strong>The name, description, and the Linux command that is executed to implement the skill.</strong></li>
+</ul>
+<p>Run the agent in the repository that implements these tools to answer queries.</p>
+<pre>uv run package_client.py</pre>
+<p>Repeat the prompts:</p>
+<ul>
+<li>What is the <code>ssh</code> server being run on this machine?</li>
+<li>Does the current <code>ssh</code> server being run have any vulnerabilities associated with it?</li>
+</ul>
+<p>Compare the results to the prior version and answer the following questions for your lab notebook.</p>
+<ul>
+<li><strong>Which vulnerabilities did the custom tools discover that weren&#39;t found previously?</strong></li>
+</ul>
+</google-codelab-step>
+</google-codelab>
+<script src="/gensec-web/scripts/native-shim.js"></script>
+<script src="/gensec-web/scripts/custom-elements.min.js"></script>
+<script src="/gensec-web/scripts/prettify.js"></script>
+<script src="/gensec-web/scripts/codelab-elements.js"></script>
+<script src="https://support.google.com/inapp/api.js"></script>
+</body>
+</html>

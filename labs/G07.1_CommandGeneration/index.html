@@ -1,0 +1,264 @@
+
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1,user-scalable=yes">
+<meta name="theme-color" content="#4F7DC9">
+<meta charset="UTF-8">
+<title>07.1: Command and Configuration Generation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="/gensec-web/scripts/codelab-elements.css">
+<style>
+.success{color:#1e8e3e}.error{color:red} </style>
+</head>
+<body>
+<google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+<google-codelab codelab-gaid="" id="G07.1_CommandGeneration" title="07.1: Command and Configuration Generation" environment="web" feedback-link="https://docs.google.com/document/d/1HTPM1fy3lxsJ_9F-1hsKahjC0oDprQgVmsE5HZfDpis">
+<google-codelab-step label="Google dork commands" duration="3">
+<p>One of the benefits of chatbots is that they can provide a more natural interface for search engines. Search engines such as Google come with a rich set of features that advanced users can leverage to zero find specific content. A summary can be found <a href="https://www.stationx.net/google-dorks-cheat-sheet/" target="_blank">here</a>. Examples include:</p>
+<ul>
+<li>Multi-word string search (e.g. <code>"We the people"</code> to search for documents with this phrase)</li>
+<li>Content restricted searches (<code>filetype:pdf</code> for PDF files, <code>ext:txt</code> for files with a txt filename extension)</li>
+<li>Site restricted searches (<code>site:pdx.edu</code> for documents on pdx.edu domains, <code>@twitter</code> for content on social media platform Twitter)</li>
+<li>Text restricted searches for URLs containing specific text (<code>inurl:security</code>), pages with titles containing specific text (<code>intitle:security</code>), or pages with specific text (<code>intext:disallow</code>)</li>
+<li>Negation operator (e.g. <code>-filetype:pdf</code> removes all results that are PDF files)</li>
+<li>Logical operators (e.g. <code>(psychology | computer science) & design</code> for sites that match psychology design or computer science design)</li>
+</ul>
+<p>Develop prompts that can be given to an LLM to see if it can generate the Google dork expressions below.</p>
+<h3 is-upgraded>Virtual desktop endpoints</h3>
+<pre><code>&#34;VNC Desktop&#34; inurl:5800</code></pre>
+<h3 is-upgraded>Restricted directories and paths</h3>
+<p>Search index restriction files (<code>robots.txt/robot.txt</code>) indicating sensitive directories that should be disallowed.</p>
+<pre><code>(inurl:&#34;robot.txt&#34; | inurl:&#34;robots.txt&#34; ) intext:disallow filetype:txt</code></pre>
+<h3 is-upgraded>Exposed database administration interface</h3>
+<pre><code>inurl:phpmyadmin site:*.pdx.edu</code></pre>
+<h3 is-upgraded>Unprotected database backups</h3>
+<p>SQL database backup files that have been left on a public web server</p>
+<pre><code>intitle:&#34;index of&#34; &#34;database.sql.zip&#34;</code></pre>
+<h3 is-upgraded>Credentials</h3>
+<pre><code>intitle:&#34;index of&#34; passwords</code></pre>
+<h3 is-upgraded>Secret files </h3>
+<pre><code>&#34;Not for Public Release&#34; ext:pdf</code></pre>
+<ul>
+<li><strong>Provide a table for your lab notebook of the prompts used for each</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="jq JSON parsing commands" duration="3">
+<p>Data is often delivered from Web APIs via the Javascript Object Notation format or JSON. One tool that is helpful for quickly parsing JSON is <code>jq</code>. The syntax for the command has a learning curve that may be difficult for some to learn. In this exercise, we&#39;ll examine the ability for an LLM to properly analyze a JSON object and generate <code>jq</code> queries using natural language.</p>
+<p>To begin with, install <code>jq</code> on your VM.</p>
+<pre>sudo apt install jq</pre>
+<p>Begin by visiting the Certificate Transparency site at <a href="https://crt.sh" target="_blank">https://crt.sh</a> and lookup the domain <code>kapow.cs.pdx.edu</code>. Doing so will access the URL <a href="https://crt.sh/?q=kapow.cs.pdx.edu" target="_blank">https://crt.sh/?q=kapow.cs.pdx.edu</a> and the results will be returned as an HTML page. One can retrieve the same content, but in a JSON format. Within your VM, use the <code>curl</code> command below to download a JSON version of the results to a file.</p>
+<pre>curl &#34;https://crt.sh/?q=kapow.cs.pdx.edu&amp;output=json&#34; &gt; kapow.json</pre>
+<p>The JSON returned has a schema that you would need to parse and understand before being able to write a <code>jq</code> command to pull out specific information from it. Upload the JSON output or copy it to an LLM and prompt the LLM to generate a <code>jq</code> command that prints out the certificate ID and common name of every entry. Run the <code>jq</code> command on the JSON.</p>
+<ul>
+<li><strong>Take a screenshot of the result that includes your FAU email ID</strong></li>
+</ul>
+<p>Modern LLMs can produce this code and execute it when prompted to generate the same result. To test this, prompt the LLM to directly output the certificate ID and common name from the JSON output. </p>
+<ul>
+<li><strong>Take a screenshot of the result that includes your FAU email ID</strong></li>
+</ul>
+<p>Using the above methods, produce all unique domain names that <code>crt.sh</code> reports for the domain <code>cs.pdx.edu</code> over the last year.</p>
+<ul>
+<li><strong>Take a screenshot of the result that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="iptables commands" duration="3">
+<p>One of the benefits of using an LLM is its ability to use its broad knowledge base to explain code and commands that a particular user may not understand. Consider the following set of commands for configuring rules using <code>iptables</code>, a network firewall tool for Linux.</p>
+<pre>iptables -A INPUT -i eth0 -p tcp -m multiport --dports 22,80,443 \
+  -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -o eth0 -p tcp -m multiport --sports 22,80,443 \
+  -m state --state ESTABLISHED -j ACCEPT</pre>
+<p>Prompt an LLM for a concise summary of the two rules that the command creates.</p>
+<ul>
+<li><strong>Take a screenshot of the result that includes your FAU email ID</strong></li>
+</ul>
+<p>Then, prompt an LLM for a prompt that could reproduce the commands exactly. Using that prompt as a basis, create a prompt that reproduces the above commands verbatim.</p>
+<ul>
+<li><strong>Take a screenshot of the prompt and result that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Google Cloud commands" duration="3">
+<p>Google Cloud&#39;s Compute Engine service allows one to set up virtual machines configured with a variety of operating systems and network configurations. As we have done previously for the WFP1 VM at the beginning of this lab, this can be done via the command-line interface provided by the Google Cloud SDK and its <code>gcloud</code> command.</p>
+<pre><code>gcloud compute firewall-rules create pdx-80 \
+  --allow=tcp:80 --source-ranges=&#34;131.252.0.0/16&#34; \
+  --target-tags=pdx-80 --direction=INGRESS
+
+gcloud compute instances create wfp1-vm \
+  --machine-type e2-micro --zone us-west1-b \
+  --image-project pdx-cs \
+  --image wfp1-nofilter
+
+gcloud compute instances add-tags wfp1-vm --tags=pdx-80 --zone us-west1-b</code></pre>
+<p>Prompt an LLM for a concise summary of the commands. </p>
+<ul>
+<li><strong>Take a screenshot of the prompt and result that includes your FAU email ID</strong></li>
+</ul>
+<p>Then, prompt an LLM for a prompt that could reproduce the commands exactly. Using that prompt as a basis, create a prompt that reproduces the above commands verbatim.</p>
+<ul>
+<li><strong>Take a screenshot of the prompt and result that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="nginx configuration" duration="3">
+<p>Consider the following nginx configuration for a web server in <a href="https://mashimaro.cs.pdx.edu" target="_blank">https://mashimaro.cs.pdx.edu</a> .</p>
+<pre><code>server {
+      server_name mashimaro.cs.pdx.edu;
+      root /var/www/html/mashimaro;
+      index index.html;
+      location / {
+              try_files $uri $uri/ =404;
+      }
+      listen 443 ssl;
+      ssl_certificate /etc/letsencrypt/live/mashimaro/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/mashimaro/privkey.pem;
+      include /etc/letsencrypt/options-ssl-nginx.conf;
+      ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}
+
+server {
+      if ($host = mashimaro.cs.pdx.edu) {
+          return 301 https://$host$request_uri;
+      }
+      server_name mashimaro.cs.pdx.edu;
+      listen 80;
+      return 404;
+}</code></pre>
+<p>Prompt an LLM for a concise line-by-line summary of the configuration above.</p>
+<ul>
+<li><strong>Take a screenshot of the result that includes your FAU email ID</strong></li>
+</ul>
+<p>Then, prompt an LLM for a prompt that could reproduce the configuration exactly. Using that prompt as a basis, create a prompt that reproduces the above configuration verbatim.</p>
+<ul>
+<li><strong>Take a screenshot of the prompt and result that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Terraform configuration" duration="3">
+<p>Terraform and other infrastructure-as-code solutions provide a way of declaratively defining infrastructure that can then be deployed in a reliable, reproducible manner. Consider the Terraform specification file below that deploys a single virtual machine on Google Cloud Platform.</p>
+<pre><code>provider &#34;google&#34; {
+  credentials = file(&#34;tf-lab.json&#34;)
+  project     = &#34;YOUR_PROJECT_ID&#34;
+  region      = &#34;us-west1&#34;
+}
+
+resource &#34;google_compute_address&#34; &#34;static&#34; {
+  name = &#34;ipv4-address&#34;
+}
+
+resource &#34;google_compute_instance&#34; &#34;default&#34; {
+  name         = &#34;tf-lab-vm&#34;
+  machine_type = &#34;e2-medium&#34;
+  zone         = &#34;us-west1-b&#34;
+
+  boot_disk {
+    initialize_params {
+      image = &#34;ubuntu-os-cloud/ubuntu-2204-jammy-v20240501&#34;
+    }
+  }
+
+  network_interface {
+    network = &#34;default&#34;
+    access_config {
+      nat_ip = google_compute_address.static.address
+    }
+  }
+}
+
+output &#34;ip&#34; {
+  value = google_compute_instance.default.network_interface.0.access_config.0.nat_ip
+}</code></pre>
+<p>Prompt an LLM for a concise line-by-line summary of the configuration above.</p>
+<ul>
+<li><strong>Take a screenshot of the result that includes your FAU email ID</strong></li>
+</ul>
+<p>Then, prompt an LLM for a prompt that could reproduce the configuration exactly. Using that prompt as a basis, create a prompt that reproduces the above configuration verbatim.</p>
+<ul>
+<li><strong>Take a screenshot of the prompt and result that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Docker configuration" duration="3">
+<p>Docker containers, which can be seen as virtual operating systems, are often used to deploy services in cloud environments. Containers are instantiated from images that are specified and built from a <code>Dockerfile</code> configuration. For beginners, parsing a configuration can be difficult. An LLM can potentially aid in understanding such files. Below is a Dockerfile for a multi-stage container build.</p>
+<pre>FROM python:3.12-alpine3.19 as builder
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt &amp;&amp; \
+    rm -rf /usr/local/lib/python3.12/site-packages/*.dist-info
+
+COPY . .
+
+FROM python:3.12-alpine3.19
+
+WORKDIR /app
+
+COPY --from=builder /app /app
+COPY --from=builder /usr/local/lib/python3.12/site-packages/ /usr/local/lib/python3.12/site-packages/
+
+ENTRYPOINT [&#34;python&#34;, &#34;app.py&#34;]</pre>
+<p>Prompt an LLM for a concise summary of the configuration above.</p>
+<ul>
+<li><strong>Take a screenshot of the result that includes your FAU email ID</strong></li>
+</ul>
+<p>Then, prompt an LLM for a prompt that could reproduce the configuration exactly. Using that prompt as a basis, create a prompt that reproduces the above configuration verbatim.</p>
+<ul>
+<li><strong>Take a screenshot of the prompt and result that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Kubernetes configuration" duration="3">
+<p>Kubernetes is a system for declaratively specifying infrastructure, deploying it, and maintaining its operation, often using containers and container images. Below is a simple configuration for a web application. </p>
+<pre><code>apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: guestbook-replicas
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: guestbook
+        tier: frontend
+    spec:
+      containers:
+      - name: guestbook-app
+        image: gcr.io/YOUR_PROJECT_ID/gcp_gb
+        env:
+        - name: PROCESSES
+          value: guestbook
+        - name: PORT
+          value: &#34;8000&#34;
+        ports:
+        - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: guestbook-lb
+  labels:
+    app: guestbook
+    tier: frontend
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8000
+  selector:
+    app: guestbook
+    tier: frontend</code></pre>
+<p>Prompt an LLM for a concise summary of the configuration above.</p>
+<ul>
+<li><strong>Take a screenshot of the result that includes your FAU email ID</strong></li>
+</ul>
+<p>Then, prompt an LLM for a prompt that could reproduce the configuration exactly. Using that prompt as a basis, create a prompt that reproduces the above configuration verbatim.</p>
+<ul>
+<li><strong>Take a screenshot of the prompt and result that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+</google-codelab>
+<script src="/gensec-web/scripts/native-shim.js"></script>
+<script src="/gensec-web/scripts/custom-elements.min.js"></script>
+<script src="/gensec-web/scripts/prettify.js"></script>
+<script src="/gensec-web/scripts/codelab-elements.js"></script>
+<script src="https://support.google.com/inapp/api.js"></script>
+</body>
+</html>
