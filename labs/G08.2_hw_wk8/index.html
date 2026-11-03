@@ -1,0 +1,71 @@
+
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1,user-scalable=yes">
+<meta name="theme-color" content="#4F7DC9">
+<meta charset="UTF-8">
+<title>08.2: Homework</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="/gensec-web/scripts/codelab-elements.css">
+<style>
+.success{color:#1e8e3e}.error{color:red} </style>
+</head>
+<body>
+<google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+<google-codelab codelab-gaid="" id="G08.2_hw_wk8" title="08.2: Homework" environment="web" feedback-link="https://docs.google.com/document/d/1quDgSKBdJp6fQ-Ey6njo6YWcMPSRmIJ41K-Kp76QFkU">
+<google-codelab-step label="Code analysis and reverse engineering application" duration="180">
+<p>Within your course repository, create a directory for the homework, then commit and push to your remote repository.</p>
+<pre>cd &lt;path_to_repo&gt;
+mkdir hw8
+touch hw8/app.py
+touch hw8/screencast_url.txt
+git add hw8
+git commit -m &#34;initial commit&#34;
+git push</pre>
+<p>In this homework, based on the lab exercises, you will construct or deploy MCP servers that agents can leverage to automate a task in code summarization and reverse engineering. Some ideas include</p>
+<ul>
+<li>Analyzing packages for malicious code (<a href="https://thehackernews.com/2023/11/48-malicious-npm-packages-found.html" target="_blank">example</a> | <a href="https://thehackernews.com/2023/12/116-malware-packages-found-on-pypi.html?m=1" target="_blank">example</a>)</li>
+<li>Automatic code deobfuscator </li>
+<li>Automatic decoding/decrypting of data</li>
+<li>Malware reverse engineering agent using COTS tools that extend those given in labs on various samples (<a href="https://github.com/woj-ciech/Daily-dose-of-malware" target="_blank">example</a> | <a href="https://github.com/vxunderground/MalwareSourceCode" target="_blank">example </a>| <a href="https://github.com/ytisf/theZoo" target="_blank">example</a> | <a href="https://github.com/rshipp/awesome-malware-analysis" target="_blank">example</a>)</li>
+</ul>
+<p>Your development should be organized and incremental, with frequent commits into your git repository. Code should also be properly documented via Python <a href="https://peps.python.org/pep-0257/" target="_blank">docstrings</a>. In addition, you must also ensure API keys do not show up in your source files, but rather are passed in via environment variables. Ensure your application code is pushed to your repository before class. </p>
+</google-codelab-step>
+<google-codelab-step label="-" duration="2">
+<h3 is-upgraded>Screencast</h3>
+<p>Upon completing your application, via a narrated screencast of no longer than 5 minutes, you will perform a demonstration and source code walk-through of the application. Ensure that the video camera is turned on initially in your screencast. The screencast should follow the order given below: </p>
+<ul>
+<li>Check out the application source code from your course repository.</li>
+<li>Demonstrate the application running showing both its capabilities as well as its limitations</li>
+<li>Perform a source code walk-through via the git commits on Gitlab to explain how the application has been incrementally implemented. </li>
+</ul>
+<p>Upload your completed screencast on MediaSpace. Ensure that it is published as &#34;Unlisted&#34;. Then, update the file <code>screencast_url.txt</code> in the homework&#39;s directory to contain the URL that your unlisted screencast on MediaSpace is located. Push the changes that include the updated URL to your repository before class.</p>
+<h3 is-upgraded>Rubric</h3>
+<p>We will be using your screencast and git repository to evaluate your homework.</p>
+<table>
+<tr><td colspan="1" rowspan="1"><p>Code checkout shown</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Demonstration of the various capabilities of the application</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Demonstration of the various limitations of the application</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Functionality added</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Code quality (clean with no unused code or variables, readable, modular, documented with Docstrings and comments, no hard-coded keys within source code)</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Walkthrough of source code via git commits shown on Gitlab. (Quantity of submitted code explained minus the quantity of submitted code not explained)</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Instructions followed properly including code submission in the specified repository files, sequencing and length of screencast.</p>
+</td></tr>
+</table>
+</google-codelab-step>
+</google-codelab>
+<script src="/gensec-web/scripts/native-shim.js"></script>
+<script src="/gensec-web/scripts/custom-elements.min.js"></script>
+<script src="/gensec-web/scripts/prettify.js"></script>
+<script src="/gensec-web/scripts/codelab-elements.js"></script>
+<script src="https://support.google.com/inapp/api.js"></script>
+</body>
+</html>

