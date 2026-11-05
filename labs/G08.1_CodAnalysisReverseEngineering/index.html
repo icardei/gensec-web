@@ -25,7 +25,7 @@ uv add -r requirements.txt</pre>
 
 
 <aside class="special warning">
-  <p><strong>CAUTION:</strong> Do not execute any programs from the <code>08_Summarization_ReverseEng/src/</code> directory as they include malicious code intended for summarization and classification tasks.</p>
+  <p><strong>CAUTION:</strong> Do not execute any programs from the <code>08_Summarization_ReverseEng/malware/</code> directory as they include malicious code intended for summarization and classification tasks.</p>
 </aside>
 
 </google-codelab-step>
@@ -75,7 +75,7 @@ uv add -r requirements.txt</pre>
     )
     output = &#34;\n&#34;.join([d.page_content for d in docs])
     result = chain.invoke(output)</code></pre>
-<h2 is-upgraded><strong>src/p0.py</strong></h2>
+<h2 is-upgraded><strong>malware/p0.py</strong></h2>
 <p>View the source file in the <code>src</code> directory to get an understanding of what it does. </p>
 <ul>
 <li><strong>Find the two main operations that the code performs</strong></li>
@@ -83,14 +83,14 @@ uv add -r requirements.txt</pre>
 <p>Run the program in the repository below:</p>
 <pre>uv run 01_code_summarize.py</pre>
 <p>Within the program&#39;s interactive shell, have the program summarize the file. </p>
-<pre>src/p0.py</pre>
+<pre>malware/p0.py</pre>
 <ul>
 <li><strong>Take a screenshot of the summary showing the operations that includes your FAU email ID</strong></li>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="-" duration="20">
 <p>Understanding unknown code is a task one might give an LLM, especially if the amount of code fits within the context window of a model. For example, one might use an LLM to determine whether or not code that has been downloaded from the Internet is malicious or not. Such an approach might be used to detect and prevent execution of malware that hijacks resources on a computer system, performs ransomware, or sets up a backdoor. </p>
-<h2 is-upgraded><strong>src/p1.py</strong></h2>
+<h2 is-upgraded><strong>malware/p1.py</strong></h2>
 <p>Examine the code for the program.</p>
 <ul>
 <li><strong>Find the mechanisms it uses to maintain persistence and steal information.</strong></li>
@@ -99,7 +99,7 @@ uv add -r requirements.txt</pre>
 <ul>
 <li><strong>Take a screenshot of the summary describing the two mechanisms that includes your FAU email ID</strong></li>
 </ul>
-<h2 is-upgraded><strong>src/p2.py</strong></h2>
+<h2 is-upgraded><strong>malware/p2.py</strong></h2>
 <p>Examine the code for the program.</p>
 <ul>
 <li><strong>What is the purpose of the code? </strong></li>
@@ -108,7 +108,7 @@ uv add -r requirements.txt</pre>
 <ul>
 <li><strong>Take a screenshot of the summary correctly identifying the purpose of the code that includes your FAU email ID</strong></li>
 </ul>
-<h2 is-upgraded><strong>src/p3.py</strong></h2>
+<h2 is-upgraded><strong>malware/p3.py</strong></h2>
 <p>Examine the code for the program.</p>
 <ul>
 <li><strong>What command does the program respond to?</strong></li>
@@ -117,7 +117,7 @@ uv add -r requirements.txt</pre>
 <ul>
 <li><strong>Take a screenshot of the summary correctly identifying the command the code responds to that includes your FAU email ID</strong></li>
 </ul>
-<h2 is-upgraded><strong>src/p4.py</strong></h2>
+<h2 is-upgraded><strong>malware/p4.py</strong></h2>
 <p>Examine the code for the program.</p>
 <ul>
 <li><strong>Find the types of data it accesses and the mechanism used for exfiltration </strong></li>
@@ -126,7 +126,7 @@ uv add -r requirements.txt</pre>
 <ul>
 <li><strong>Take a screenshot of the summary correctly identifying the types of data and the exfiltration method that includes your FAU email ID</strong></li>
 </ul>
-<h2 is-upgraded><strong>src/p5.py</strong></h2>
+<h2 is-upgraded><strong>malware/p5.py</strong></h2>
 <p>Examine the code for the program taken from an <a href="https://www.endorlabs.com/learn/llm-assisted-malware-review-ai-and-humans-join-forces-to-combat-malware" target="_blank">article</a> on LLM-assisted malware analysis of Python packages. Its original source can be found <a href="https://inspector.pypi.io/project/web3toolz/0.8/packages/1f/22/8788de74793d3f4da61816e3f505db211d97592263f3f1092f66df8501cb/web3toolz-0.8-py3-none-any.whl/web3toolz/steam.py" target="_blank">here</a>.</p>
 <ul>
 <li><strong>Find what files it accesses and how it obtains its exfiltration destination</strong></li>
@@ -135,7 +135,7 @@ uv add -r requirements.txt</pre>
 <ul>
 <li><strong>Take a screenshot of the summary correctly identifying the types of data and the mechanism used to obtain its exfiltration destination that includes your FAU email ID</strong></li>
 </ul>
-<h2 is-upgraded><strong>src/p6.py</strong></h2>
+<h2 is-upgraded><strong>malware/p6.py</strong></h2>
 <p>Another example from the <a href="https://www.endorlabs.com/learn/llm-assisted-malware-review-ai-and-humans-join-forces-to-combat-malware" target="_blank">article </a>is also included. Its original source can be found <a href="https://inspector.pypi.io/project/phoenixc2/1.0/packages/80/87/df4c03b60c57da2e213c9f95d989262fbf2c8b7c9b179bef77ce2a47d326/phoenixc2-1.0-py3-none-any.whl/phoenixc2/server/kits/http_reverse/payloads/python.payload.py" target="_blank">here</a>.</p>
 <ul>
 <li><strong>Find the function of the program and the types of payloads it can execute</strong></li>
@@ -169,7 +169,7 @@ Respond in JSON format with the following structure:
         &#123;&#123; &#34;file_creation&#34;: &#123;&#123; &#34;detected&#34;: true/false, &#34;confidence&#34;: 0-1, &#34;evidence&#34;: &#34;description of findings&#34;, &#34;code_snippet&#34;: &#34;snippet of code&#34; }} }},
         ...
   }}</code></pre>
-<h2 is-upgraded><strong>src/p0.py</strong></h2>
+<h2 is-upgraded><strong>malware/p0.py</strong></h2>
 <p>Run the program in the repository below to perform program classifications.</p>
 <pre>uv run 02_code_classify.py</pre>
 <p>Within the program&#39;s interactive shell, have the program classify the file. For each classification category that is marked as &#39;<code>true</code>&#39;</p>
@@ -178,32 +178,32 @@ Respond in JSON format with the following structure:
 </ul>
 </google-codelab-step>
 <google-codelab-step label="-" duration="20">
-<h2 is-upgraded><strong>src/p1.py</strong></h2>
+<h2 is-upgraded><strong>malware/p1.py</strong></h2>
 <p>Have the program classify the file. For each classification category that is marked as &#39;<code>true</code>&#39;</p>
 <ul>
 <li><strong>Create a table of the </strong><strong><code>code_snippet</code></strong><strong> returned for each that the LLM identifies as evidence</strong></li>
 </ul>
-<h2 is-upgraded><strong>src/p2.py</strong></h2>
+<h2 is-upgraded><strong>malware/p2.py</strong></h2>
 <p>Have the program classify the file. For each classification category that is marked as &#39;<code>true</code>&#39;</p>
 <ul>
 <li><strong>Create a table of the </strong><strong><code>code_snippet</code></strong><strong> returned for each that the LLM identifies as evidence</strong></li>
 </ul>
-<h2 is-upgraded><strong>src/p3.py</strong></h2>
+<h2 is-upgraded><strong>malware/p3.py</strong></h2>
 <p>Have the program classify the file. For each classification category that is marked as &#39;<code>true</code>&#39;</p>
 <ul>
 <li><strong>Create a table of the </strong><strong><code>code_snippet</code></strong><strong> returned for each that the LLM identifies as evidence</strong></li>
 </ul>
-<h2 is-upgraded><strong>src/p4.py</strong></h2>
+<h2 is-upgraded><strong>malware/p4.py</strong></h2>
 <p>Have the program classify the file. For each classification category that is marked as &#39;<code>true</code>&#39;</p>
 <ul>
 <li><strong>Create a table of the </strong><strong><code>code_snippet</code></strong><strong> returned for each that the LLM identifies as evidence</strong></li>
 </ul>
-<h2 is-upgraded><strong>src/p5.py</strong></h2>
+<h2 is-upgraded><strong>malware/p5.py</strong></h2>
 <p>Have the program classify the file. For each classification category that is marked as &#39;<code>true</code>&#39;</p>
 <ul>
 <li><strong>Create a table of the </strong><strong><code>code_snippet</code></strong><strong> returned for each that the LLM identifies as evidence</strong></li>
 </ul>
-<h2 is-upgraded><strong>src/p6.py</strong></h2>
+<h2 is-upgraded><strong>malware/p6.py</strong></h2>
 <p>Have the program classify the file. For each classification category that is marked as &#39;<code>true</code>&#39;</p>
 <ul>
 <li><strong>Create a table of the </strong><strong><code>code_snippet</code></strong><strong> returned for each that the LLM identifies as evidence</strong></li>
@@ -254,7 +254,7 @@ print(summary)</code></pre>
 <p>Run the program in the repository to analyze a file.</p>
 <pre>uv run 03a_git_file.py</pre>
 <p>Then, prompt the program about one of the prior examples:</p>
-<pre>08_.../src/p5.py</pre>
+<pre>08_.../malware/p5.py</pre>
 <ul>
 <li><strong>Take a screenshot of the hash of the last commit that includes your FAU email ID</strong></li>
 </ul>
