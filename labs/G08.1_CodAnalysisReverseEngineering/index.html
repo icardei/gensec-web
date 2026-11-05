@@ -209,13 +209,80 @@ Respond in JSON format with the following structure:
 </ul>
 </google-codelab-step>
 <google-codelab-step label="Repository analysis via git" duration="20">
-<p>Open-source repositories managed via git are often targets for malicious software developers. Adversaries can publish malicious repositories, submit malicious commits, or initiate malicious pull requests. Automatically monitoring and reporting on potential threats and vulnerabilities in a repository can be useful with several services such as GitHub&#39;s <a href="https://github.com/dependabot" target="_blank">Dependabot</a> and Snyk&#39;s <a href="https://snyk.io/product/snyk-code/" target="_blank">code analysis</a> offerings providing real-time notifications on potential issues in a codebase. However, adversaries have been known to flood repositories with malicious pull requests that masquerade as legitimate services such as Dependabot attempting to patch vulnerable code in order to trick a maintainer into installing an <a href="https://www.bleepingcomputer.com/news/security/github-repos-bombarded-by-info-stealing-commits-masked-as-dependabot/" target="_blank">info stealer</a> shown below.</p>
+<p>Open-source repositories managed via git are often targets for malicious software developers. 
+  Adversaries can publish malicious repositories, submit malicious commits, or initiate malicious pull requests.
+   Automatically monitoring and reporting on potential threats and vulnerabilities in a repository can be useful 
+   with several services such as GitHub&#39;s <a href="https://github.com/dependabot" target="_blank">Dependabot</a> 
+   and Snyk&#39;s <a href="https://snyk.io/product/snyk-code/" target="_blank">code analysis</a> 
+   offerings providing real-time notifications on potential issues in a codebase. However, adversaries have been 
+   known to flood repositories with malicious pull requests that masquerade as legitimate services such as
+    Dependabot attempting to patch vulnerable code in order to trick a maintainer into installing an 
+    <a href="https://www.bleepingcomputer.com/news/security/github-repos-bombarded-by-info-stealing-commits-masked-as-dependabot/" target="_blank">
+      info stealer</a> shown below.</p>
+
 <p class="image-container"><img style="width:624px" src="img/30dfa0191dcfa62f.png"></p>
 <p>With repository maintainers receiving many pull requests from other developers wishing to add functionality or fix bugs in the codebase, it is important to verify that the requests are legitimate. Understanding unknown code is a task one might give an LLM, especially as a first pass, to reduce the load on the repository maintainer. In this exercise, we will combine an LLM&#39;s code analysis and summarization abilities with Python support for navigating GitHub repositories.</p>
 </google-codelab-step>
+
+
+<!-- New steps adapted for the github_client.py agent use : -->
+<google-codelab-step label="-" duration="10">
+<h2 is-upgraded><strong>File analysis</strong></h2>
+<p>
+  For the following exercises, we will use the <code>03_github/github_client.py</code> agent to study 
+  github repositories: analyzing the contents of files in a repository given its path, 
+  identify the last commit that modified the file, and obtain the changes made as a result of that commit.
+</p>
+
+<p>
+  Below is the <code>FastAgent</code> agent program. Note that it does not work with Gemini LLMs, so you will need to 
+  select a different model when prompted. GPT-55 is a good choice.
+</p>
+
+<pre><code>import asyncio
+from fast_agent.core.fastagent import FastAgent
+from fast_agent.llm.model_factory import ModelFactory
+from fast_agent.llm.provider_types import Provider
+import questionary
+
+# Create the application
+fast = FastAgent("Code Analysis Agent")
+
+# ... model selection details omitted ...
+
+@fast.agent(
+    instruction=f"You are a code analysis assistant. Your task is to analyze source code repositories using the tools provided.",
+    model=model,
+    servers=["github_remote"],
+    use_history=True,
+)
+async def main():
+    async with fast.run() as agent:
+        await agent.interactive()
+
+if __name__ == "__main__":
+    asyncio.run(main())</code></pre>
+
+<p>
+  For this exercise, analize the file <code>malware/p5.py</code> in the repository. 
+  Use the agent to retrieve the file contents, explain what the file does and describe all 
+  unsafe and malicious actions it performs in relation with publicized attack patterns and techniques
+  <ul>
+  <li><strong>Take a screenshot of the results that includes your FAU email ID</strong></li>
+  </ul>
+
+</p>
+</google-codelab-step>
+
+<!--
 <google-codelab-step label="-" duration="3">
 <h2 is-upgraded><strong>File analysis</strong></h2>
-<p>Retrieving a file from a repository and examining its commits allows one to identify problematic code and track how it entered the source tree. Consider the code below that utilizes PyGithub to retrieve the contents of a file in a repository given its path, to identify the last commit that modified the file, and to obtain the changes made as a result of that commit.</p>
+<p>Retrieving a file from a repository and examining its commits allows one to identify problematic code and 
+  track how it entered the source tree.
+  Consider the code below that utilizes PyGithub to retrieve the 
+  contents of a file in a repository given its path, to identify the last commit that modified the file, 
+  and to obtain the changes made as a result of that commit.
+</p>
 <pre><code>import os
 import github
 github_token = os.getenv(&#34;GITHUB_PERSONAL_ACCESS_TOKEN&#34;)
@@ -313,6 +380,8 @@ def process_pull_request(pr_number):
 <li><strong>Take a screenshot of the problematic files that have been added that includes your FAU email ID</strong></li>
 </ul>
 </google-codelab-step>
+-->
+
 <google-codelab-step label="Python deobfuscation" duration="3">
 <p>Modern malware utilizes a range of encoding and encryption techniques to hide itself from detection. In reverse-engineering these pieces of malware, one would like to automate the task. Consider the <a href="https://www.sentinelone.com/labs/automating-string-decryption-and-other-reverse-engineering-tasks-in-radare2-with-r2pipe/" target="_blank">OSX.Fairytale</a> malware that uses XOR with the byte 0x30 to encrypt a string followed by Base64 to encode the result in order to hide it from anti-malware detectors looking for particular strings. An assembly snippet that shows the decoding of is shown below:</p>
 <p class="image-container"><img style="width:624px" src="img/978c0500e9746689.png"></p>
