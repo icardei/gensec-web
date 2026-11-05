@@ -22,6 +22,12 @@ git pull
 cd 08*
 uv init --python 3.13 --bare
 uv add -r requirements.txt</pre>
+
+
+<aside class="special warning">
+  <p><strong>CAUTION:</strong> Do not execute any programs from the <code>08_Summarization_ReverseEng/src/</code> directory as they include malicious code intended for summarization and classification tasks.</p>
+</aside>
+
 </google-codelab-step>
 <google-codelab-step label="Documentation generation" duration="3">
 <p>Code summarization is often done by humans in order to generate documentation that can be used to allow others to understand code. One of the more reliable uses for LLMs is to produce such documentation. In Python, docstrings are used to provide this information. Consider the code below that reverses a string, but does not have any documentation associated with it.</p>
