@@ -371,6 +371,10 @@ print(summary)</code></pre>
 
 <google-codelab-step label="-" duration="3">
 <h2 is-upgraded><strong>Pull request analysis</strong></h2>
+<p>
+  A Pull Request (PR) is a formal proposal to merge code changes from one branch into another within 
+  a version control system like Git. 
+</p>
 <p>Pull requests are often initiated to add or modify code in a repository. Unfortunately, 
   some requests may contain malicious changes. As a result, it is helpful to analyze them 
   for potential issues using an LLM or to have an LLM examine prior pull requests to track 
@@ -412,7 +416,7 @@ def process_pull_request(pr_number):
 <li><strong>Take screenshots of your prompt, the final part of the agent's reply with the name of the problematic files 
   that have been added, and that also include your FAU email ID</strong></li>
 </ul>
-<p>Ask the agent to print the first 10 lined of first file found problematic.
+<p>Ask the agent to print the first 10 lines of first file found problematic.
 </p>
 <ul>
 <li><strong>Take a screenshot with the agent's response.</strong></li>
@@ -480,7 +484,7 @@ foo = &#39;Benign code has been executed&#39;</code></pre>
 </ul>
 </google-codelab-step>
 <google-codelab-step label="-" duration="15">
-<p>Consider the code below that is part of a CTF level in <code>src/bloat.py</code>. Your goal is to find the flag associated with the level.</p>
+<p>Consider the code below that is part of a CTF (Capture the Flag) level in <code>src/bloat.py</code>. Your goal is to find the flag associated with the level.</p>
 <h3 is-upgraded>bloat.py</h3>
 <pre><code>import sys
 a = &#34;!\&#34;#$%&amp;&#39;()*+,-./0123456789:;&lt;=&gt;?@ABCDEFGHIJKLMNOPQRSTUVWXYZ&#34;+ \
