@@ -236,7 +236,7 @@ Respond in JSON format with the following structure:
 
 <p>
   Below is the <code>FastAgent</code> agent program. Note that it does not work with Gemini LLMs, so you will need to 
-  select a different model when prompted. GPT-55 is a good choice.
+  select a different model when prompted. OpenAI's "GPT-55" or newer is a good choice.
 </p>
 
 <pre><code>import asyncio
@@ -266,9 +266,9 @@ if __name__ == "__main__":
 <p>
   For this exercise, analize the file <code>malware/p5.py</code> in the repository. 
   Use the agent to retrieve the file contents, explain what the file does and describe all 
-  unsafe and malicious actions it performs in relation with publicized attack patterns and techniques
+  unsafe and malicious actions it performs in relation with publicized attack patterns and techniques.
   <ul>
-  <li><strong>Take a screenshot of the results that includes your FAU email ID</strong></li>
+  <li><strong>Take a screenshot of the results, that also includes your FAU email ID</strong></li>
   </ul>
 
 </p>
@@ -325,10 +325,31 @@ print(summary)</code></pre>
 <li><strong>Take a screenshot of the hash of the last commit that includes your FAU email ID</strong></li>
 </ul>
 </google-codelab-step>
+-->
 <google-codelab-step label="-" duration="3">
 <h2 is-upgraded><strong>Commit analysis</strong></h2>
-<p>Retrieving a file from a repository and examining its commits allows one to identify problematic code and track how it entered the repository. In this exercise, we prompt the model with instructions to identify whether particular commits are malicious using the prompt template below.</p>
-<pre><code>commit_prompt = PromptTemplate(
+<p>Retrieving a file from a repository and examining its commits allows one to identify problematic code and 
+  track how it entered the repository. In this exercise, we start the FastAgent program <code>03_github/github_client.py</code>,
+  we select a non-Gemini model, such as GPT-55, and we prompt the model with instructions to identify 
+  whether particular commits are malicious:
+  <ul>
+    <li>Analyze the commit with hash 9de23d6fa07fe80a526376ddd2de53c7641b6901 to determine 3 things: 
+      <ol>
+        <li>What the code in the commit does.</li>
+        <li>Whether the code does what the commit message claims.</li>
+        <li>Whether the code in the commit is malicious.</li>
+      </ol>
+    </li>
+  </ul>
+
+<ul>
+  <li><strong>Take a screenshot with the start start of the agent's response.</strong></li>
+  <li><strong>Take a screenshot with the third file that has been flagged as malicious that includes your FAU email ID.</strong></li>
+</ul>
+</p>
+
+<!--
+  <pre><code>commit_prompt = PromptTemplate(
         input_variables=[&#34;author&#34;, &#34;date&#34;, &#34;message&#34;, &#34;changes&#34;],
         template=&#34;&#34;&#34;You are a git commit analyzer.  A commit is given with the names of files and their changes.  Analyze the commit to determine 3 things: 1. What the code in the commit does.  2. Whether the code does what the commit message claims.  3. Whether the code in the commit is malicious.
 
@@ -339,16 +360,28 @@ print(summary)</code></pre>
     )</code></pre>
 <p>Run the program in the repository to analyze a commit.</p>
 <pre>uv run 03b_git_commit.py</pre>
+
+
 <p>Then, prompt the program about one of the commits:</p>
 <pre>9de23d6fa07fe80a526376ddd2de53c7641b6901</pre>
 <ul>
 <li><strong>Take a screenshot of the files that have been flagged as malicious that includes your FAU email ID</strong></li>
 </ul>
+-->
 </google-codelab-step>
+
+
 <google-codelab-step label="-" duration="3">
 <h2 is-upgraded><strong>Pull request analysis</strong></h2>
-<p>Pull requests are often initiated to add or modify code in a repository. Unfortunately, some requests may contain malicious changes. As a result, it is helpful to analyze them for potential issues using an LLM or to have an LLM examine prior pull requests to track how problematic entered the code base. Consider the code below that pulls out the contents of a particular pull and prompts an LLM to determine if it is malicious.</p>
-<pre><code>g = Github(...)
+<p>Pull requests are often initiated to add or modify code in a repository. Unfortunately, 
+  some requests may contain malicious changes. As a result, it is helpful to analyze them 
+  for potential issues using an LLM or to have an LLM examine prior pull requests to track 
+  how problematic entered the code base.  
+  <!-- Consider the code below that pulls out the contents 
+  of a particular pull and prompts an LLM to determine if it is malicious.
+  -->
+</p>
+<!--<pre><code>g = Github(...)
 repo = g.get_repo(...)
 
 def process_pull_request(pr_number):
@@ -372,15 +405,24 @@ def process_pull_request(pr_number):
         &#39;diff&#39;: pr_data[&#39;diff&#39;]
     })
     return(summary.content)</code></pre>
-<p>Run the program in the repository to analyze a pull request.</p>
-<pre>uv run 03c_git_pull_request.py</pre>
-<p>Then, prompt the program about a specific pull request.</p>
-<pre>22</pre>
-<ul>
-<li><strong>Take a screenshot of the problematic files that have been added that includes your FAU email ID</strong></li>
-</ul>
-</google-codelab-step>
 -->
+<p>Run the github agent program in the repository. Ask the agent to 
+  switch to public repository <a href="https://github.com/wu4f/cs475-src" target="_blank">https://github.com/wu4f/cs475-src</a>. 
+  Prompt the agent to analyze pull request <b>22</b> by user <code>owner/repo</code> as described above.
+</p>
+<ul>
+<li><strong>Take screenshots of your prompt, the final part of the agent's reply with the name of the problematic files 
+  that have been added, and that also include your FAU email ID</strong></li>
+</ul>
+<p>Ask the agent to print the first 10 lined of first file found problematic.
+</p>
+<ul>
+<li><strong>Take a screenshot with the agent's response.</strong></li>
+</ul>
+
+</google-codelab-step>
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 <google-codelab-step label="Python deobfuscation" duration="3">
 <p>Modern malware utilizes a range of encoding and encryption techniques to hide itself from detection. In reverse-engineering these pieces of malware, one would like to automate the task. Consider the <a href="https://www.sentinelone.com/labs/automating-string-decryption-and-other-reverse-engineering-tasks-in-radare2-with-r2pipe/" target="_blank">OSX.Fairytale</a> malware that uses XOR with the byte 0x30 to encrypt a string followed by Base64 to encode the result in order to hide it from anti-malware detectors looking for particular strings. An assembly snippet that shows the decoding of is shown below:</p>
