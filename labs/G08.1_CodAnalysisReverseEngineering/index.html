@@ -714,7 +714,7 @@ else:
 <p>Similar to Ghidra, the <code>radare2</code> suite of reverse engineering tools can also be used to augment the reverse engineering process in order to aid the LLM in its analysis. To begin with, setup the tools to build the <code>radare2</code> decompiler, then use the <code>radare2</code> package manager <code>r2pm</code> to install the decompiler package.</p>
 <pre><code>sudo apt update -y
 sudo apt install -y meson ninja-build radare2
-
+  
 r2pm -U
 r2pm -ci r2dec</code></pre>
 <p>Consider the code below that utilizes <code>r2</code>&#39;s scripting support <code>r2pipe</code> to open up an executable in <code>r2</code> and execute a simple decompilation process on it. Upon returning the result of decompilation, the tool then sends the results to the LLM to analyze.</p>
