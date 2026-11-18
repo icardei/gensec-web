@@ -8,7 +8,7 @@
 <title>10.3: Final project</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-<link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+<link rel="stylesheet" href="/gensec-web/scripts/codelab-elements.css">
 <style>
 .success{color:#1e8e3e}.error{color:red} </style>
 </head>
@@ -24,24 +24,72 @@ touch final/screencast_url.txt
 git add final
 git commit -m &#34;initial commit for final&#34;
 git push</code></pre>
-<p>For your final project, you will experiment with creating your own MCP clients and servers for performing threat intelligence or other defensive tasks not found in the lab exercises. Custom functionality can include:</p>
+<p>For your final project, you will experiment with creating your own MCP clients, MCP servers, and skills,  
+    for performing threat intelligence or other defensive tasks <b>not found</b> in the lab exercises.
+    You must develop an agentic application that demonstrates your understanding of the concepts and techniques 
+    learned in this course. 
+    You may use any of the libraries or tools covered in the course, as well as any additional libraries or tools that you find useful.
+    Custom functionality can include:</p>
 <ul>
 <li>Orchestrating the use of a range of security APIs found <a href="https://github.com/public-apis/public-apis" target="_blank">here</a>, <a href="https://docs.virustotal.com/reference/overview" target="_blank">here</a>, <a href="https://haveibeenpwned.com/API/v3" target="_blank">here</a>, or <a href="https://github.com/cipher387/API-s-for-OSINT" target="_blank">here</a> or additional security tools found <a href="https://github.com/projectdiscovery/nuclei" target="_blank">here</a>, <a href="https://www.openvas.org/" target="_blank">here</a>, or <a href="https://www.tenable.com/products/nessus" target="_blank">here</a>.</li>
 <li>Threat intelligence applications (e.g. services such as Greynoise, Shodan, AlienVault OTX, AbuseIPDB)</li>
 <li>Defensive applications (e.g. revoking or rotating cloud or API keys, automated system hardening, analyzing log files and security alerts)</li>
 </ul>
+<p>As the application is developed, keep track of the main LLM prompts utilized to generate the code of your 
+    application in file <code>prompts.txt</code>, in order to replay its recreation for your screencast. 
+    Take screenshots of the prompts and the agent's replies, and copy them to the Project Word document.
+    Upon completion of the application, push the resulting code and prompts file 
+    to your project repository.
+</p>
+
 </google-codelab-step>
-<google-codelab-step label="-" duration="2">
-<h3 is-upgraded>Screencast</h3>
-<p>Upon completing your application, via a narrated screencast of no longer than 15 minutes, you will perform a demonstration and source code walk-through of the application. Ensure that the video camera is turned on initially in your screencast. The screencast should follow the order given below: </p>
+
+<google-codelab-step label="Screencast" duration="2">
+<!--<h3 is-upgraded>Screencast</h3>-->
+<p>Upon completing your application, via a narrated screencast of no longer than 15 minutes, 
+    you will perform a demonstration and source code walk-through of the application. 
+    Ensure that the video camera is turned on initially in your screencast. 
+    The screencast should follow the order given below: </p>
+
+
 <ul>
 <li>Check out the application source code from your course repository.</li>
 <li>Demonstrate the application running showing both its capabilities as well as its limitations</li>
 <li>Perform a source code walk-through via the git commits on Gitlab to explain how the application has been incrementally implemented. </li>
 </ul>
-<p>Upload your completed screencast on MediaSpace. Ensure that it is published as &#34;Unlisted&#34;. Then, update the file <code>screencast_url.txt</code> in the homework&#39;s directory to contain the URL that your unlisted screencast on MediaSpace is located. Push the changes that include the updated URL to your repository.</p>
-<p>Rubric</p>
-<p>We will be using your screencast and code in your git repository to evaluate your project. In your walkthrough, you should address the following in sequential order:</p>
+
+<p>Upload your screencast video file to your Youtube account. Ensure that it is unlisted and that the video 
+    URL is accessible without an account. Use your browser in incognito mode to check the video URL. 
+    Add the recording URL to the Project Word file.
+    Push the changes that include the updated URL 
+    to your repository when done.
+</p>
+</google-codelab-step>
+
+<google-codelab-step label="Submission and Rubric" duration="20">
+<h3 is-upgraded>Project Submission</h3>
+<p>Follow these instructions to submit your project on Canvas:
+<ol>
+    <li>Ensure the latest Project  code is pushed to your course repository on Github.</li>
+    <li>Enter your <b>repository URL</b> on the provided field in the project Word document.</li>
+    <li>Enter the <b>screencast URL</b> on the provided field in the project Word document.</li>
+    <li>Copy screenhsots with all prompts and the agent's replies to the project Word document. </li>
+        <ul>
+            <li style="background-color: yellow;">Ensure these have a readable font size, 
+            are clear and legible to get any credit.</li>
+        </ul>   
+    </li>
+    <li>Convert the Word document to PDF.</li>
+    <li>Upload the PDF to the Poject Canvas page before the deadline.</li>
+    <li>Doublecheck the PDF file uploaded on Canvas, including the Github repo link from the PDF file and the youtube screencast URL.</li>
+</ol>
+</p>
+
+
+<h3 is-upgraded>Rubric</h3>
+<p>We will be using  the Project PDF, your screencast, and the code in the git repository to evaluate your project.</p>
+
+<p> In your walkthrough, you should address the following in sequential order:</p>
 <table>
 <tr><td colspan="1" rowspan="1"><p>Video of yourself within screencast</p>
 </td></tr>
@@ -57,15 +105,16 @@ git push</code></pre>
 </td></tr>
 <tr><td colspan="1" rowspan="1"><p>Walkthrough of source code via git commits shown on Gitlab. (Quantity of submitted code explained minus the quantity of submitted code not explained)</p>
 </td></tr>
-<tr><td colspan="1" rowspan="1"><p>Instructions followed properly including code submission in the specified repository files, sequencing and length of screencast.</p>
+<tr><td colspan="1" rowspan="1"><p>Instructions followed properly including PDF file format, 
+    code submission in the specified repository files, sequencing and length of screencast.</p>
 </td></tr>
 </table>
 </google-codelab-step>
 </google-codelab>
-<script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
-<script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
-<script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
-<script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+<script src="/gensec-web/scripts/native-shim.js"></script>
+<script src="/gensec-web/scripts/custom-elements.min.js"></script>
+<script src="/gensec-web/scripts/prettify.js"></script>
+<script src="/gensec-web/scripts/codelab-elements.js"></script>
 <script src="https://support.google.com/inapp/api.js"></script>
 </body>
 </html>
